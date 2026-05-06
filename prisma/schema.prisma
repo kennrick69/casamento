@@ -1,0 +1,456 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organizerOf EventOrganizer[]
+  accounts    Account[]
+  sessions    Session[]
+}
+
+// --- Auth.js v5 tables ---
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// --- Domínio ---
+
+model Event {
+  id                    String         @id @default(cuid())
+  slug                  String         @unique
+  title                 String
+  coupleNames           String
+  coupleLabel           String         @default("os noivos")
+  ceremonyDate          DateTime
+  timezone              String         @default("America/Sao_Paulo")
+  ceremonyLocation      String?
+  ceremonyAddress       String?
+  receptionLocation     String?
+  receptionAddress      String?
+  mapsLink              String?
+  dresscode             String?
+  paletteColors         Json?
+  description           String?        @db.Text
+  coverImageKey         String?
+  themeId               String
+  status                EventStatus    @default(DRAFT)
+  features              Json
+  donationMode          DonationMode   @default(TRUST)
+  pixKey                String?
+  guestApprovalRequired Boolean        @default(false)
+  contentModerationMode ModerationMode @default(REACTIVE)
+  publicTokenK          String
+  prizeDescription      String?
+  showPrize             Boolean        @default(true)
+  rsvpEarlyDeadline     DateTime?
+  pointsPerCurrencyUnit Float          @default(0.1)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  archivedAt            DateTime?
+
+  theme               Theme                @relation(fields: [themeId], references: [id])
+  organizers          EventOrganizer[]
+  guests              Guest[]
+  journeyItems        JourneyItem[]
+  gifts               Gift[]
+  photos              Photo[]
+  chatMessages        ChatMessage[]
+  playlistSuggestions PlaylistSuggestion[]
+  coupleMessages      CoupleMessage[]
+  missions            Mission[]
+  pointEvents         PointEvent[]
+  donations           Donation[]
+  checkinCodes        CheckinCode[]
+  checkins            Checkin[]
+  reports             Report[]
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum DonationMode {
+  TRUST
+  PIX_PROOF
+  GATEWAY
+}
+
+enum ModerationMode {
+  REACTIVE
+  PREVENTIVE
+}
+
+model EventOrganizer {
+  eventId String
+  userId  String
+  role    OrganizerRole
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, userId])
+}
+
+enum OrganizerRole {
+  OWNER
+  EDITOR
+}
+
+model Theme {
+  id     String @id @default(cuid())
+  key    String @unique
+  name   String
+  tokens Json
+
+  events Event[]
+}
+
+model Guest {
+  id                  String     @id @default(cuid())
+  eventId             String
+  name                String
+  email               String
+  phone               String?
+  plusOnes            Int        @default(0)
+  dietaryRestrictions String?
+  message             String?    @db.Text
+  rsvpStatus          RsvpStatus @default(PENDING)
+  approved            Boolean    @default(true)
+  sessionToken        String     @unique
+  consentTerms        Boolean    @default(false)
+  consentPhotoMural   Boolean    @default(false)
+  consentTimestamp    DateTime?
+  banned              Boolean    @default(false)
+  deletedAt           DateTime?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  event               Event                @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  photos              Photo[]
+  chatMessages        ChatMessage[]
+  playlistSuggestions PlaylistSuggestion[]
+  playlistVotes       PlaylistVote[]
+  coupleMessages      CoupleMessage[]
+  pointEvents         PointEvent[]
+  donations           Donation[]
+  checkins            Checkin[]
+  giftReservations    Gift[]
+  guestPoints         GuestPoints?
+  reportsMade         Report[]             @relation("Reporter")
+
+  @@unique([eventId, email])
+  @@index([eventId, sessionToken])
+}
+
+enum RsvpStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+}
+
+model JourneyItem {
+  id          String  @id @default(cuid())
+  eventId     String
+  time        String
+  title       String
+  description String?
+  icon        String?
+  location    String?
+  order       Int
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Gift {
+  id                String    @id @default(cuid())
+  eventId           String
+  name              String
+  description       String?
+  price             Float?
+  imageKey          String?
+  externalLink      String?
+  reservedByGuestId String?
+  reservedAt        DateTime?
+  fulfilled         Boolean   @default(false)
+
+  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  reserver Guest? @relation(fields: [reservedByGuestId], references: [id])
+}
+
+model Photo {
+  id               String          @id @default(cuid())
+  eventId          String
+  guestId          String
+  storageKey       String
+  caption          String?
+  visibility       PhotoVisibility @default(PUBLIC)
+  approvedByCouple Boolean         @default(true)
+  removedAt        DateTime?
+  createdAt        DateTime        @default(now())
+
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest   Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  reports Report[]
+}
+
+enum PhotoVisibility {
+  PUBLIC
+  COUPLE_ONLY
+}
+
+model ChatMessage {
+  id        String    @id @default(cuid())
+  eventId   String
+  guestId   String
+  content   String    @db.Text
+  removedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest   Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  reports Report[]
+}
+
+model PlaylistSuggestion {
+  id           String   @id @default(cuid())
+  eventId      String
+  guestId      String
+  trackName    String
+  artist       String
+  externalLink String?
+  approved     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  event Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest Guest          @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  votes PlaylistVote[]
+}
+
+model PlaylistVote {
+  suggestionId String
+  guestId      String
+  createdAt    DateTime @default(now())
+
+  suggestion PlaylistSuggestion @relation(fields: [suggestionId], references: [id], onDelete: Cascade)
+  guest      Guest              @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@id([suggestionId, guestId])
+}
+
+model CoupleMessage {
+  id        String   @id @default(cuid())
+  eventId   String
+  guestId   String
+  content   String   @db.Text
+  isPublic  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+}
+
+// --- Gamificação ---
+
+model Mission {
+  id          String  @id @default(cuid())
+  eventId     String
+  code        String
+  title       String
+  description String?
+  points      Int
+  dailyCap    Int?
+  totalCap    Int?
+  config      Json?
+  active      Boolean @default(true)
+  order       Int
+
+  event        Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  pointEvents  PointEvent[]
+  checkinCodes CheckinCode[]
+
+  @@unique([eventId, code])
+}
+
+model GuestPoints {
+  guestId     String   @id
+  eventId     String
+  totalPoints Int      @default(0)
+  lastUpdated DateTime @default(now())
+
+  guest Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+}
+
+model PointEvent {
+  id          String   @id @default(cuid())
+  guestId     String
+  eventId     String
+  missionId   String?
+  points      Int
+  reason      String
+  metadata    Json?
+  provisional Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  guest   Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  mission Mission? @relation(fields: [missionId], references: [id])
+
+  @@index([guestId, createdAt])
+  @@index([eventId, createdAt])
+}
+
+// --- Doações ---
+
+model Donation {
+  id               String         @id @default(cuid())
+  eventId          String
+  guestId          String
+  amount           Float
+  mode             DonationMode
+  status           DonationStatus @default(DECLARED)
+  proofImageKey    String?
+  gatewayProvider  String?
+  gatewayPaymentId String?
+  approvedAt       DateTime?
+  approvedByUserId String?
+  rejectedReason   String?
+  note             String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, status])
+}
+
+enum DonationStatus {
+  DECLARED
+  PROOF_UPLOADED
+  APPROVED
+  REJECTED
+  PAID
+}
+
+// --- Check-in ---
+
+model CheckinCode {
+  id         String    @id @default(cuid())
+  eventId    String
+  code       String
+  purpose    String
+  missionId  String?
+  validFrom  DateTime?
+  validUntil DateTime?
+  active     Boolean   @default(true)
+
+  event    Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  mission  Mission?  @relation(fields: [missionId], references: [id])
+  checkins Checkin[]
+
+  @@unique([eventId, code])
+}
+
+model Checkin {
+  id          String   @id @default(cuid())
+  eventId     String
+  guestId     String
+  codeId      String
+  checkedInAt DateTime @default(now())
+  lat         Float?
+  lng         Float?
+
+  event Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest Guest       @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  code  CheckinCode @relation(fields: [codeId], references: [id])
+}
+
+// --- Moderação ---
+
+model Report {
+  id              String       @id @default(cuid())
+  eventId         String
+  reporterGuestId String
+  targetType      ReportTarget
+  photoId         String?
+  chatMessageId   String?
+  reason          String?
+  status          ReportStatus @default(PENDING)
+  resolvedAt      DateTime?
+  createdAt       DateTime     @default(now())
+
+  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  reporter    Guest        @relation("Reporter", fields: [reporterGuestId], references: [id])
+  photo       Photo?       @relation(fields: [photoId], references: [id])
+  chatMessage ChatMessage? @relation(fields: [chatMessageId], references: [id])
+}
+
+enum ReportTarget {
+  PHOTO
+  MESSAGE
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  REMOVED
+  DISMISSED
+}
+
+// --- LGPD logs ---
+
+model DataAccessLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  eventId   String?
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}

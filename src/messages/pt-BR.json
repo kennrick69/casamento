@@ -1,0 +1,80 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "error": "Algo deu errado. Tente novamente.",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "delete": "Excluir",
+    "back": "Voltar",
+    "next": "Próximo",
+    "yes": "Sim",
+    "no": "Não",
+    "search": "Buscar",
+    "close": "Fechar",
+    "send": "Enviar",
+    "edit": "Editar",
+    "required": "Campo obrigatório",
+    "optional": "Opcional"
+  },
+  "nav": {
+    "home": "Início",
+    "local": "Local",
+    "roteiro": "Roteiro",
+    "mural": "Mural de fotos",
+    "chat": "Chat",
+    "presentes": "Lista de presentes",
+    "playlist": "Playlist",
+    "gincana": "Gincana",
+    "recados": "Recados",
+    "minhaJornada": "Minha jornada"
+  },
+  "rsvp": {
+    "title": "Confirmar presença",
+    "name": "Seu nome completo",
+    "email": "Seu e-mail",
+    "phone": "Seu telefone",
+    "willAttend": "Vou ao casamento!",
+    "wontAttend": "Não poderei ir",
+    "plusOnes": "Vou com mais quantas pessoas?",
+    "dietaryRestrictions": "Restrições alimentares",
+    "message": "Recado para os noivos",
+    "consentTerms": "Li e aceito os termos de uso e a política de privacidade",
+    "consentPhotoMural": "Autorizo o uso das minhas fotos no mural do evento",
+    "alreadyRsvped": "Já confirmei presença antes",
+    "confirmed": "Presença confirmada!",
+    "declined": "Que pena! Vai fazer falta.",
+    "recover": "Recuperar acesso"
+  },
+  "legal": {
+    "privacyTitle": "Política de Privacidade",
+    "termsTitle": "Termos de Uso",
+    "lastUpdated": "Última atualização"
+  },
+  "auth": {
+    "loginTitle": "Entrar",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "seu@email.com",
+    "sendLink": "Enviar link de acesso",
+    "checkEmail": "Verifique seu e-mail",
+    "checkEmailMessage": "Enviamos um link de acesso para {email}. Clique no link para entrar.",
+    "linkExpires": "O link expira em 10 minutos.",
+    "resend": "Reenviar link"
+  },
+  "admin": {
+    "title": "Painel dos Noivos",
+    "events": "Eventos",
+    "newEvent": "Novo evento",
+    "guests": "Convidados",
+    "dashboard": "Resumo",
+    "settings": "Configurações",
+    "logout": "Sair"
+  },
+  "errors": {
+    "notFound": "Página não encontrada",
+    "unauthorized": "Você não tem permissão para acessar esta página",
+    "eventNotFound": "Evento não encontrado",
+    "eventPrivate": "Este evento é privado",
+    "invalidToken": "Link de acesso inválido. Peça um novo convite."
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong. Please try again.",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "back": "Back",
+    "next": "Next",
+    "yes": "Yes",
+    "no": "No",
+    "search": "Search",
+    "close": "Close",
+    "send": "Send",
+    "edit": "Edit",
+    "required": "Required field",
+    "optional": "Optional"
+  },
+  "nav": {
+    "home": "Home",
+    "local": "Venue",
+    "roteiro": "Schedule",
+    "mural": "Photo wall",
+    "chat": "Chat",
+    "presentes": "Gift list",
+    "playlist": "Playlist",
+    "gincana": "Game",
+    "recados": "Messages",
+    "minhaJornada": "My journey"
+  },
+  "rsvp": {
+    "title": "RSVP",
+    "name": "Full name",
+    "email": "Your e-mail",
+    "phone": "Your phone",
+    "willAttend": "I'll be there!",
+    "wontAttend": "I can't make it",
+    "plusOnes": "How many guests are you bringing?",
+    "dietaryRestrictions": "Dietary restrictions",
+    "message": "Message to the couple",
+    "consentTerms": "I've read and agree to the terms of use and privacy policy",
+    "consentPhotoMural": "I allow my photos to be displayed on the event's photo wall",
+    "alreadyRsvped": "I already RSVP'd",
+    "confirmed": "RSVP confirmed!",
+    "declined": "We'll miss you!",
+    "recover": "Recover access"
+  },
+  "legal": {
+    "privacyTitle": "Privacy Policy",
+    "termsTitle": "Terms of Use",
+    "lastUpdated": "Last updated"
+  },
+  "auth": {
+    "loginTitle": "Sign in",
+    "emailLabel": "Email",
+    "emailPlaceholder": "your@email.com",
+    "sendLink": "Send access link",
+    "checkEmail": "Check your email",
+    "checkEmailMessage": "We sent an access link to {email}. Click the link to sign in.",
+    "linkExpires": "The link expires in 10 minutes.",
+    "resend": "Resend link"
+  },
+  "admin": {
+    "title": "Couple's Dashboard",
+    "events": "Events",
+    "newEvent": "New event",
+    "guests": "Guests",
+    "dashboard": "Overview",
+    "settings": "Settings",
+    "logout": "Sign out"
+  },
+  "errors": {
+    "notFound": "Page not found",
+    "unauthorized": "You don't have permission to access this page",
+    "eventNotFound": "Event not found",
+    "eventPrivate": "This event is private",
+    "invalidToken": "Invalid access link. Please request a new invitation."
+  }
+}
