@@ -4,7 +4,7 @@ import Resend from "next-auth/providers/resend";
 import { prisma } from "@/lib/db";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET ?? "build-time-placeholder",
   adapter: PrismaAdapter(prisma),
   providers: [
     Resend({
