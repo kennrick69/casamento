@@ -28,7 +28,7 @@ export async function GET(
 
   // Serve the file
   const filePath = path.join(
-    process.env.STORAGE_PATH ?? "/data/uploads",
+    process.env.RAILWAY_VOLUME_PATH ?? "/tmp/casamento-uploads",
     decodedKey
   );
   const file = await fs.readFile(filePath);

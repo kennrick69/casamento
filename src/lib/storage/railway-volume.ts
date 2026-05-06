@@ -7,7 +7,7 @@ import type { StorageProvider } from "./types";
 export class RailwayVolumeStorage implements StorageProvider {
   private readonly base: string;
 
-  constructor(base = process.env.STORAGE_PATH ?? "/data/uploads") {
+  constructor(base = process.env.RAILWAY_VOLUME_PATH ?? "/tmp/casamento-uploads") {
     this.base = base;
   }
 
