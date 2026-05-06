@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckCircle, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 
 interface RsvpFormProps {
   slug: string;
