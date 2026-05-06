@@ -2,6 +2,7 @@
   "name": "casamento",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.33.3",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -17,6 +18,9 @@
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": ["sharp", "unrs-resolver"]
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
