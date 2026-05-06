@@ -30,7 +30,6 @@ export function Countdown({ targetDate, timezone }: CountdownProps) {
 
   // Atualiza a cada minuto — sem segundos por decisão de produto
   useEffect(() => {
-    setTime(calculate(targetDate));
     const id = setInterval(() => setTime(calculate(targetDate)), 60_000);
     return () => clearInterval(id);
   }, [targetDate]);
