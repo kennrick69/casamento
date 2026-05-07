@@ -82,6 +82,18 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 ---
 
+## 🟡 MÉDIA — Substituir greybox por arte final do casal (landing interativa)
+
+**Status:** landing `/` usa bonecos greybox (CSS puro). Arte real aguardando produção com Midjourney.
+
+**O que falta:** assets finais (6 imagens de personagens + cenário) gerados e aprovados pela noiva. Quando prontos, substituir os divs greybox no `ProtoScene` pelas imagens reais e remover o banner `data-testid="prototype-banner"`.
+
+**Spec completa:** `docs/future-features/landing-interativa-una-o-casal.md`
+
+**Quando fazer:** após conclusão do Bloco A e aprovação visual com a noiva.
+
+---
+
 ## ✅ Concluídas
 
 *(Mover itens aqui quando pagos, com data.)*

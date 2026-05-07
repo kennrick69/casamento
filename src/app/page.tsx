@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SkyLanding } from "@/components/home/sky-landing";
+import { ProtoScene } from "@/components/landing/ProtoScene";
 
 export const metadata: Metadata = {
   title: "Voem. — Convites digitais de casamento",
@@ -8,5 +8,18 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return <SkyLanding />;
+  return (
+    <div
+      style={{
+        minHeight: "100dvh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#111111",
+        padding: "24px 16px",
+      }}
+    >
+      <ProtoScene />
+    </div>
+  );
 }
