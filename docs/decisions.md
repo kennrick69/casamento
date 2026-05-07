@@ -53,6 +53,26 @@ Se não houver evidência disponível: **perguntar ao usuário** em vez de infer
 
 ---
 
+## ADR-007 — Prisma generate é obrigatório em todo job CI que importa @prisma/client
+
+**Data:** 2026-05-07
+**Status:** Aceito
+
+**Contexto:** o job `smoke` do GitHub Actions falhou com `Cannot find module '.prisma/client/default'`. O erro ocorreu após o A.1 adicionar novos modelos ao schema. O Prisma Client é gerado em runtime por `prisma generate` e não é commitado no repositório. Cada job no GitHub Actions roda em runner Ubuntu isolado — artefatos (incluindo arquivos gerados) não são compartilhados entre jobs mesmo que `needs: [unit, typecheck]` esteja declarado. Os jobs `unit` e `typecheck` tinham `prisma generate` explícito; `smoke` não tinha.
+
+**Por que "postinstall" foi descartado:** adicionar `prisma generate` como script `postinstall` no `package.json` faria ele rodar em toda instalação de dependências — incluindo ambientes que não precisam (Docker de build que só roda `next build`, pipelines de lint-only, `npm install` de um desenvolvedor novo). O custo de tempo e acoplamento é desnecessário quando o problema é localizado e a correção pontual é clara.
+
+**Decisão:** cada job CI que importa `@prisma/client` direta ou indiretamente deve ter um step explícito `pnpm exec prisma generate` logo após `pnpm install --frozen-lockfile`. Sem exceções.
+
+**Regra de detecção:** ao criar um novo job CI, perguntar: "algum arquivo importado por este job (direta ou indiretamente) usa `@prisma/client`?" Se sim, o step é obrigatório. Isso inclui:
+- Qualquer job que rode testes com fixtures de banco
+- Qualquer job que suba um servidor Next.js local (webServer no Playwright)
+- Qualquer job que importe `src/lib/db` ou qualquer action/page server-side
+
+**Consequências:** jobs CI ficam autossuficientes. Fácil de auditar: basta grep `prisma generate` no `.yml` e comparar com jobs que usam Prisma. O custo de ~5s por job é compensado pela ausência de falhas silenciosas.
+
+---
+
 ## ADR-006 — Paridade entre validação local e build de produção
 
 **Data:** 2026-05-07
@@ -72,7 +92,7 @@ Se não houver evidência disponível: **perguntar ao usuário** em vez de infer
 | Regra | Ferramenta | Quando roda |
 |-------|-----------|-------------|
 | TypeScript strict | `pnpm typecheck` | CI + pre-push |
-| ESLint | `pnpm lint` | CI |
+| ESLint | `pnpm lint` | CI + pre-push |
 | Exports async em `"use server"` | `scripts/check-server-actions.mjs` | CI (`test:all`) + hook pre-push |
 | Testes unitários | `pnpm test` | CI + pre-push via `test:all` |
 
