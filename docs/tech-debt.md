@@ -4,6 +4,16 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 ---
 
+## 🟡 MÉDIA — Substituir hero minimalista por ilustração final
+
+**Status:** hero atual usa tipografia + gradiente CSS (Voem., céu dia/noite).
+
+**O que falta:** ilustração do casal voando (aquarela digital, versões dia/noite, formatos horizontal/vertical/quadrado para diferentes viewports). Aguardando decisão de execução: Midjourney + ilustrador freelancer.
+
+**Quando fazer:** antes do lançamento público da plataforma para outros casais.
+
+---
+
 ## 🔴 ALTA — Migrar storage para Cloudflare R2
 
 **Status:** Ativo — em uso o volume persistente do Railway.
