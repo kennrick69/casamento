@@ -31,7 +31,11 @@ export default async function EventLayout({
     >
       <AccessibilityBar />
       <main className="flex-1 pb-20">{children}</main>
-      <BottomNav slug={slug} />
+      <BottomNav
+        slug={slug}
+        ceremonyDate={event.ceremonyDate.toISOString()}
+        timezone={event.timezone}
+      />
     </div>
   );
 }

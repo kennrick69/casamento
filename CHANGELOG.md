@@ -1,5 +1,13 @@
 # Changelog
 
+## [Correções pós-testes] — 2026-05-07
+
+### Fixed
+- **Bottom nav adaptativo** — navegação agora muda automaticamente com base na data do casamento: antes do dia mostra Início/Roteiro/Local/Presentes (4 abas); no dia e após mostra Início/Fotos/Chat/Playlist/Presentes (5 abas). Helper `getActiveBottomNav` testado unitariamente com 7 casos.
+- **Landing pública desbloqueada** — eventos com status `PUBLISHED` agora acessíveis sem cookie nem `?k=`. A função `validateEventAccess` retorna `ok: true, guest: null` para visitantes anônimos em eventos publicados.
+- **Página raiz substituída** — `/` exibia o template padrão do create-next-app desde o primeiro commit. Substituído por landing da plataforma com hero, CTA para noivos (`/admin`) e explicação para convidados.
+- **ADR-005 documentado** — decisão sobre como tratar mudanças em decisões de produto/arquitetura previamente acordadas adicionada a `docs/decisions.md`.
+
 ## [6.0.0] — Fase 6 (2026-05-07)
 
 ### Added

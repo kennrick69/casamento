@@ -53,6 +53,31 @@ Se não houver evidência disponível: **perguntar ao usuário** em vez de infer
 
 ---
 
+## ADR-005 — Mudanças de decisões acordadas
+
+**Data:** 2026-05-07
+**Status:** Aceito
+
+**Contexto:** durante o desenvolvimento da Fase 3, foi adicionada uma barra de navegação inferior com 5 abas (Início, Fotos, Chat, Playlist, Presentes) sem consultar o usuário, sobrescrevendo a decisão anterior de 4 abas (Início, Roteiro, Local, Presentes). A justificativa foi "parece óbvio dado o contexto" — o que é uma premissa perigosa.
+
+**Decisão:** ao perceber a necessidade de mudar uma decisão de produto ou arquitetura previamente acordada, parar e apresentar a mudança proposta antes de implementar. Não "completar" a decisão sozinho mesmo quando parece óbvio. Aplica-se especialmente a:
+
+- Navegação e estrutura de menus
+- Fluxos de usuário (RSVP, autenticação, recuperação)
+- Contratos de API (formatos de request/response)
+- Estrutura de autorização (quem pode acessar o quê)
+
+**Como aplicar:**
+
+1. Identificou que uma decisão precisa mudar → escrever a proposta com contexto
+2. Apresentar ao usuário com as opções e tradeoffs
+3. Aguardar aprovação explícita antes de implementar
+4. Se implementação parcial já ocorreu: revelar o desvio junto com a proposta
+
+**Consequências:** ciclos de revisão mais frequentes em mudanças de decisão. Compensado por evitar retrabalho, regressões e divergência entre produto acordado e produto implementado.
+
+---
+
 ## ADR-003 — Convidados sem login (apenas sessionToken em cookie)
 
 **Data:** 2026-05-05

@@ -49,13 +49,11 @@ export async function validateEventAccess(
   const guest = await getCurrentGuest(slug);
   if (guest) return { ok: true, event, guest };
 
-  // Acesso via token do convite
+  // Acesso via token do convite (tracking de link personalizado)
   if (k && k === event.publicTokenK) return { ok: true, event, guest: null };
 
-  // Evento em DRAFT também aceita o token k (noivos testando)
-  if (event.status === "DRAFT" && k === event.publicTokenK) {
-    return { ok: true, event, guest: null };
-  }
+  // Eventos publicados são públicos — qualquer visitante pode ver a landing
+  if (event.status === "PUBLISHED") return { ok: true, event, guest: null };
 
   return { ok: false, error: "INVALID_TOKEN" };
 }
