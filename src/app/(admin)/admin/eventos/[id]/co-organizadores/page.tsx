@@ -38,7 +38,7 @@ export default async function CoOrganizadoresPage({
 
   const organizers = await prisma.eventOrganizer.findMany({
     where: { eventId: id },
-    include: { user: { select: { id: true, name: true, email: true } } },
+    include: { user: { select: { id: true, firstName: true, name: true, email: true } } },
   });
 
   return (
@@ -57,7 +57,7 @@ export default async function CoOrganizadoresPage({
               className="bg-background border border-border rounded-lg px-4 py-3 flex items-center justify-between"
             >
               <div>
-                <p className="font-medium">{o.user.name}</p>
+                <p className="font-medium">{o.user.firstName || o.user.name || o.user.email}</p>
                 <p className="text-sm text-muted-foreground">{o.user.email}</p>
               </div>
               <div className="flex items-center gap-3">
