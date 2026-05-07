@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Unit + Integration tests ─────────────────────────────────────────────────
+  unit:
+    name: Unit tests (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
+
+      - name: Run unit tests
+        run: pnpm test
+        env:
+          NEXTAUTH_SECRET: ci-test-secret-placeholder-32chars!!
+
+  # ── Typecheck + Lint ──────────────────────────────────────────────────────────
+  typecheck:
+    name: TypeScript + ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+  # ── Smoke test contra Railway ────────────────────────────────────────────────
+  smoke:
+    name: Smoke test (Railway)
+    runs-on: ubuntu-latest
+    # Only run on push to main (not on PRs — Railway may not be up to date yet)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [unit, typecheck]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: Wait for Railway deploy
+        run: |
+          echo "Waiting 90s for Railway to finish deploying..."
+          sleep 90
+
+      - name: Run smoke tests against Railway
+        run: pnpm exec playwright test tests/e2e/smoke.test.ts --project=chromium
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ secrets.RAILWAY_URL }}
+          TEST_SLUG: ${{ secrets.TEST_SLUG || 'casamento-exemplo' }}
+          TEST_PUBLIC_TOKEN: ${{ secrets.TEST_PUBLIC_TOKEN || 'dev-public-token-k' }}
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: tests/visual/report/
+          retention-days: 7
