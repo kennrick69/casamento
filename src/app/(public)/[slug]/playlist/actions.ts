@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentGuest } from "@/lib/auth/guest";
 import { revalidatePath } from "next/cache";
+import { awardPoints } from "@/lib/points";
 
 const SongSchema = z.object({
   slug: z.string(),
@@ -40,6 +41,7 @@ export async function addSong(formData: FormData) {
     },
   });
 
+  void awardPoints(guest.id, event.id, "playlist_add");
   revalidatePath(`/${slug}/playlist`);
 }
 
@@ -59,9 +61,14 @@ export async function toggleVote(formData: FormData) {
       where: { suggestionId_guestId: { suggestionId, guestId: guest.id } },
     });
   } else {
+    const suggestion = await prisma.playlistSuggestion.findUnique({
+      where: { id: suggestionId },
+      select: { eventId: true },
+    });
     await prisma.playlistVote.create({
       data: { suggestionId, guestId: guest.id },
     });
+    if (suggestion) void awardPoints(guest.id, suggestion.eventId, "vote_cast");
   }
 
   revalidatePath(`/${slug}/playlist`);

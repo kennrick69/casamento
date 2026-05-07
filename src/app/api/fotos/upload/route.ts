@@ -3,6 +3,7 @@ import { getCurrentGuest } from "@/lib/auth/guest";
 import { storage } from "@/lib/storage";
 import { prisma } from "@/lib/db";
 import { nanoid } from "nanoid";
+import { awardPoints } from "@/lib/points";
 
 const MAX_SIZE = 8 * 1024 * 1024; // 8 MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic"];
@@ -59,6 +60,8 @@ export async function POST(req: NextRequest) {
       approvedByCouple: approved,
     },
   });
+
+  void awardPoints(guest.id, event.id, "photo_upload");
 
   return NextResponse.json({ ok: true, key });
 }

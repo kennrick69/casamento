@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { getCurrentGuest } from "@/lib/auth/guest";
 import { realtime } from "@/lib/realtime";
+import { awardPoints } from "@/lib/points";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { z } from "zod";
@@ -46,6 +47,8 @@ export async function sendMessage(formData: FormData) {
     guestId: msg.guestId,
     createdAt: format(msg.createdAt, "HH:mm", { locale: ptBR }),
   };
+
+  void awardPoints(guest.id, event.id, "chat_message");
 
   // Dispara evento Pusher (noop em dev sem Pusher configurado)
   await realtime.trigger(`event-${event.id}`, "chat-message", payload).catch(() => null);

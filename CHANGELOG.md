@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0] — Fase 4 (2026-05-07)
+
+### Added
+- Motor de pontuação (`src/lib/points/index.ts`) com caps diário e total, transacional
+- 7 missões padrão criadas automaticamente em cada novo evento: RSVP confirmado, RSVP antecipado, foto no mural, mensagem no chat, sugestão de música, voto em música, check-in no local
+- Pontos awarded automaticamente em: RSVP confirmado, upload de foto, mensagem no chat, sugestão e voto na playlist
+- `/[slug]/gincana` — página do convidado com ranking top-10, placar pessoal, posição e lista de missões
+- `/[slug]/checkin` — formulário de check-in por código (suporte a código pré-preenchido via query string `?code=`)
+- `/admin/eventos/[id]/gincana` — painel admin: ranking, ativar/desativar missões, criar e gerenciar códigos de check-in com missão associada
+- Aba "Gincana" no nav do admin de evento
+
 ## [3.0.0] — Fase 3 (2026-05-07)
 
 ### Added

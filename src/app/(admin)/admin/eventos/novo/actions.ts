@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { nanoid } from "nanoid";
+import { seedDefaultMissions } from "@/lib/points";
 
 const BasicSchema = z.object({
   coupleNames: z.string().min(3, "Nome do casal obrigatório"),
@@ -61,6 +62,8 @@ export async function createEventBasic(formData: FormData): Promise<void> {
       },
     },
   });
+
+  await seedDefaultMissions(event.id);
 
   redirect(`/admin/eventos/${event.id}/configuracoes?step=2`);
 }

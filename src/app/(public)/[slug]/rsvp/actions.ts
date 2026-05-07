@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { generateSessionToken, setGuestCookie, signRecoveryToken } from "@/lib/auth/guest";
+import { awardPoints } from "@/lib/points";
 import { email } from "@/lib/email";
 import { formatEventDate } from "@/lib/timezone";
 import {
@@ -117,9 +118,10 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
         },
       });
 
-  // Pontua rsvp_early se elegível (pontos implementados na Fase 4)
-  // TODO[fase-4]: awaitpoints.award(guest.id, event.id, isEarly ? 'rsvp_early' : 'rsvp_late')
-  void isEarly;
+  if (rsvpStatus === "CONFIRMED") {
+    void awardPoints(guest.id, event.id, "rsvp_confirmed");
+    if (isEarly) void awardPoints(guest.id, event.id, "rsvp_early");
+  }
 
   await setGuestCookie(sessionToken);
 
