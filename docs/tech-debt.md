@@ -94,6 +94,16 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 ---
 
+## 🟡 MÉDIA — Atualizar GitHub Actions de Node 20 para Node 22
+
+**Status:** CI usa `node-version: 20` em todos os jobs.
+
+**Deadline:** antes de junho/2026 — GitHub Actions encerra suporte a Node 20 LTS nessa data.
+
+**Como fazer:** em `.github/workflows/ci.yml`, trocar `node-version: 20` por `node-version: 22` nos 3 jobs (`unit`, `typecheck`, `smoke`). Testar localmente com `node --version` se necessário.
+
+---
+
 ## ✅ Concluídas
 
 *(Mover itens aqui quando pagos, com data.)*

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 type SceneState = 'falling' | 'flying' | 'failed';
 
@@ -265,11 +266,11 @@ export function ProtoScene() {
     }
   }
 
+  const router = useRouter();
+
   // ========== HANDLER DO BOTÃO PRINCIPAL ==========
   function handleEnterClick() {
-    // Por enquanto: console.log
-    // Depois: integrar com fluxo real (redirect pra landing real, ou /admin)
-    console.log('teleporta pra landing real');
+    router.push('/admin');
   }
 
   return (
