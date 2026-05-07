@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth, signIn } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { verifyClaimToken } from "../../eventos/[id]/co-organizadores/actions";
+import { verifyClaimToken } from "@/lib/auth/co-org-token";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Aceitar convite" };
