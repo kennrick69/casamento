@@ -16,7 +16,7 @@ type Tab = {
 const TABS_PRE_DDAY: Tab[] = [
   { href: "", label: "Início", icon: Home },
   { href: "/roteiro", label: "Roteiro", icon: Map },
-  { href: "/local", label: "Local", icon: MapPin },
+  { href: "/locais", label: "Locais", icon: MapPin },
   { href: "/presentes", label: "Presentes", icon: Gift },
 ];
 

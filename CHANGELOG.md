@@ -1,5 +1,25 @@
 # Changelog
 
+## [Feature: Locais] — 2026-05-07
+
+### Added
+- **Model `EventLocation`** — múltiplos locais por evento com tipos (Cerimônia, Recepção, Chá de panela, Despedida, Brunch, Ensaio, Outro), ordem, data/hora própria, dresscode, descrição, `isMain`, `isPublic`
+- **Migration `20260507120000_add_event_location`** — cria tabela e migra dados dos campos planos existentes (cerimônia + recepção) para `EventLocation` automaticamente
+- **`/[slug]/locais`** — nova página pública listando todos os locais com Waze/Maps por local
+- **`/admin/eventos/[id]/locais`** — admin CRUD completo: criar, editar (via `?edit=id`), remover, reordenar com ▲▼
+- **`src/lib/locations/index.ts`** — helpers `generateMapsLink`, `generateWazeLink`, `LOCATION_TYPE_LABELS`, `LOCATION_TYPE_ICONS`, `getMainLocation`
+- **Aba "Locais" no EventNav admin**
+
+### Changed
+- **Bottom nav pré-cerimônia**: "Local" (`/local`) → "Locais" (`/locais`); label e href corrigidos
+- **Bottom nav D-day+**: Início/Fotos/Chat/Playlist/Presentes (confirmado e documentado)
+- **RSVP email**: campo `location` agora vem do `EventLocation` principal (com fallback para campo legado)
+- **`/[slug]/local`** — redireciona permanentemente para `/[slug]/locais`
+
+### Tech Debt Registered
+- Remoção dos campos legados de local no model Event (pré-condição: migrar todos os leitores)
+- Visibilidade restrita (`isPublic=false`) pendente de sistema de grupos/tags de convidados
+
 ## [Correções pós-testes] — 2026-05-07
 
 ### Fixed

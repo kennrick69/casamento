@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { generateSessionToken, setGuestCookie, signRecoveryToken } from "@/lib/auth/guest";
 import { awardPoints } from "@/lib/points";
+import { getMainLocation } from "@/lib/locations";
 import { email } from "@/lib/email";
 import { formatEventDate } from "@/lib/timezone";
 import {
@@ -67,6 +68,13 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
     },
   });
   if (!event) return { ok: false, type: "ERROR", message: "Evento não encontrado" };
+
+  // Prefere o local principal do EventLocation; cai no campo legado se não houver.
+  const mainLocation = await getMainLocation(event.id, "CEREMONY");
+  const locationLabel =
+    mainLocation?.title
+      ? `${mainLocation.title}${mainLocation.address ? ` — ${mainLocation.address}` : ""}`
+      : (event.ceremonyLocation ?? "");
 
   // Verifica se já existe Guest com esse email neste evento
   const existing = await prisma.guest.findUnique({
@@ -143,7 +151,7 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
         eventTitle: event.title,
         coupleNames: event.coupleNames,
         dateLabel,
-        location: event.ceremonyLocation ?? "",
+        location: locationLabel,
         eventUrl,
       }),
       text: rsvpConfirmText({
@@ -151,7 +159,7 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
         eventTitle: event.title,
         coupleNames: event.coupleNames,
         dateLabel,
-        location: event.ceremonyLocation ?? "",
+        location: locationLabel,
         eventUrl,
       }),
     });

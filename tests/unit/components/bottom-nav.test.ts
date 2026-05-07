@@ -13,7 +13,7 @@ describe("getActiveBottomNav", () => {
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tabs = getActiveBottomNav(tomorrow.toISOString(), TZ);
     expect(tabs).toHaveLength(4);
-    expect(tabs.map((t) => t.href)).toEqual(["", "/roteiro", "/local", "/presentes"]);
+    expect(tabs.map((t) => t.href)).toEqual(["", "/roteiro", "/locais", "/presentes"]);
   });
 
   it("returns dday-plus tabs (5) when ceremony is today", () => {
@@ -47,7 +47,7 @@ describe("getActiveBottomNav", () => {
     const tabs = getActiveBottomNav(future.toISOString(), TZ);
     const labels = tabs.map((t) => t.label);
     expect(labels).toContain("Roteiro");
-    expect(labels).toContain("Local");
+    expect(labels).toContain("Locais");
     expect(labels).not.toContain("Fotos");
     expect(labels).not.toContain("Chat");
   });
@@ -59,7 +59,7 @@ describe("getActiveBottomNav", () => {
     expect(labels).toContain("Fotos");
     expect(labels).toContain("Chat");
     expect(labels).not.toContain("Roteiro");
-    expect(labels).not.toContain("Local");
+    expect(labels).not.toContain("Locais");
   });
 
   it("both tab sets always start with Início and end with Presentes", () => {

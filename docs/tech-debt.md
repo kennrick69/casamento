@@ -46,6 +46,32 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 ---
 
+## 🟡 MÉDIA — Remover campos legados de local no model Event
+
+**Status:** campos mantidos para compatibilidade retroativa após migração para `EventLocation`.
+
+**Campos legados:** `Event.ceremonyLocation`, `Event.ceremonyAddress`, `Event.receptionLocation`, `Event.receptionAddress`, `Event.mapsLink`, `Event.dresscode`.
+
+**Pré-condição para remover:**
+1. Confirmar que toda leitura de local foi migrada para `EventLocation` (emails, roteiro, landing)
+2. Confirmar que o formulário em `configuracoes` (step 2 / LocationForm) foi substituído pelo admin `/locais`
+3. Criar migration que remove os campos do schema
+4. Atualizar `.env.example` se necessário
+
+**Impacto atual:** Duplicação de dados entre campos planos e `EventLocation`. A migration de dados em `20260507120000_add_event_location` popula `EventLocation` a partir dos campos planos. O admin `/locais` é a fonte de verdade para novos eventos.
+
+---
+
+## 🟡 MÉDIA — Visibilidade restrita de locais (isPublic=false)
+
+**Status:** campo `isPublic` existe no schema e no admin. Validação de acesso não implementada — todos os locais com `isPublic=false` ainda aparecem para todos.
+
+**Pré-condição:** sistema de tags/grupos de convidados (Fase 3+).
+
+**Implementação futura:** em `src/app/(public)/[slug]/locais/page.tsx`, filtrar `isPublic=true` OR (convidado tem tag relevante).
+
+---
+
 ## ✅ Concluídas
 
 *(Mover itens aqui quando pagos, com data.)*

@@ -16,6 +16,7 @@ export function EventNav({ eventId }: { eventId: string }) {
     { href: base, label: "Dashboard" },
     { href: `${base}/convidados`, label: "Convidados" },
     { href: `${base}/roteiro`, label: "Roteiro" },
+    { href: `${base}/locais`, label: "Locais" },
     { href: `${base}/gincana`, label: "Gincana" },
     { href: `${base}/notificacoes`, label: "Notificações" },
     { href: `${base}/co-organizadores`, label: "Co-organizadores" },

@@ -96,6 +96,7 @@ model Event {
   theme               Theme                @relation(fields: [themeId], references: [id])
   organizers          EventOrganizer[]
   guests              Guest[]
+  locations           EventLocation[]
   journeyItems        JourneyItem[]
   gifts               Gift[]
   photos              Photo[]
@@ -125,6 +126,16 @@ enum DonationMode {
 enum ModerationMode {
   REACTIVE
   PREVENTIVE
+}
+
+enum LocationType {
+  CEREMONY
+  RECEPTION
+  TEA_PARTY
+  BACHELOR_PARTY
+  BRUNCH
+  REHEARSAL
+  OTHER
 }
 
 model EventOrganizer {
@@ -193,6 +204,28 @@ enum RsvpStatus {
   PENDING
   CONFIRMED
   DECLINED
+}
+
+model EventLocation {
+  id            String       @id @default(cuid())
+  eventId       String
+  type          LocationType
+  title         String
+  address       String?
+  date          DateTime?
+  timeLabel     String?
+  dresscode     String?
+  description   String?      @db.Text
+  coverImageKey String?
+  isMain        Boolean      @default(false)
+  order         Int          @default(0)
+  isPublic      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, order])
+  @@index([eventId, type, isMain])
 }
 
 model JourneyItem {
