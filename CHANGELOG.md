@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.0.0] — Fase 5 (2026-05-07)
+
+### Added
+- `/api/cron/reminder` — cron endpoint que envia lembrete automático a confirmados 7 e 1 dia antes do casamento (idempotente via chave Resend)
+- Templates `reminderHtml/Text` e `massEmailHtml/Text` em `src/lib/email/templates.ts`
+- `/admin/eventos/[id]/notificacoes` — painel de notificações: info sobre lembretes automáticos + formulário para envio de email em massa (confirmados ou todos)
+- Aba "Notificações" no nav do admin de evento
+
 ## [4.0.0] — Fase 4 (2026-05-07)
 
 ### Added

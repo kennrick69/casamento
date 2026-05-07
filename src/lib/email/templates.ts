@@ -160,3 +160,85 @@ export function recoveryText(o: RecoveryOpts): string {
     "Este link expira em 24 horas.",
   ].join("\n");
 }
+
+// ── Lembrete de evento ────────────────────────────────────────────────────
+
+export interface ReminderOpts {
+  name: string;
+  eventTitle: string;
+  coupleNames: string;
+  dateLabel: string;
+  location: string;
+  daysLeft: number;
+  eventUrl: string;
+}
+
+export function reminderHtml(o: ReminderOpts): string {
+  const daysText = o.daysLeft === 1 ? "amanhã" : `em ${o.daysLeft} dias`;
+  return wrap(`
+    ${p(`Olá, <strong>${o.name}</strong>!`)}
+    ${p(`O grande dia de ${o.coupleNames} é <strong>${daysText}</strong>. Prepare-se para celebrar!`)}
+    <div style="background:#fafafa;border:1px solid #e8e8e8;border-radius:6px;padding:16px 20px;margin:16px 0">
+      ${detail("📅", o.dateLabel)}
+      ${o.location ? detail("📍", o.location) : ""}
+    </div>
+    <div style="text-align:center;margin:24px 0">
+      ${btn(o.eventUrl, "Ver meu convite")}
+    </div>
+    ${p(`Até lá! — ${o.coupleNames}`)}
+  `);
+}
+
+export function reminderText(o: ReminderOpts): string {
+  const daysText = o.daysLeft === 1 ? "amanhã" : `em ${o.daysLeft} dias`;
+  return [
+    `${o.coupleNames} — ${o.eventTitle}`,
+    "",
+    `Olá, ${o.name}! O grande dia é ${daysText}.`,
+    "",
+    o.dateLabel,
+    o.location,
+    "",
+    `Acesse seu convite: ${o.eventUrl}`,
+  ].filter(Boolean).join("\n");
+}
+
+// ── Email em massa (organizador → convidados) ─────────────────────────────
+
+export interface MassEmailOpts {
+  name: string;
+  eventTitle: string;
+  coupleNames: string;
+  subject: string;
+  body: string;
+  eventUrl: string;
+}
+
+export function massEmailHtml(o: MassEmailOpts): string {
+  const lines = o.body
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((l) => p(l))
+    .join("");
+  return wrap(`
+    ${p(`Olá, <strong>${o.name}</strong>!`)}
+    ${lines}
+    <div style="text-align:center;margin:24px 0">
+      ${btn(o.eventUrl, "Ver meu convite")}
+    </div>
+    ${p(`Com carinho — ${o.coupleNames}`)}
+  `);
+}
+
+export function massEmailText(o: MassEmailOpts): string {
+  return [
+    `${o.coupleNames} — ${o.eventTitle}`,
+    "",
+    `Olá, ${o.name}!`,
+    "",
+    o.body,
+    "",
+    `Acesse seu convite: ${o.eventUrl}`,
+  ].join("\n");
+}
