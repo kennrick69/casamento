@@ -62,16 +62,25 @@ Configurar em Railway → service → Settings → Cron Jobs:
 
 ```bash
 pnpm install
-# Instalar o git hook que bloqueia push com exports síncronos em "use server":
-cp scripts/check-server-actions.mjs .git/hooks/  # só referência
-cat > .git/hooks/pre-push << 'EOF'
+# Instalar o git hook pre-push (bloqueia push se build/checks falharem):
+cat > .git/hooks/pre-push << 'HOOK'
 #!/bin/sh
+set -e
+REQUIRED_MAJOR=20
+ACTUAL_MAJOR=$(node -v | sed 's/v//' | cut -d. -f1)
+if [ "$ACTUAL_MAJOR" -lt "$REQUIRED_MAJOR" ]; then
+  echo "❌  Node 20+ necessário. Versão atual: $(node -v)"; exit 1
+fi
 node scripts/check-server-actions.mjs
-EOF
+pnpm typecheck
+pnpm build:local
+HOOK
 chmod +x .git/hooks/pre-push
 ```
 
-O hook roda automaticamente em `git push`. O mesmo check está em `pnpm test:all`.
+O hook roda automaticamente em `git push` e valida: versão do Node, exports async,
+TypeScript e build Next.js (sem migrate — não requer banco). O mesmo check de exports
+async está em `pnpm test:all`.
 
 ## Primeiro acesso como organizador
 

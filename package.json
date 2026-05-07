@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma migrate deploy && prisma generate && next build",
+    "build:local": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
@@ -27,6 +28,9 @@
     "test:load": "k6 run tests/load/rsvp-flow.js",
     "check:server-actions": "node scripts/check-server-actions.mjs",
     "test:all": "pnpm check:server-actions && pnpm test && pnpm test:e2e"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
