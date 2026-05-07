@@ -1,6 +1,19 @@
 # Changelog
 
-## [1.0.0] — Fase 1 (2026-05-06)
+## [3.0.0] — Fase 3 (2026-05-07)
+
+### Added
+- `/[slug]/mural` — mural de fotos com upload (8 MB, JPEG/PNG/WebP/HEIC), grid responsivo
+- `/api/fotos/upload` — endpoint de upload com validação de tipo, tamanho e permissão de convidado
+- `/[slug]/chat` — chat ao vivo com Pusher (real-time) e fallback funcional sem Pusher
+- `/[slug]/playlist` — playlist colaborativa com sugestão de músicas e votação por coração
+- `/[slug]/presentes` — lista de presentes com reserva/cancelamento e exibição da chave PIX
+- Bottom nav expandido: 5 abas (Início · Fotos · Chat · Playlist · Presentes)
+
+### Fixed
+- `verifyClaimToken` movida para fora do `"use server"` — corrige erro de build no Next.js 16/Turbopack
+
+## [2.0.0] — Fase 2 (2026-05-07)
 
 ### Added
 - Landing page pública com 3 estados de convidado: CTA de RSVP, banner de confirmado, banner de declínio

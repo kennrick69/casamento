@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MapPin, Calendar, Gift } from "lucide-react";
+import { Home, Camera, MessageCircle, Music, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { href: "", label: "Início", icon: Home },
-  { href: "/roteiro", label: "Roteiro", icon: Calendar },
-  { href: "/local", label: "Local", icon: MapPin },
+  { href: "/mural", label: "Fotos", icon: Camera },
+  { href: "/chat", label: "Chat", icon: MessageCircle },
+  { href: "/playlist", label: "Playlist", icon: Music },
   { href: "/presentes", label: "Presentes", icon: Gift },
 ] as const;
 
@@ -31,15 +32,15 @@ export function BottomNav({ slug }: { slug: string }) {
               <Link
                 href={fullHref}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 py-2 min-h-[48px] w-full",
-                  "text-xs font-medium transition-colors",
+                  "flex flex-col items-center justify-center gap-0.5 py-2 min-h-[48px] w-full",
+                  "text-[10px] font-medium transition-colors",
                   isActive
                     ? "text-[var(--theme-primary)]"
                     : "text-[var(--theme-secondary)] hover:text-[var(--theme-primary)]"
                 )}
               >
                 <Icon
-                  size={22}
+                  size={20}
                   strokeWidth={isActive ? 2.5 : 1.75}
                   aria-hidden="true"
                 />
