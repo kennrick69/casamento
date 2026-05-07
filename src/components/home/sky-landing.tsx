@@ -51,8 +51,10 @@ export function SkyLanding() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("voem-theme") as Theme | null;
-    setTheme(stored ?? systemTheme());
+    // Leitura de localStorage no cliente para evitar mismatch de hidratação —
+    // padrão correto para APIs de browser não disponíveis no servidor.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTheme((localStorage.getItem("voem-theme") as Theme | null) ?? systemTheme());
     setMounted(true);
   }, []);
 

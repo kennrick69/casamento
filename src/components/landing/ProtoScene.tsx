@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type SceneState = 'falling' | 'flying' | 'failed';
 
@@ -8,12 +8,10 @@ export function ProtoScene() {
   const containerRef = useRef<HTMLDivElement>(null);
   const brideRef = useRef<HTMLDivElement>(null);
   const groomRef = useRef<HTMLDivElement>(null);
-  const cloudRefs = [
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-  ];
+  const cloud0Ref = useRef<HTMLDivElement>(null);
+  const cloud1Ref = useRef<HTMLDivElement>(null);
+  const cloud2Ref = useRef<HTMLDivElement>(null);
+  const cloud3Ref = useRef<HTMLDivElement>(null);
 
   const [state, setState] = useState<SceneState>('falling');
   const [timeLeft, setTimeLeft] = useState(15);
@@ -34,6 +32,85 @@ export function ProtoScene() {
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
+
+  // ========== UNITE (transição pra voo) ==========
+  // useCallback com [] — todas as deps são refs ou setters estáveis do React
+  const unite = useCallback(() => {
+    if (stateRef.current !== 'falling') return;
+    setState('flying');
+    stateRef.current = 'flying';
+
+    const centerY = 280;
+    bridePos.current = { x: 130, y: centerY };
+    groomPos.current = { x: 200, y: centerY };
+
+    if (brideRef.current) {
+      brideRef.current.style.transition = 'all 0.8s ease-out';
+      brideRef.current.style.left = '130px';
+      brideRef.current.style.top = centerY + 'px';
+    }
+    if (groomRef.current) {
+      groomRef.current.style.transition = 'all 0.8s ease-out';
+      groomRef.current.style.left = '200px';
+      groomRef.current.style.top = centerY + 'px';
+    }
+
+    // Vibração leve no celular ao unir (haptic API)
+    if ('vibrate' in navigator) {
+      navigator.vibrate(50);
+    }
+
+    // Após transição, inicia loop de voo
+    setTimeout(() => {
+      if (brideRef.current) brideRef.current.style.transition = 'none';
+      if (groomRef.current) groomRef.current.style.transition = 'none';
+
+      let t = 0;
+      function flyLoop() {
+        if (stateRef.current !== 'flying') return;
+        t += 0.04;
+        const offsetY = Math.sin(t) * 8;
+        if (brideRef.current)
+          brideRef.current.style.top = centerY + offsetY + 'px';
+        if (groomRef.current)
+          groomRef.current.style.top = centerY + offsetY + 'px';
+        requestAnimationFrame(flyLoop);
+      }
+      flyLoop();
+
+      // Botão aparece 1.5s depois
+      setTimeout(() => setShowButton(true), 1500);
+    }, 800);
+  }, []);
+
+  // ========== FAIL ==========
+  // useCallback com [] — todas as deps são refs ou setters estáveis do React
+  const fail = useCallback(() => {
+    setState('failed');
+    stateRef.current = 'failed';
+
+    if (brideRef.current) {
+      brideRef.current.style.transition = 'all 1s ease-in';
+      brideRef.current.style.top = '470px';
+    }
+    if (groomRef.current) {
+      groomRef.current.style.transition = 'all 1s ease-in';
+      groomRef.current.style.top = '470px';
+    }
+
+    setTimeout(() => setShowFailText(true), 1800);
+  }, []);
+
+  // ========== UNION CHECK ==========
+  // useCallback necessário: capturado pelo drag useEffect (deps array)
+  const checkUnion = useCallback(() => {
+    const dx = Math.abs(bridePos.current.x - groomPos.current.x);
+    const dy = Math.abs(bridePos.current.y - groomPos.current.y);
+    // Threshold permissivo (70x50) pra facilitar acerto em mobile
+    if (dx < 70 && dy < 50) {
+      unite();
+    }
+  }, [unite]);
 
   // ========== DRAG ==========
   useEffect(() => {
@@ -104,17 +181,7 @@ export function ProtoScene() {
       cleanup1();
       cleanup2();
     };
-  }, []);
-
-  // ========== UNION CHECK ==========
-  function checkUnion() {
-    const dx = Math.abs(bridePos.current.x - groomPos.current.x);
-    const dy = Math.abs(bridePos.current.y - groomPos.current.y);
-    // Threshold permissivo (70x50) pra facilitar acerto em mobile
-    if (dx < 70 && dy < 50) {
-      unite();
-    }
-  }
+  }, [checkUnion]);
 
   // ========== FALLING ==========
   useEffect(() => {
@@ -145,10 +212,12 @@ export function ProtoScene() {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [state]);
+  }, [state, fail]);
 
   // ========== CLOUDS ==========
   useEffect(() => {
+    // Array local dentro do effect — acesso a .current aqui é seguro (fora do render)
+    const cloudElRefs = [cloud0Ref, cloud1Ref, cloud2Ref, cloud3Ref];
     const interval = setInterval(() => {
       cloudPositions.current.forEach((c, i) => {
         if (stateRef.current === 'flying') {
@@ -161,7 +230,7 @@ export function ProtoScene() {
             c.x = Math.random() * 320 - 40;
           }
         }
-        const el = cloudRefs[i].current;
+        const el = cloudElRefs[i].current;
         if (el) {
           el.style.left = c.x + 'px';
           el.style.top = c.y + 'px';
@@ -169,74 +238,7 @@ export function ProtoScene() {
       });
     }, 50);
     return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // ========== UNITE (transição pra voo) ==========
-  function unite() {
-    if (stateRef.current !== 'falling') return;
-    setState('flying');
-    stateRef.current = 'flying';
-
-    const centerY = 280;
-    bridePos.current = { x: 130, y: centerY };
-    groomPos.current = { x: 200, y: centerY };
-
-    if (brideRef.current) {
-      brideRef.current.style.transition = 'all 0.8s ease-out';
-      brideRef.current.style.left = '130px';
-      brideRef.current.style.top = centerY + 'px';
-    }
-    if (groomRef.current) {
-      groomRef.current.style.transition = 'all 0.8s ease-out';
-      groomRef.current.style.left = '200px';
-      groomRef.current.style.top = centerY + 'px';
-    }
-
-    // Vibração leve no celular ao unir (haptic API)
-    if ('vibrate' in navigator) {
-      navigator.vibrate(50);
-    }
-
-    // Após transição, inicia loop de voo
-    setTimeout(() => {
-      if (brideRef.current) brideRef.current.style.transition = 'none';
-      if (groomRef.current) groomRef.current.style.transition = 'none';
-
-      let t = 0;
-      function flyLoop() {
-        if (stateRef.current !== 'flying') return;
-        t += 0.04;
-        const offsetY = Math.sin(t) * 8;
-        if (brideRef.current)
-          brideRef.current.style.top = centerY + offsetY + 'px';
-        if (groomRef.current)
-          groomRef.current.style.top = centerY + offsetY + 'px';
-        requestAnimationFrame(flyLoop);
-      }
-      flyLoop();
-
-      // Botão aparece 1.5s depois
-      setTimeout(() => setShowButton(true), 1500);
-    }, 800);
-  }
-
-  // ========== FAIL ==========
-  function fail() {
-    setState('failed');
-    stateRef.current = 'failed';
-
-    if (brideRef.current) {
-      brideRef.current.style.transition = 'all 1s ease-in';
-      brideRef.current.style.top = '470px';
-    }
-    if (groomRef.current) {
-      groomRef.current.style.transition = 'all 1s ease-in';
-      groomRef.current.style.top = '470px';
-    }
-
-    setTimeout(() => setShowFailText(true), 1800);
-  }
 
   // ========== RESET ==========
   function reset() {
@@ -311,7 +313,7 @@ export function ProtoScene() {
 
       {/* Nuvens */}
       <div
-        ref={cloudRefs[0]}
+        ref={cloud0Ref}
         style={{
           position: 'absolute',
           top: '80px',
@@ -324,7 +326,7 @@ export function ProtoScene() {
         }}
       />
       <div
-        ref={cloudRefs[1]}
+        ref={cloud1Ref}
         style={{
           position: 'absolute',
           top: '200px',
@@ -337,7 +339,7 @@ export function ProtoScene() {
         }}
       />
       <div
-        ref={cloudRefs[2]}
+        ref={cloud2Ref}
         style={{
           position: 'absolute',
           top: '340px',
@@ -350,7 +352,7 @@ export function ProtoScene() {
         }}
       />
       <div
-        ref={cloudRefs[3]}
+        ref={cloud3Ref}
         style={{
           position: 'absolute',
           top: '420px',

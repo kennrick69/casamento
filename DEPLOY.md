@@ -73,6 +73,7 @@ if [ "$ACTUAL_MAJOR" -lt "$REQUIRED_MAJOR" ]; then
 fi
 node scripts/check-server-actions.mjs
 pnpm typecheck
+pnpm lint
 pnpm build:local
 HOOK
 chmod +x .git/hooks/pre-push

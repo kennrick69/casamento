@@ -4,7 +4,6 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireOrganizer } from "@/lib/authorization";
 import { revalidatePath } from "next/cache";
-import type { LocationType } from "@prisma/client";
 
 const LOCATION_TYPES = [
   "CEREMONY",
