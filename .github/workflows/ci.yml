@@ -90,6 +90,18 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install chromium --with-deps
 
+      - name: Validate Railway URL secret
+        env:
+          RAILWAY_URL: ${{ secrets.RAILWAY_URL }}
+        run: |
+          if [ -z "$RAILWAY_URL" ]; then
+            echo "❌ Secret RAILWAY_URL não configurado."
+            echo "   Adicione em: GitHub → Settings → Secrets → Actions → New repository secret"
+            echo "   Nome: RAILWAY_URL   Valor: URL pública do deploy no Railway"
+            exit 1
+          fi
+          echo "✅ RAILWAY_URL configurado: ${RAILWAY_URL:0:30}..."
+
       - name: Wait for Railway deploy
         run: |
           echo "Waiting 90s for Railway to finish deploying..."
