@@ -128,3 +128,24 @@
     @apply font-sans;
   }
 }
+
+/* ── Acessibilidade: tamanho de fonte ──────────────────────────────────── */
+html[data-font-size="large"] {
+  font-size: 112%;
+}
+html[data-font-size="xlarge"] {
+  font-size: 125%;
+}
+
+/* ── Acessibilidade: alto contraste ────────────────────────────────────── */
+html[data-contrast="high"] {
+  --theme-background: #000000 !important;
+  --theme-foreground: #ffffff !important;
+  --theme-secondary: #cccccc !important;
+  --theme-border: #ffffff !important;
+  --theme-muted: #111111 !important;
+  --theme-primary: #ffffff !important;
+  --theme-primary-foreground: #000000 !important;
+  --theme-accent: #ffff00 !important;
+  filter: contrast(1.2);
+}

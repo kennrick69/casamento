@@ -5,6 +5,14 @@ import { prisma } from "@/lib/db";
 import { generateSessionToken, setGuestCookie, signRecoveryToken } from "@/lib/auth/guest";
 import { email } from "@/lib/email";
 import { formatEventDate } from "@/lib/timezone";
+import {
+  rsvpConfirmHtml,
+  rsvpConfirmText,
+  rsvpDeclineHtml,
+  rsvpDeclineText,
+  recoveryHtml,
+  recoveryText,
+} from "@/lib/email/templates";
 
 const RsvpSchema = z.object({
   slug: z.string(),
@@ -45,7 +53,18 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
     consentPhotoMural,
   } = parsed.data;
 
-  const event = await prisma.event.findUnique({ where: { slug } });
+  const event = await prisma.event.findUnique({
+    where: { slug },
+    select: {
+      id: true,
+      title: true,
+      coupleNames: true,
+      ceremonyDate: true,
+      ceremonyLocation: true,
+      timezone: true,
+      rsvpEarlyDeadline: true,
+    },
+  });
   if (!event) return { ok: false, type: "ERROR", message: "Evento não encontrado" };
 
   // Verifica se já existe Guest com esse email neste evento
@@ -55,8 +74,7 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
 
   if (existing) {
     if (!existing.deletedAt && !existing.banned) {
-      // Envia magic link de reidentificação em vez de criar duplicado
-      await sendRecoveryEmail(existing.sessionToken, emailAddr, event.title, slug);
+      await sendRecoveryEmail(existing.sessionToken, emailAddr, event.title, event.coupleNames, slug);
       return { ok: false, type: "RECOVERY_SENT", emailAddr };
     }
   }
@@ -105,15 +123,54 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
 
   await setGuestCookie(sessionToken);
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const eventUrl = `${baseUrl}/${slug}`;
+  const dateLabel = formatEventDate(
+    event.ceremonyDate,
+    event.timezone,
+    "d 'de' MMMM 'de' yyyy 'às' HH:mm"
+  );
+
   if (rsvpStatus === "CONFIRMED") {
-    await sendConfirmationEmail(
-      emailAddr,
-      name,
-      event.title,
-      formatEventDate(event.ceremonyDate, event.timezone, "d 'de' MMMM 'de' yyyy 'às' HH:mm"),
-      event.ceremonyLocation ?? "",
-      slug
-    );
+    await email.send({
+      to: emailAddr,
+      subject: `Presença confirmada — ${event.title}`,
+      idempotencyKey: `rsvp-confirm-${emailAddr}-${slug}`,
+      html: rsvpConfirmHtml({
+        name,
+        eventTitle: event.title,
+        coupleNames: event.coupleNames,
+        dateLabel,
+        location: event.ceremonyLocation ?? "",
+        eventUrl,
+      }),
+      text: rsvpConfirmText({
+        name,
+        eventTitle: event.title,
+        coupleNames: event.coupleNames,
+        dateLabel,
+        location: event.ceremonyLocation ?? "",
+        eventUrl,
+      }),
+    });
+  } else {
+    await email.send({
+      to: emailAddr,
+      subject: `Recebemos sua resposta — ${event.title}`,
+      idempotencyKey: `rsvp-decline-${emailAddr}-${slug}`,
+      html: rsvpDeclineHtml({
+        name,
+        eventTitle: event.title,
+        coupleNames: event.coupleNames,
+        eventUrl,
+      }),
+      text: rsvpDeclineText({
+        name,
+        eventTitle: event.title,
+        coupleNames: event.coupleNames,
+        eventUrl,
+      }),
+    });
   }
 
   return { ok: true, status: rsvpStatus, guestName: guest.name };
@@ -125,6 +182,7 @@ async function sendRecoveryEmail(
   sessionToken: string,
   to: string,
   eventTitle: string,
+  coupleNames: string,
   slug: string
 ) {
   const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
@@ -134,43 +192,9 @@ async function sendRecoveryEmail(
 
   await email.send({
     to,
-    subject: `Seu acesso ao ${eventTitle}`,
+    subject: `Seu acesso — ${eventTitle}`,
     idempotencyKey: `recovery-${sessionToken}`,
-    html: `
-      <p>Olá!</p>
-      <p>Você já está na nossa lista para <strong>${eventTitle}</strong>.</p>
-      <p>Clique no link abaixo para acessar seu convite:</p>
-      <p><a href="${link}" style="font-size:18px;font-weight:bold">Acessar meu convite</a></p>
-      <p><small>Este link expira em 24 horas.</small></p>
-    `,
-    text: `Seu link de acesso para ${eventTitle}: ${link}`,
-  });
-}
-
-// ─── Email de confirmação de presença ─────────────────────────────────────
-
-async function sendConfirmationEmail(
-  to: string,
-  name: string,
-  eventTitle: string,
-  dateLabel: string,
-  location: string,
-  slug: string
-) {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const eventUrl = `${baseUrl}/${slug}`;
-
-  await email.send({
-    to,
-    subject: `Presença confirmada — ${eventTitle}`,
-    idempotencyKey: `rsvp-confirm-${to}-${slug}`,
-    html: `
-      <p>Olá, ${name}!</p>
-      <p>Sua presença em <strong>${eventTitle}</strong> foi confirmada com sucesso. 🎉</p>
-      ${dateLabel ? `<p>📅 ${dateLabel}</p>` : ""}
-      ${location ? `<p>📍 ${location}</p>` : ""}
-      <p><a href="${eventUrl}">Ver meu convite</a></p>
-    `,
-    text: `Presença confirmada em ${eventTitle}! ${dateLabel}. Acesse: ${eventUrl}`,
+    html: recoveryHtml({ eventTitle, coupleNames, link }),
+    text: recoveryText({ eventTitle, coupleNames, link }),
   });
 }

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { signRecoveryToken } from "@/lib/auth/guest";
 import { email } from "@/lib/email";
+import { recoveryHtml, recoveryText } from "@/lib/email/templates";
 
 const Schema = z.object({
   slug: z.string(),
@@ -22,7 +23,10 @@ export async function requestRecoveryLink(formData: FormData): Promise<RecoverRe
 
   const { slug, emailAddr } = parsed.data;
 
-  const event = await prisma.event.findUnique({ where: { slug } });
+  const event = await prisma.event.findUnique({
+    where: { slug },
+    select: { id: true, title: true, coupleNames: true },
+  });
   if (!event) return { ok: false, message: "Evento não encontrado" };
 
   // Resposta idêntica independente de o email existir — evita enumeração
@@ -38,15 +42,10 @@ export async function requestRecoveryLink(formData: FormData): Promise<RecoverRe
 
     await email.send({
       to: emailAddr,
-      subject: `Seu acesso ao ${event.title}`,
+      subject: `Seu acesso — ${event.title}`,
       idempotencyKey: `recovery-${guest.sessionToken}-${Math.floor(Date.now() / 3_600_000)}`,
-      html: `
-        <p>Olá, ${guest.name}!</p>
-        <p>Clique no link abaixo para acessar seu convite para <strong>${event.title}</strong>:</p>
-        <p><a href="${link}" style="font-size:18px;font-weight:bold">Acessar meu convite</a></p>
-        <p><small>Este link expira em 24 horas.</small></p>
-      `,
-      text: `Acesse seu convite para ${event.title}: ${link}`,
+      html: recoveryHtml({ eventTitle: event.title, coupleNames: event.coupleNames, link }),
+      text: recoveryText({ eventTitle: event.title, coupleNames: event.coupleNames, link }),
     });
   }
 
