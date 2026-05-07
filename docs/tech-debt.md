@@ -17,8 +17,8 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 **Como migrar:**
 1. Criar bucket R2 na Cloudflare
 2. Implementar `src/lib/storage/cloudflare-r2.ts` implementando `StorageProvider`
-3. Definir `STORAGE_PROVIDER=r2` nas env vars do Railway
-4. Atualizar `src/lib/storage/index.ts` para instanciar `CloudflareR2Storage`
+3. **Ligar leitura de `STORAGE_PROVIDER` em `src/lib/storage/index.ts`** — hoje o código ignora essa variável e usa `RailwayVolumeStorage` hardcoded; ao migrar, mudar para: `process.env.STORAGE_PROVIDER === "r2" ? new CloudflareR2Storage() : new RailwayVolumeStorage()`
+4. Definir `STORAGE_PROVIDER=r2` nas env vars do Railway (variável já documentada em `.env.example`)
 5. Migrar fotos existentes do volume para o R2 com script
 6. Remover `RailwayVolumeStorage` após validar
 
