@@ -58,6 +58,21 @@ Configurar em Railway → service → Settings → Cron Jobs:
 | `POST /api/cron/backup` | `0 3 * * 1` (segunda 3h) | `x-cron-secret: $CRON_SECRET` |
 | `POST /api/cron/reminder` | `0 8 * * *` (diário 8h) | `x-cron-secret: $CRON_SECRET` |
 
+## Setup local (novo desenvolvedor)
+
+```bash
+pnpm install
+# Instalar o git hook que bloqueia push com exports síncronos em "use server":
+cp scripts/check-server-actions.mjs .git/hooks/  # só referência
+cat > .git/hooks/pre-push << 'EOF'
+#!/bin/sh
+node scripts/check-server-actions.mjs
+EOF
+chmod +x .git/hooks/pre-push
+```
+
+O hook roda automaticamente em `git push`. O mesmo check está em `pnpm test:all`.
+
 ## Primeiro acesso como organizador
 
 1. Acesse `/admin` → "Entrar com email" → informe seu email

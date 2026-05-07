@@ -25,7 +25,8 @@
     "test:visual": "playwright test --config=playwright.config.ts tests/visual",
     "test:perf": "lhci autorun",
     "test:load": "k6 run tests/load/rsvp-flow.js",
-    "test:all": "pnpm test && pnpm test:e2e"
+    "check:server-actions": "node scripts/check-server-actions.mjs",
+    "test:all": "pnpm check:server-actions && pnpm test && pnpm test:e2e"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

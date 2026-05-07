@@ -53,6 +53,36 @@ Se não houver evidência disponível: **perguntar ao usuário** em vez de infer
 
 ---
 
+## ADR-006 — Paridade entre validação local e build de produção
+
+**Data:** 2026-05-07
+**Status:** Aceito
+
+**Contexto:** o build no Railway falhou com "exports de arquivo 'use server' devem ser async" — uma regra que o Next.js valida em build time mas que TypeScript e os testes unitários não cobrem. O erro "passou local, falhou em produção" indica gap na camada de validação, não só um bug pontual.
+
+**Decisão:** toda regra que o build de produção valida deve ter um equivalente local que falha **antes** do push. Quando um erro do tipo "passou local, falhou no build" ocorre:
+
+1. Corrigir o bug pontual
+2. Identificar por que o check local não pegou
+3. Adicionar o check ao pipeline local (`pnpm test:all` e/ou hook `pre-push`)
+4. Documentar a nova validação aqui
+
+**Validações implantadas:**
+
+| Regra | Ferramenta | Quando roda |
+|-------|-----------|-------------|
+| TypeScript strict | `pnpm typecheck` | CI + pre-push |
+| ESLint | `pnpm lint` | CI |
+| Exports async em `"use server"` | `scripts/check-server-actions.mjs` | CI (`test:all`) + hook pre-push |
+| Testes unitários | `pnpm test` | CI + pre-push via `test:all` |
+
+**Como aplicar:**
+
+- Erro de build no Railway que não foi pego localmente → identificar a categoria do erro → adicionar ao pipeline → não fechar sem o check implantado.
+- O script `scripts/check-server-actions.mjs` detecta funções exportadas sem `async` em arquivos `"use server"`. Roda como hook `pre-push` e em `pnpm test:all`.
+
+---
+
 ## ADR-005 — Mudanças de decisões acordadas
 
 **Data:** 2026-05-07
