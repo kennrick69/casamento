@@ -1,5 +1,16 @@
 # Changelog
 
+## [6.0.0] — Fase 6 (2026-05-07)
+
+### Added
+- `/admin/eventos/[id]/presentes` — CRUD de lista de presentes com marcação de recebido
+- `/admin/eventos/[id]/mural` — aprovação/remoção de fotos (com seção "aguardando aprovação" em destaque)
+- `/admin/eventos/[id]/moderacao` — revisão de denúncias: remover conteúdo ou descartar
+- `/admin/eventos/[id]/lgpd` — painel LGPD: contagem de esquecimentos, link de exportação CSV, explicação de retenção
+- Dashboard do evento com cards de acesso rápido para Mural, Presentes, Moderação e LGPD
+- Link "Gincana — ganhe pontos!" no banner de confirmado na landing page (quando gamification ativo)
+- Página 404 customizada (`src/app/not-found.tsx`)
+
 ## [5.0.0] — Fase 5 (2026-05-07)
 
 ### Added

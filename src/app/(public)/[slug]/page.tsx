@@ -60,7 +60,11 @@ export default async function EventPage({
 
         {/* Estado do convidado */}
         {guest?.rsvpStatus === "CONFIRMED" && (
-          <ConfirmedBanner name={guest.name} slug={slug} />
+          <ConfirmedBanner
+            name={guest.name}
+            slug={slug}
+            gamification={(event.features as Record<string, boolean>).gamification}
+          />
         )}
         {guest?.rsvpStatus === "DECLINED" && (
           <DeclinedBanner slug={slug} k={k} />
@@ -105,7 +109,7 @@ export default async function EventPage({
 
 // ─── Sub-componentes de estado ─────────────────────────────────────────────
 
-function ConfirmedBanner({ name, slug }: { name: string; slug: string }) {
+function ConfirmedBanner({ name, slug, gamification }: { name: string; slug: string; gamification?: boolean }) {
   const firstName = name.split(" ")[0];
   return (
     <section
@@ -121,6 +125,7 @@ function ConfirmedBanner({ name, slug }: { name: string; slug: string }) {
         <QuickLink href={`/${slug}/roteiro`} label="Ver roteiro do dia" />
         <QuickLink href={`/${slug}/local`} label="Como chegar" />
         <QuickLink href={`/${slug}/presentes`} label="Lista de presentes" />
+        {gamification && <QuickLink href={`/${slug}/gincana`} label="Gincana — ganhe pontos!" />}
       </div>
     </section>
   );

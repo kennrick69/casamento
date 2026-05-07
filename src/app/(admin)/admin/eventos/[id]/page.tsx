@@ -119,6 +119,26 @@ export default async function EventDashboardPage({
             <p className="font-medium">{totalPhotos}</p>
           </InfoCard>
         </div>
+
+        <div className="mt-6">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">Gerenciar conteúdo</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { href: `/admin/eventos/${id}/mural`, label: "Mural" },
+              { href: `/admin/eventos/${id}/presentes`, label: "Presentes" },
+              { href: `/admin/eventos/${id}/moderacao`, label: "Moderação" },
+              { href: `/admin/eventos/${id}/lgpd`, label: "LGPD" },
+            ].map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-sm text-center px-3 py-3 rounded-lg border border-border bg-background hover:bg-muted transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </div>
       </main>
     </div>
   );
