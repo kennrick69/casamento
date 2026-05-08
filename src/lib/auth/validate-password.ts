@@ -1,12 +1,12 @@
 import { zxcvbn, zxcvbnOptions } from "@zxcvbn-ts/core";
 import { adjacencyGraphs, dictionary } from "@zxcvbn-ts/language-common";
-import ptBrDictionary from "@zxcvbn-ts/language-pt-br";
+import { dictionary as ptBrDictionary } from "@zxcvbn-ts/language-pt-br";
 
 zxcvbnOptions.setOptions({
   graphs: adjacencyGraphs,
   dictionary: {
     ...dictionary,
-    ...ptBrDictionary.dictionary,
+    ...ptBrDictionary,
   },
 });
 
