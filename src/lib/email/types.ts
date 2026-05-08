@@ -4,6 +4,7 @@ export interface SendEmailOpts {
   html: string;
   text?: string;
   idempotencyKey?: string;
+  headers?: Record<string, string>;
 }
 
 export interface EmailProvider {

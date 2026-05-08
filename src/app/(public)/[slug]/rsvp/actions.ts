@@ -8,8 +8,8 @@ import { getMainLocation } from "@/lib/locations";
 import { email } from "@/lib/email";
 import { formatEventDate } from "@/lib/timezone";
 import {
-  rsvpConfirmHtml,
-  rsvpConfirmText,
+  rsvpConfirmationHtml,
+  rsvpConfirmationText,
   rsvpDeclineHtml,
   rsvpDeclineText,
   recoveryHtml,
@@ -69,12 +69,21 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
   });
   if (!event) return { ok: false, type: "ERROR", message: "Evento não encontrado" };
 
-  // Prefere o local principal do EventLocation; cai no campo legado se não houver.
-  const mainLocation = await getMainLocation(event.id, "CEREMONY");
-  const locationLabel =
-    mainLocation?.title
-      ? `${mainLocation.title}${mainLocation.address ? ` — ${mainLocation.address}` : ""}`
-      : (event.ceremonyLocation ?? "");
+  const [mainLocation, receptionLocation] = await Promise.all([
+    getMainLocation(event.id, "CEREMONY"),
+    getMainLocation(event.id, "RECEPTION"),
+  ]);
+
+  function locationLabel(
+    loc: Awaited<ReturnType<typeof getMainLocation>>,
+    legacyName: string | null
+  ) {
+    if (loc?.title) return `${loc.title}${loc.address ? ` — ${loc.address}` : ""}`;
+    return legacyName ?? "";
+  }
+
+  const ceremonyLabel = locationLabel(mainLocation, event.ceremonyLocation);
+  const receptionLabel = locationLabel(receptionLocation, null);
 
   // Verifica se já existe Guest com esse email neste evento
   const existing = await prisma.guest.findUnique({
@@ -133,34 +142,46 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
 
   await setGuestCookie(sessionToken);
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const eventUrl = `${baseUrl}/${slug}`;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const eventUrl = `${appUrl}/${slug}`;
   const dateLabel = formatEventDate(
     event.ceremonyDate,
     event.timezone,
     "d 'de' MMMM 'de' yyyy 'às' HH:mm"
   );
 
+  const antiSpamHeaders = {
+    "Precedence": "transactional",
+    "X-Entity-Ref-ID": `rsvp-confirm-${slug}`,
+  };
+
   if (rsvpStatus === "CONFIRMED") {
     await email.send({
       to: emailAddr,
       subject: `Presença confirmada — ${event.title}`,
       idempotencyKey: `rsvp-confirm-${emailAddr}-${slug}`,
-      html: rsvpConfirmHtml({
+      headers: antiSpamHeaders,
+      html: rsvpConfirmationHtml({
         name,
-        eventTitle: event.title,
         coupleNames: event.coupleNames,
+        eventTitle: event.title,
         dateLabel,
-        location: locationLabel,
+        ceremonyLabel: ceremonyLabel || undefined,
+        receptionLabel: receptionLabel || undefined,
         eventUrl,
+        editResponseUrl: `${appUrl}/${slug}/rsvp`,
+        muralUrl: `${appUrl}/${slug}/mural`,
       }),
-      text: rsvpConfirmText({
+      text: rsvpConfirmationText({
         name,
-        eventTitle: event.title,
         coupleNames: event.coupleNames,
+        eventTitle: event.title,
         dateLabel,
-        location: locationLabel,
+        ceremonyLabel: ceremonyLabel || undefined,
+        receptionLabel: receptionLabel || undefined,
         eventUrl,
+        editResponseUrl: `${appUrl}/${slug}/rsvp`,
+        muralUrl: `${appUrl}/${slug}/mural`,
       }),
     });
   } else {

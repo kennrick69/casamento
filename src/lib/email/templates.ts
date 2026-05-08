@@ -300,6 +300,72 @@ export function welcomeVerifyText(o: WelcomeVerifyOpts): string {
   ].join("\n");
 }
 
+// ── Confirmação de presença (template rico — R.3) ────────────────────────
+
+export interface RsvpConfirmationOpts {
+  name: string;
+  coupleNames: string;
+  eventTitle: string;
+  dateLabel: string;
+  ceremonyLabel?: string;
+  receptionLabel?: string;
+  eventUrl: string;
+  editResponseUrl: string;
+  muralUrl: string;
+}
+
+export function rsvpConfirmationHtml(o: RsvpConfirmationOpts): string {
+  const body = `
+    <h1 style="margin:0 0 4px;font-size:28px;color:#1a1a1a;font-family:Georgia,serif">${o.coupleNames}</h1>
+    <p style="margin:0 0 24px;font-size:12px;color:#888;font-family:Arial,sans-serif;text-transform:uppercase;letter-spacing:0.1em">Voem. · Convites de casamento</p>
+
+    <p style="margin:0 0 8px;font-size:22px;color:#2d6a4f;font-family:Georgia,serif">✓ Presença confirmada!</p>
+
+    ${p(`Olá, <strong>${o.name}</strong>! Que alegria.`)}
+    ${p(`Sua presença no <strong>${o.eventTitle}</strong> está confirmada. O casal ficou feliz em saber que você vai estar com eles nesse dia tão especial.`)}
+
+    <div style="background:#f9f9f9;border-left:4px solid #2d6a4f;border-radius:0 6px 6px 0;padding:16px 20px;margin:20px 0">
+      ${o.dateLabel ? detail("📅", `<strong>${o.dateLabel}</strong>`) : ""}
+      ${o.ceremonyLabel ? detail("💒", `Cerimônia: ${o.ceremonyLabel}`) : ""}
+      ${o.receptionLabel ? detail("🎉", `Festa: ${o.receptionLabel}`) : ""}
+    </div>
+
+    <div style="text-align:center;margin:28px 0 16px">
+      ${btn(o.eventUrl, "Ver meu convite")}
+    </div>
+
+    <p style="margin:0 0 8px;font-size:13px;color:#555;font-family:Arial,sans-serif;text-align:center">
+      Quer enviar uma foto ou deixar uma mensagem?<br>
+      <a href="${o.muralUrl}" style="color:#1a1a1a;font-weight:600">Visite o mural do evento →</a>
+    </p>
+
+    <p style="margin:24px 0 0;font-size:12px;color:#aaa;font-family:Arial,sans-serif;text-align:center">
+      Mudou de ideia? <a href="${o.editResponseUrl}" style="color:#888">Atualize sua resposta</a> · Salve este e-mail para acessar o convite depois.
+    </p>
+  `;
+  return wrap(body);
+}
+
+export function rsvpConfirmationText(o: RsvpConfirmationOpts): string {
+  return [
+    `✓ Presença confirmada — ${o.coupleNames}`,
+    "",
+    `Olá, ${o.name}!`,
+    `Sua presença no ${o.eventTitle} está confirmada.`,
+    "",
+    o.dateLabel ? `📅 ${o.dateLabel}` : "",
+    o.ceremonyLabel ? `💒 Cerimônia: ${o.ceremonyLabel}` : "",
+    o.receptionLabel ? `🎉 Festa: ${o.receptionLabel}` : "",
+    "",
+    `Ver meu convite: ${o.eventUrl}`,
+    `Mural do evento: ${o.muralUrl}`,
+    "",
+    `Mudou de ideia? Atualize sua resposta: ${o.editResponseUrl}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 // ── Email em massa (organizador → convidados) ─────────────────────────────
 
 export interface MassEmailOpts {
