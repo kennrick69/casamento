@@ -52,7 +52,7 @@ export default async function AdminPage() {
           </div>
         ) : (
           <ul className="flex flex-col gap-3">
-            {organizers.map(({ event, role }) => (
+            {organizers.map(({ event }) => (
               <li key={event.id}>
                 <Link
                   href={`/admin/eventos/${event.id}`}
