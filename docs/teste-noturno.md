@@ -14,6 +14,19 @@ e marca cada item.
 
 ---
 
+## [2026-05-08] R.4 — Auditoria de mensagens de erro
+
+**O que foi:** Strings em inglês em rotas de API substituídas por português; fallback de upload de foto melhorado.
+
+**Onde testar:** fluxos onde mensagens de erro aparecem
+
+**O que validar:**
+- [ ] Upload de foto com rede lenta/falha → mensagem "Falha ao enviar. Tente novamente." aparece
+- [ ] Tentar exportar CSV de convidados sem autenticação → resposta HTTP com "Não autorizado" (verificar no DevTools)
+- [ ] Nenhuma mensagem em inglês visível em qualquer tela de erro
+
+---
+
 ## [2026-05-07] A.1 — Landing page + botão CTA
 
 **O que foi:** ProtoScene.tsx — hero estático com botão "Criar meu convite" que redireciona para /admin.

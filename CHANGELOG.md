@@ -1,5 +1,23 @@
 # Changelog
 
+## [R.4 — Auditoria de mensagens de erro] — 2026-05-08
+
+### Changed
+
+- `api/admin/.../convidados/export/route.ts` — `"Unauthorized"` → `"Não autorizado"`, `"Forbidden"` → `"Acesso negado"`
+- `api/pusher/auth/route.ts` — `"Bad request"` → `"Requisição inválida"`
+- `api/qr/[slug]/route.ts` — `"Not found"` → `"Não encontrado"`
+- `api/photos/[key]/route.ts` — `"Not found"` → `"Não encontrado"` (ambas as ocorrências)
+- `api/cron/reminder/route.ts` — `"Unauthorized"` → `"Não autorizado"`
+- `api/cron/backup/route.ts` — `"Unauthorized"` → `"Não autorizado"`
+- `(public)/[slug]/mural/photo-uploader.tsx` — fallback de erro de upload: `"Erro ao enviar."` → `"Falha ao enviar. Tente novamente."`
+
+### Docs
+
+- `docs/audit-mensagens.md` — inventário completo de 112 mensagens; 3 MEDIUM + 5 LOW aplicados; sem itens HIGH identificados
+
+---
+
 ## [R.3 — Email de confirmação de presença] — 2026-05-08
 
 ### Added

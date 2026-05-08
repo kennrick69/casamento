@@ -8,14 +8,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
-  if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+  if (!session?.user?.id) return new NextResponse("Não autorizado", { status: 401 });
 
   const { id } = await params;
 
   try {
     await requireOrganizer(id);
   } catch {
-    return new NextResponse("Forbidden", { status: 403 });
+    return new NextResponse("Acesso negado", { status: 403 });
   }
 
   const guests = await prisma.guest.findMany({

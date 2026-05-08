@@ -28,7 +28,7 @@ export function PhotoUploader({ slug, guestId }: { slug: string; guestId: string
 
       const res = await fetch("/api/fotos/upload", { method: "POST", body: fd });
       if (!res.ok) {
-        const { error: msg } = (await res.json().catch(() => ({ error: "Erro ao enviar." }))) as {
+        const { error: msg } = (await res.json().catch(() => ({ error: "Falha ao enviar. Tente novamente." }))) as {
           error: string;
         };
         setError(msg);

@@ -15,7 +15,7 @@ export async function GET(
   });
 
   if (!event) {
-    return new NextResponse("Not found", { status: 404 });
+    return new NextResponse("Não encontrado", { status: 404 });
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";

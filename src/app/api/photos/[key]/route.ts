@@ -20,11 +20,11 @@ export async function GET(
   });
 
   if (!photo || photo.removedAt) {
-    return new NextResponse("Not found", { status: 404 });
+    return new NextResponse("Não encontrado", { status: 404 });
   }
 
   const exists = await storage.exists(decodedKey);
-  if (!exists) return new NextResponse("Not found", { status: 404 });
+  if (!exists) return new NextResponse("Não encontrado", { status: 404 });
 
   // Serve the file
   const filePath = path.join(

@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   const channel = body.get("channel_name") as string;
 
   if (!socketId || !channel) {
-    return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    return NextResponse.json({ error: "Requisição inválida" }, { status: 400 });
   }
 
   const auth = realtime.authorize(channel, socketId);
