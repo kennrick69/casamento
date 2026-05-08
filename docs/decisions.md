@@ -168,3 +168,75 @@ Se não houver evidência disponível: **perguntar ao usuário** em vez de infer
 **Contexto:** criar conta é fricção desnecessária para convidados (muitos são pessoas mais velhas).
 
 **Decisão:** convidados se identificam apenas com nome + email + telefone no auto-cadastro. `sessionToken` em cookie de 1 ano. Recuperação por magic link se cookie perdido. Auth.js v5 é só para os noivos.
+
+---
+
+## ADR-009 — Bloco A (Auth profissional) — concluído
+
+**Data:** 2026-05-08
+**Status:** Aceito
+
+### O que entrou (A.1 → A.10)
+
+| Sub-bloco | Descrição |
+|---|---|
+| A.1 | Modelo User com campos de auth (firstName, lastName, phone, passwordHash, termsVersion, etc.) e enums AuthAction, UserRole |
+| A.2 | (incluído em A.1 — campos base de auth) |
+| A.3 | Páginas /login e /signup com tabs, react-hook-form, zxcvbn, honeypot, rate limiting |
+| A.4 | Verificação de e-mail: token UUID→SHA-256, /verify-email com countdown, /admin/onboarding 3 telas, /admin/dev-tools com DEV_TOOLS_ENABLED guard |
+| A.5 | Cloudflare Turnstile (CAPTCHA opcional via NEXT_PUBLIC_TURNSTILE_SITE_KEY) |
+| A.6 | Password reset completo: /forgot-password com anti-enumeration, /reset-password com zxcvbn, invalidação de sessões via passwordChangedAt + JWT callback |
+| A.7 | /admin/conta — dados pessoais, alterar senha, notificações (marketingOptIn) |
+| A.8 | Headers de segurança: HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, CSP baseline |
+| A.9 | Termos de Uso v1.0 e Política de Privacidade v1.0 (placeholder com TODO jurídico), /aceitar-termos com bloqueio no admin layout |
+| A.10 | Audit: unit tests para hashToken/checkRateLimit/verifyTurnstile, smoke E2E de auth, a11y em páginas de auth, Lighthouse CI setup |
+
+### Tech-debt explícito (para revisitar)
+
+| Item | Localização | Trigger para resolver |
+|---|---|---|
+| Revisão jurídica dos termos e política | `docs/legal/termos-v1.md`, `docs/legal/privacidade-v1.md` | Antes de qualquer lançamento comercial |
+| `'unsafe-inline'` em CSP script-src/style-src | `next.config.ts` | Implementar nonces via Middleware quando necessário (bloqueia nota A+ no securityheaders.com) |
+| DPO e CNPJ na política de privacidade | `docs/legal/privacidade-v1.md`, `/privacidade/page.tsx` | Abertura da empresa |
+| SCCs para transferência internacional (Resend/Railway/Pusher) | `docs/legal/privacidade-v1.md` | Antes do lançamento |
+| Job automático de deleção de dados do evento (90 dias pós-cerimônia) | `schema.prisma: Event.ceremonyDate` | Antes do primeiro evento em produção real |
+| Substituição do Storage de Railway Volume → Cloudflare R2 | `src/lib/storage/index.ts` | Ao atingir limites de volume ou em produção |
+
+### Lighthouse — resultados esperados (auth pages, mobile)
+
+Executado via `@lhci/cli` no job smoke após deploy no Railway. Scores esperados baseados na análise da stack:
+
+| Página | Performance | Accessibility | Best Practices | SEO | Nota |
+|---|---|---|---|---|---|
+| /login | 90–95 | 90–95 | 85–90 | 90–95 | `unsafe-inline` no CSP penaliza Best Practices |
+| /forgot-password | 92–97 | 90–95 | 85–90 | 90–95 | idem |
+| /termos | 95–100 | 95–100 | 85–90 | 90–95 | Página estática leve |
+| /privacidade | 95–100 | 95–100 | 85–90 | 90–95 | Página estática leve |
+
+**Fatores que afetam negativamente:**
+- `'unsafe-inline'` em `script-src` e `style-src` → Lighthouse Best Practices deduz pontos (flag de segurança)
+- Widget Turnstile (se ativo) carrega script externo → leve impacto em Performance
+- `next/font/google` com `display: swap` → sem FOIT, mas possível FOUT mínimo
+
+**Fatores positivos:**
+- Fontes self-hosted pelo Next.js (zero requisição para fonts.googleapis.com em runtime)
+- Páginas leves — sem imagens pesadas, sem JS bundles grandes
+- HSTS configurado → Best Practices ++
+- Sem cookies de terceiros → Best Practices ++
+
+*Scores reais aparecem nos artifacts do CI após push.*
+
+### Axe A11y — cobertura
+
+Rotas públicas testadas com axe-core (WCAG 2.1 AA, exceto color-contrast que é verificado via tema):
+
+- `/login` — formulário com labels, tabs com roles corretos
+- `/forgot-password` — formulário acessível
+- `/termos` — documento de prose estruturado
+- `/privacidade` — documento de prose com tabelas
+
+Rotas de auth que requerem sessão (testadas manualmente):
+- `/verify-email` — requires auth
+- `/admin/conta` — requires auth + terms accepted
+- `/aceitar-termos` — requires auth
+

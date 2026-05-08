@@ -379,4 +379,51 @@ ou prisma studio): definir `termsVersion = null` para um usuário existente.
 - [ ] Acessar `/admin/conta` com termos pendentes → bloqueado (redireciona para `/aceitar-termos`)
 - [ ] Acessar `/termos` sem estar logado → página pública carrega normalmente
 
+---
+
+## [2026-05-08] A.10 — Audit + Smoke E2E + Lighthouse + Axe
+
+**O que foi:** Unit tests para hashToken/checkRateLimit/verifyTurnstile. Smoke E2E de auth
+em `tests/e2e/auth.test.ts`. A11y via axe-core adicionada às páginas de auth. Lighthouse CI
+configurado com `@lhci/cli` no job smoke (continue-on-error, informativo). ADR-009 e CHANGELOG
+do Bloco A documentados.
+
+**Onde testar:** CI (smoke job no GitHub Actions após push para main)
+
+### Smoke E2E de auth (CI automático)
+
+**O que validar (vai aparecer no CI run após este push):**
+- [ ] Job "Smoke test (Railway)" passa com todos os steps verdes
+- [ ] "Run smoke tests — auth (Bloco A)" mostra todos os testes passando
+- [ ] Os testes que requerem TEST_USER_EMAIL/PASSWORD aparecem como "skipped" (não "failed") se secrets não configurados
+- [ ] "Run a11y tests" passa (continue-on-error — pode falhar sem bloquear)
+- [ ] "Lighthouse CI" executa e sobe relatórios para temporary-public-storage (URL no output do job)
+
+### Verificar cobertura de testes
+
+**O que validar:**
+- [ ] `pnpm test` localmente → 13 arquivos, 115+ testes, todos verdes (TZ=UTC)
+- [ ] Os 3 novos arquivos de teste aparecem no output: `auth-token`, `auth-rate-limit`, `auth-turnstile`
+
+### Lighthouse — scores esperados
+
+**Após CI rodar, verificar na aba Artifacts do GitHub Actions:**
+- [ ] /login: Performance ≥ 90, Accessibility ≥ 90, Best Practices ≥ 85, SEO ≥ 90
+- [ ] /forgot-password: idem
+- [ ] /termos: Performance ≥ 95, todos ≥ 90
+- [ ] /privacidade: idem
+- [ ] Nota: Best Practices pode ficar em 85–90 por causa do `unsafe-inline` no CSP (documentado em ADR-009)
+
+### Axe A11y
+
+**O que validar (CI + manual):**
+- [ ] CI: "Run a11y tests" mostra zero violações WCAG AA em /login, /forgot-password, /termos, /privacidade
+- [ ] Manual: inspecionar se há violações de color-contrast (excluídas dos testes automáticos — verificar manualmente via DevTools → Lighthouse)
+
+### securityheaders.com (manual pós-deploy)
+
+- [ ] Acessar https://securityheaders.com → analisar `https://casamento-production-2c06.up.railway.app`
+- [ ] Nota mínima esperada: **A** (todos os 5 headers principais presentes)
+- [ ] Nota A+ bloqueada pelo `unsafe-inline` até implementar nonces (aceitável como baseline)
+
 *Última atualização: 2026-05-08*

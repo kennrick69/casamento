@@ -6,6 +6,7 @@ import { vi } from "vitest";
 // Prevent real DB connections in unit tests
 vi.mock("@/lib/db", () => ({
   prisma: {
+    // Domain models
     event: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), create: vi.fn(), update: vi.fn() },
     guest: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), create: vi.fn(), update: vi.fn() },
     guestPoints: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), upsert: vi.fn() },
@@ -17,6 +18,12 @@ vi.mock("@/lib/db", () => ({
     photo: { create: vi.fn(), findMany: vi.fn(), update: vi.fn() },
     checkinCode: { findUnique: vi.fn() },
     checkin: { findFirst: vi.fn(), create: vi.fn() },
+    // Auth models (Bloco A)
+    user: { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
+    verificationToken: { findUnique: vi.fn(), create: vi.fn(), delete: vi.fn(), deleteMany: vi.fn() },
+    passwordReset: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), deleteMany: vi.fn() },
+    rateLimitAttempt: { count: vi.fn(), create: vi.fn(), findFirst: vi.fn(), deleteMany: vi.fn() },
+    authLog: { create: vi.fn(), findMany: vi.fn() },
     $transaction: vi.fn((ops: unknown[]) => Promise.all(ops)),
   },
 }));

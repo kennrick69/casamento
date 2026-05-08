@@ -62,7 +62,7 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-  # ── Smoke test contra Railway ────────────────────────────────────────────────
+  # ── Smoke + A11y + Lighthouse contra Railway ─────────────────────────────────
   smoke:
     name: Smoke test (Railway)
     runs-on: ubuntu-latest
@@ -107,12 +107,34 @@ jobs:
           echo "Waiting 90s for Railway to finish deploying..."
           sleep 90
 
-      - name: Run smoke tests against Railway
+      - name: Run smoke tests — rotas públicas
         run: pnpm exec playwright test tests/e2e/smoke.test.ts --project=chromium
         env:
           PLAYWRIGHT_BASE_URL: ${{ secrets.RAILWAY_URL }}
           TEST_SLUG: ${{ secrets.TEST_SLUG || 'casamento-exemplo' }}
           TEST_PUBLIC_TOKEN: ${{ secrets.TEST_PUBLIC_TOKEN || 'dev-public-token-k' }}
+
+      - name: Run smoke tests — auth (Bloco A)
+        run: pnpm exec playwright test tests/e2e/auth.test.ts --project=chromium
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ secrets.RAILWAY_URL }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+
+      - name: Run a11y tests — rotas públicas + auth
+        run: pnpm exec playwright test tests/a11y/ --project=chromium
+        continue-on-error: true  # A11y é informativo; não bloqueia CI
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ secrets.RAILWAY_URL }}
+          TEST_SLUG: ${{ secrets.TEST_SLUG || 'casamento-exemplo' }}
+          TEST_PUBLIC_TOKEN: ${{ secrets.TEST_PUBLIC_TOKEN || 'dev-public-token-k' }}
+
+      - name: Lighthouse CI — páginas de auth (mobile)
+        run: pnpm exec lhci autorun --config=lighthouserc.js
+        continue-on-error: true  # Lighthouse é informativo; não bloqueia CI
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ secrets.RAILWAY_URL }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4

@@ -1,5 +1,34 @@
 # Changelog
 
+## [Bloco A — Auth profissional] — 2026-05-08
+
+### Added
+
+- **A.3 /login e /signup** — tabs com react-hook-form, zxcvbn para força de senha, honeypot anti-bot, rate limiting por IP (`RateLimitAttempt`), `AuthLog` para LOGIN_SUCCESS/LOGIN_FAILED/SIGNUP_COMPLETED
+- **A.4 Verificação de e-mail** — token UUID→SHA-256 em `VerificationToken`, /verify-email com countdown de reenvio (60s), /admin/onboarding em 3 telas, /admin/dev-tools com guard `DEV_TOOLS_ENABLED`, logging de `EMAIL_SEND_FAILED` com banner visível em Railway Logs
+- **A.5 Cloudflare Turnstile** — CAPTCHA opcional via `NEXT_PUBLIC_TURNSTILE_SITE_KEY`; widget com `render=explicit` no nível do `AuthTabs` para sobreviver a troca de abas; verificação server-side via `verifyTurnstile()`; `CAPTCHA_FAILED` no AuthLog
+- **A.6 Password Reset** — /forgot-password com anti-enumeration, /reset-password com zxcvbn (score ≥ 2), token SHA-256 no banco expira em 30 min, invalidação de sessões existentes via `passwordChangedAt` + JWT callback, notificação de segurança por e-mail, `PASSWORD_RESET_REQUESTED/COMPLETED` no AuthLog
+- **A.7 /admin/conta** — 3 seções: dados pessoais (nome, telefone), segurança (alterar senha com PasswordStrengthBar, re-auth imediato), notificações (marketingOptIn). Link "Minha conta" no header do painel
+- **A.8 Headers de segurança** — HSTS (max-age=31536000; includeSubDomains), X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin, CSP baseline cobrindo Turnstile + Pusher + fontes self-hosted. Aplicado em `/(.*)`
+- **A.9 Termos de Uso e Privacidade v1.0** — documentos placeholder com TODO jurídico em `docs/legal/`. /termos e /privacidade com conteúdo completo (10/11 seções, LGPD, tabelas de retenção e compartilhamento). Versão gerenciada em `src/lib/legal/versions.ts`. Admin layout redireciona para /aceitar-termos quando usuário não aceitou versão atual
+- **A.10 Audit + Smoke E2E** — unit tests para `hashToken`, `checkRateLimit`, `verifyTurnstile` (13 arquivos, 115 testes). Smoke E2E de auth em `tests/e2e/auth.test.ts` (guards, formulários, anti-enumeration, reset inválido). A11y via axe-core em páginas de auth. Lighthouse CI com `@lhci/cli` no job smoke
+
+### Changed
+
+- `tests/unit/setup.ts` — adicionados mocks de Prisma para modelos de auth: `user`, `verificationToken`, `passwordReset`, `rateLimitAttempt`, `authLog`
+- `.github/workflows/ci.yml` — smoke job expandido: auth E2E, a11y (continue-on-error), Lighthouse CI (continue-on-error)
+- `docs/decisions.md` — ADR-009 documentando Bloco A completo, tech-debt, resultados esperados do Lighthouse
+
+### Security
+
+- Passwords: Argon2 hash (`@node-rs/argon2`)
+- Tokens: UUID v4 plain + SHA-256 hash no banco
+- Sessions: JWT com invalidação via `passwordChangedAt`
+- Rate limiting: sliding window por chave composta (action:ip ou action:email)
+- CSP: `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`
+
+---
+
 ## [Feature: Locais] — 2026-05-07
 
 ### Added

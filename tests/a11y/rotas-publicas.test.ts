@@ -9,12 +9,18 @@ const SLUG = process.env.TEST_SLUG ?? "casamento-exemplo";
 const PUBLIC_TOKEN = process.env.TEST_PUBLIC_TOKEN ?? "dev-public-token-k";
 
 const routes = [
+  // Páginas de evento público
   { path: `/${SLUG}?k=${PUBLIC_TOKEN}`, label: "Landing page" },
   { path: `/${SLUG}/rsvp`, label: "RSVP" },
   { path: `/${SLUG}/roteiro`, label: "Roteiro" },
   { path: `/${SLUG}/local`, label: "Local" },
   { path: `/${SLUG}/recuperar`, label: "Recuperar acesso" },
   { path: `/${SLUG}/gincana`, label: "Gincana" },
+  // Páginas de auth (Bloco A) — públicas, sem necessidade de sessão
+  { path: "/login", label: "Login / Signup" },
+  { path: "/forgot-password", label: "Esqueci minha senha" },
+  { path: "/termos", label: "Termos de Uso" },
+  { path: "/privacidade", label: "Política de Privacidade" },
 ];
 
 for (const route of routes) {
