@@ -40,7 +40,7 @@ export async function deleteJourneyItem(formData: FormData) {
   const eventId = formData.get("eventId") as string;
   await requireOrganizer(eventId);
 
-  await prisma.journeyItem.delete({ where: { id: itemId } });
+  await prisma.journeyItem.deleteMany({ where: { id: itemId, eventId } });
 
   // Re-ordenar os demais
   const remaining = await prisma.journeyItem.findMany({

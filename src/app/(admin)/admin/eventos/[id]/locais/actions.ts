@@ -73,7 +73,7 @@ export async function updateLocation(formData: FormData) {
   await requireOrganizer(eventId);
 
   await prisma.eventLocation.update({
-    where: { id: locationId },
+    where: { id: locationId, eventId },
     data: {
       ...rest,
       address: address || null,
@@ -94,7 +94,7 @@ export async function deleteLocation(formData: FormData) {
   const eventId = formData.get("eventId") as string;
 
   await requireOrganizer(eventId);
-  await prisma.eventLocation.delete({ where: { id: locationId } });
+  await prisma.eventLocation.deleteMany({ where: { id: locationId, eventId } });
 
   // Renumber orders
   const remaining = await prisma.eventLocation.findMany({

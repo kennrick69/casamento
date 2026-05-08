@@ -25,7 +25,7 @@ export async function createGift(formData: FormData): Promise<{ ok: boolean; err
       eventId,
       name: name.trim(),
       description: description?.trim() || null,
-      price: price ? parseFloat(price) || null : null,
+      price: (() => { const n = price ? parseFloat(price) : NaN; return Number.isFinite(n) ? n : null; })(),
       externalLink: externalLink || null,
     },
   });
@@ -38,7 +38,7 @@ export async function deleteGift(formData: FormData): Promise<{ ok: boolean }> {
   const giftId = formData.get("giftId") as string;
   try { await requireOrganizer(eventId); } catch { return { ok: false }; }
 
-  await prisma.gift.delete({ where: { id: giftId } });
+  await prisma.gift.deleteMany({ where: { id: giftId, eventId } });
   revalidatePath(`/admin/eventos/${eventId}/presentes`);
   return { ok: true };
 }
@@ -49,7 +49,7 @@ export async function toggleFulfilled(formData: FormData): Promise<{ ok: boolean
   const fulfilled = formData.get("fulfilled") === "true";
   try { await requireOrganizer(eventId); } catch { return { ok: false, nowFulfilled: fulfilled }; }
 
-  await prisma.gift.update({ where: { id: giftId }, data: { fulfilled: !fulfilled } });
+  await prisma.gift.updateMany({ where: { id: giftId, eventId }, data: { fulfilled: !fulfilled } });
   revalidatePath(`/admin/eventos/${eventId}/presentes`);
   return { ok: true, nowFulfilled: !fulfilled };
 }
