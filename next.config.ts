@@ -15,10 +15,10 @@ const CSP_DIRECTIVES = [
   "style-src 'self' 'unsafe-inline'",
   // Fonts: next/font/google self-hosts all fonts as static assets under /_next/static/
   "font-src 'self'",
-  // Images: own API proxy + inline data URIs + blob for upload previews
-  "img-src 'self' data: blob:",
-  // Connections: own API + Pusher WebSocket (all clusters) + Turnstile verification
-  "connect-src 'self' wss://*.pusher.com https://*.pusher.com https://challenges.cloudflare.com",
+  // Images: own API proxy + inline data URIs + blob for upload previews + Spotify album art
+  "img-src 'self' data: blob: https://i.scdn.co https://mosaic.scdn.co https://images-ak.spotifycdn.com",
+  // Connections: own API + Pusher WebSocket (all clusters) + Turnstile + Spotify API
+  "connect-src 'self' wss://*.pusher.com https://*.pusher.com https://challenges.cloudflare.com https://api.spotify.com https://accounts.spotify.com",
   // Frames: Turnstile renders its challenge inside an iframe
   "frame-src https://challenges.cloudflare.com",
   // Block plugins and dynamic base URL overrides
@@ -55,6 +55,15 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["@prisma/client"],
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "i.scdn.co" },
+      { protocol: "https", hostname: "mosaic.scdn.co" },
+      { protocol: "https", hostname: "images-ak.spotifycdn.com" },
+    ],
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 3600,
+  },
   async headers() {
     return [
       {

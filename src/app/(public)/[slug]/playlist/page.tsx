@@ -97,7 +97,7 @@ export default async function PlaylistPage({
               className="flex items-center gap-3 rounded-[var(--theme-radius)] border border-[var(--theme-border)] px-3 py-3"
             >
               {s.albumArtUrl ? (
-                <Image src={s.albumArtUrl} alt={s.trackName} width={44} height={44} className="rounded shrink-0" unoptimized />
+                <Image src={s.albumArtUrl} alt={s.trackName} width={44} height={44} className="rounded shrink-0"/>
               ) : (
                 <div className="w-11 h-11 rounded bg-[var(--theme-muted)] shrink-0 flex items-center justify-center text-xl">
                   🎵

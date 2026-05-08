@@ -54,7 +54,7 @@ function SongRow({ song, eventId }: { song: Song; eventId: string }) {
   return (
     <div className="border rounded-lg flex items-start gap-3 p-3 bg-background">
       {song.albumArtUrl ? (
-        <Image src={song.albumArtUrl} alt={song.trackName} width={44} height={44} className="rounded shrink-0 mt-0.5" unoptimized />
+        <Image src={song.albumArtUrl} alt={song.trackName} width={44} height={44} className="rounded shrink-0 mt-0.5"/>
       ) : (
         <div className="w-11 h-11 rounded bg-muted shrink-0 flex items-center justify-center text-lg">🎵</div>
       )}

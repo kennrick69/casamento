@@ -14,7 +14,22 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  return { title: slug };
+  const { prisma } = await import("@/lib/db");
+  const event = await prisma.event.findUnique({
+    where: { slug },
+    select: { coupleNames: true, ceremonyDate: true },
+  });
+  if (!event) return { title: slug };
+  const dateStr = event.ceremonyDate.toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" });
+  return {
+    title: event.coupleNames,
+    description: `Casamento de ${event.coupleNames} — ${dateStr}`,
+    openGraph: {
+      title: `Casamento de ${event.coupleNames}`,
+      description: `${dateStr} · Convite interativo`,
+      type: "website",
+    },
+  };
 }
 
 export default async function EventPage({
