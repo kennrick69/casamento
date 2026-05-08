@@ -1,5 +1,24 @@
 # Changelog
 
+## [R.2.B — Wizard de criação de evento] — 2026-05-08
+
+### Changed
+
+- **P4-A** — Campos "Modo de doação" e "Chave PIX" no passo 4 agora condicionais ao feature flag `donations`
+- **P4-B** — Label do checkbox de aprovação: "Requerer aprovação manual…" → "Revisar cada convidado antes de liberar o convite" + helper text
+- **P4-C** — Acesso a `?step=4` em eventos já publicados redireciona para `/configuracoes`
+- **F1** — Botão "← Passo X: [nome]" entre todos os passos do wizard
+- **F2 (HIGH)** — react-hook-form + zodResolver em todos os passos 1–4: erros inline em pt-BR, toast de erro em falha de servidor
+- **F3** — Progress bar usa `font-medium` em vez de `font-mono`; indicador "Passo X de 4" abaixo das pílulas
+
+### Added
+
+- `src/lib/utils/redirect.ts` — utilitário `isRedirectError()` para re-throw seguro de redirects Next.js em client components
+- `src/app/(admin)/layout.tsx` — `<Toaster>` do sonner no layout admin (posição bottom-right, richColors)
+- Formulários cliente do wizard: `novo-wizard-form.tsx`, `wizard-basic-form.tsx`, `wizard-location-form.tsx`, `wizard-publish-form.tsx`
+
+---
+
 ## [R.1 — Auditoria de jargão e tom] — 2026-05-08
 
 ### Changed

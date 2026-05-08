@@ -416,4 +416,55 @@ do Bloco A documentados.
 - [ ] Nota mínima esperada: **A** (todos os 5 headers principais presentes)
 - [ ] Nota A+ bloqueada pelo `unsafe-inline` até implementar nonces (aceitável como baseline)
 
+---
+
+## [2026-05-08] R.2.B — Wizard de criação de evento (react-hook-form + navegação)
+
+**O que foi:** Validação client-side com react-hook-form + zodResolver em todos os passos do
+wizard. Botão "← Voltar" entre passos. Indicador "Passo X de 4". Toast de erro em falhas de
+servidor. Campos de doação/PIX condicionais ao feature flag. Label de aprovação simplificado.
+Redirect de ?step=4 para eventos já publicados.
+
+**Onde testar:** `/admin/eventos/novo` → wizard de 4 passos
+
+### Passo 1 — Dados básicos (novo evento)
+
+**O que validar:**
+- [ ] Campo "Nome do casal" em branco → erro inline "Informe o nome do casal (mínimo 3 caracteres)"
+- [ ] Sem data → erro "Escolha a data do casamento"
+- [ ] Prazo de confirmação posterior à data do casamento → erro "O prazo de confirmação deve ser antes da data do casamento"
+- [ ] Campos válidos → botão ativa, "Criando evento…" durante submit, avança para passo 2
+- [ ] Pílulas de progresso em font normal (não monospace), "Passo 1 de 4" abaixo
+
+### Passo 2 — Local
+
+**O que validar:**
+- [ ] Botão "← Passo 1: Dados básicos" visível e volta corretamente
+- [ ] Link do Maps com texto inválido (sem https://) → erro "Cole o link completo do Maps, começando com https://"
+- [ ] Link do Maps válido → aceito sem erro
+- [ ] Submit → "Salvando…" durante processamento, avança para passo 3
+- [ ] Todos os campos opcionais (pode avançar sem preencher)
+
+### Passo 3 — Tema visual
+
+**O que validar:**
+- [ ] Botão "← Passo 2: Local" visível e funcional
+- [ ] Selecionar tema → botão "Próximo: Publicar →" (não "Salvar tema →")
+- [ ] Avança para passo 4 ao clicar
+
+### Passo 4 — Publicar
+
+**O que validar:**
+- [ ] Botão "← Passo 3: Tema visual" visível e funcional
+- [ ] Se `donations = false` → campos "Modo de doação" e "Chave PIX" NÃO aparecem
+- [ ] Se `donations = true` → campos aparecem normalmente
+- [ ] Label do checkbox: "Revisar cada convidado antes de liberar o convite" + helper text
+- [ ] Botão "Publicar evento 🎉" e indicador "Publicando…" durante submit
+- [ ] Após publicar → redirecionado para `/admin/eventos/[id]`
+
+### Guard P4-C
+
+**O que validar:**
+- [ ] Acessar manualmente `?step=4` num evento já publicado → redirecionado para `/configuracoes` (sem query string)
+
 *Última atualização: 2026-05-08*
