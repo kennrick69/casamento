@@ -30,6 +30,8 @@ export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
   const slug = formData.get("slug") as string | null;
+  const rawCaption = formData.get("caption") as string | null;
+  const caption = rawCaption ? rawCaption.trim().slice(0, 280) || null : null;
 
   if (!file || !slug) {
     return NextResponse.json({ error: "Dados insuficientes." }, { status: 400 });
@@ -85,6 +87,7 @@ export async function POST(req: NextRequest) {
       eventId: event.id,
       guestId: guest.id,
       storageKey: key,
+      caption,
       approvedByCouple: approved,
     },
   });

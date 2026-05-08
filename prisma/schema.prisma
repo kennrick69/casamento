@@ -352,14 +352,29 @@ model Photo {
   removedAt        DateTime?
   createdAt        DateTime        @default(now())
 
-  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  guest   Guest    @relation(fields: [guestId], references: [id], onDelete: Cascade)
-  reports Report[]
+  event     Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest     Guest           @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  reports   Report[]
+  reactions PhotoReaction[]
 }
 
 enum PhotoVisibility {
   PUBLIC
   COUPLE_ONLY
+}
+
+model PhotoReaction {
+  id        String   @id @default(cuid())
+  photoId   String
+  emoji     String
+  guestId   String?
+  sessionId String?
+  createdAt DateTime @default(now())
+
+  photo Photo @relation(fields: [photoId], references: [id], onDelete: Cascade)
+
+  @@unique([photoId, sessionId, emoji])
+  @@index([photoId])
 }
 
 model ChatMessage {

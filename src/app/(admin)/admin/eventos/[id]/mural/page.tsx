@@ -3,8 +3,7 @@ import { requireOrganizer } from "@/lib/authorization";
 import { notFound } from "next/navigation";
 import { EventNav } from "@/components/admin/event-nav";
 import { AdminHeader } from "@/components/admin/admin-header";
-import { PhotoCardActions } from "./photo-card-actions";
-import Image from "next/image";
+import { MuralAdminClient } from "./mural-admin-client";
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -14,74 +13,58 @@ export default async function MuralAdminPage({ params }: Props) {
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
-  const photos = await prisma.photo.findMany({
-    where: { eventId, removedAt: null },
-    orderBy: { createdAt: "desc" },
-    include: { guest: { select: { name: true } } },
-  });
+  const [photos, reactionStats] = await Promise.all([
+    prisma.photo.findMany({
+      where: { eventId, removedAt: null },
+      orderBy: { createdAt: "desc" },
+      include: {
+        guest: { select: { name: true } },
+        reactions: { select: { emoji: true } },
+      },
+    }),
+    prisma.photoReaction.groupBy({
+      by: ["emoji"],
+      where: { photo: { eventId } },
+      _count: true,
+    }),
+  ]);
 
   const pending = photos.filter((p) => !p.approvedByCouple);
   const approved = photos.filter((p) => p.approvedByCouple);
+
+  const photosWithCounts = photos.map((p) => {
+    const counts: Record<string, number> = {};
+    for (const r of p.reactions) counts[r.emoji] = (counts[r.emoji] ?? 0) + 1;
+    return { ...p, reactionCounts: counts };
+  });
+
+  const totalReactions = reactionStats.reduce((sum, r) => sum + r._count, 0);
 
   return (
     <div className="min-h-screen bg-background">
       <AdminHeader title="Mural" />
       <main className="max-w-3xl mx-auto px-4 py-8">
         <EventNav eventId={eventId} />
-        <h1 className="text-2xl font-bold mb-2">Mural de fotos</h1>
-        <p className="text-sm text-muted-foreground mb-6">
-          {photos.length} fotos · {pending.length} aguardando aprovação
-        </p>
 
-        {pending.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-base font-semibold mb-3 text-amber-700">Aguardando aprovação ({pending.length})</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {pending.map((photo) => (
-                <PhotoCard key={photo.id} photo={photo} eventId={eventId} baseUrl={baseUrl} showApprove />
-              ))}
-            </div>
-          </section>
-        )}
+        <div className="flex items-start justify-between mb-2">
+          <h1 className="text-2xl font-bold">Mural de fotos</h1>
+        </div>
 
-        <section>
-          <h2 className="text-base font-semibold mb-3">Aprovadas ({approved.length})</h2>
-          {approved.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma foto aprovada.</p>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {approved.map((photo) => (
-                <PhotoCard key={photo.id} photo={photo} eventId={eventId} baseUrl={baseUrl} showApprove={false} />
-              ))}
-            </div>
-          )}
-        </section>
+        {/* Stats row */}
+        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-6">
+          <span>{photos.length} fotos</span>
+          <span className="text-amber-700 font-medium">{pending.length} aguardando aprovação</span>
+          <span>{totalReactions} reações</span>
+        </div>
+
+        <MuralAdminClient
+          photos={photosWithCounts}
+          eventId={eventId}
+          baseUrl={baseUrl}
+          pendingCount={pending.length}
+          approvedCount={approved.length}
+        />
       </main>
-    </div>
-  );
-}
-
-function PhotoCard({
-  photo,
-  eventId,
-  baseUrl,
-  showApprove,
-}: {
-  photo: { id: string; storageKey: string; guest: { name: string } };
-  eventId: string;
-  baseUrl: string;
-  showApprove: boolean;
-}) {
-  const src = `${baseUrl}/api/photos/${encodeURIComponent(photo.storageKey)}`;
-  return (
-    <div className="border rounded-lg overflow-hidden flex flex-col">
-      <div className="relative aspect-square bg-muted">
-        <Image src={src} alt={photo.guest.name} fill className="object-cover" unoptimized />
-      </div>
-      <div className="p-2 flex flex-col gap-1">
-        <p className="text-xs text-muted-foreground truncate">{photo.guest.name}</p>
-        <PhotoCardActions eventId={eventId} photoId={photo.id} showApprove={showApprove} />
-      </div>
     </div>
   );
 }
