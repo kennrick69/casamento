@@ -392,18 +392,31 @@ model ChatMessage {
 }
 
 model PlaylistSuggestion {
-  id           String   @id @default(cuid())
-  eventId      String
-  guestId      String
-  trackName    String
-  artist       String
-  externalLink String?
-  approved     Boolean  @default(true)
-  createdAt    DateTime @default(now())
+  id              String               @id @default(cuid())
+  eventId         String
+  guestId         String
+  trackName       String
+  artist          String
+  externalLink    String?
+  spotifyTrackId  String?
+  previewUrl      String?
+  albumArtUrl     String?
+  approved        Boolean              @default(true)
+  songStatus      PlaylistSongStatus   @default(PENDING)
+  createdAt       DateTime             @default(now())
 
   event Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
   guest Guest          @relation(fields: [guestId], references: [id], onDelete: Cascade)
   votes PlaylistVote[]
+
+  @@index([eventId, songStatus])
+}
+
+enum PlaylistSongStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PLAYED
 }
 
 model PlaylistVote {
