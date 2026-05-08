@@ -298,4 +298,40 @@ Atenção: o link no email tem o token PLAIN (não o hash). O que está no banco
 - [ ] Checkbox "marketingOptIn" carrega com o estado atual do usuário
 - [ ] Salvar preferências → atualiza no banco (verificar via /admin/dev-tools AuthLog ou direto no banco)
 
+---
+
+## [2026-05-08] A.8 — Headers de segurança e CSP
+
+**O que foi:** `next.config.ts` com `headers()` aplicando HSTS, X-Frame-Options DENY,
+X-Content-Type-Options nosniff, Referrer-Policy, e Content-Security-Policy baseline.
+CSP cobre: scripts próprios + Next.js inline + Cloudflare Turnstile, estilos inline,
+fontes self-hosted (next/font/google), imagens/blobs próprios, Pusher WebSocket,
+iframes do Turnstile. `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`.
+
+**Onde testar:** qualquer página do site em produção
+
+**O que validar:**
+
+- [ ] Abrir DevTools → Network → qualquer request → aba Headers → verificar presença de:
+  - `Strict-Transport-Security: max-age=31536000; includeSubDomains`
+  - `X-Frame-Options: DENY`
+  - `X-Content-Type-Options: nosniff`
+  - `Referrer-Policy: strict-origin-when-cross-origin`
+  - `Content-Security-Policy: default-src 'self'; ...`
+- [ ] Console do browser: **zero erros de CSP** na landing page `/`
+- [ ] Console do browser: **zero erros de CSP** na página `/login` (Turnstile carrega)
+- [ ] Widget Turnstile aparece e funciona normalmente no login/signup
+- [ ] Chat do evento (Pusher) conecta sem erros de CSP (abrir console na página `/[slug]/chat`)
+- [ ] Fontes carregam corretamente (Cormorant Garamond, etc.) — sem FOUT duradouro
+- [ ] Upload de foto no mural funciona (blob: URL necessário para preview)
+
+**Validação externa (após deploy):**
+- [ ] Acessar https://securityheaders.com → analisar `https://casamento-production-2c06.up.railway.app`
+- [ ] Resultado esperado: nota **A ou A+** (HSTS + X-Frame + nosniff + Referrer + CSP presentes)
+- [ ] Nota: `'unsafe-inline'` em script-src/style-src impedirá A+ até implementar nonces — aceitável para baseline
+
+**Edge cases:**
+- [ ] Abrir `/admin/conta` → alterar senha → re-auth funciona (form-action 'self' não bloqueia server actions)
+- [ ] Abrir `/[slug]/rsvp` → submeter RSVP → sem erros de CSP (fetch para própria origem)
+
 *Última atualização: 2026-05-08*
