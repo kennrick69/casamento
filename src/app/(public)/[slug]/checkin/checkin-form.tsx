@@ -24,7 +24,7 @@ export function CheckinForm({ slug, initialCode }: { slug: string; initialCode?:
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
         <label htmlFor="code" className="text-sm font-medium">
-          Código de check-in
+          Código do local
         </label>
         <input
           id="code"
@@ -45,7 +45,7 @@ export function CheckinForm({ slug, initialCode }: { slug: string; initialCode?:
         disabled={isPending || !code.trim()}
         className="py-3 rounded-[var(--theme-radius)] bg-[var(--theme-primary)] text-[var(--theme-primary-foreground)] font-medium disabled:opacity-40 transition-opacity"
       >
-        {isPending ? "Verificando…" : "Fazer check-in"}
+        {isPending ? "Verificando…" : "Já cheguei!"}
       </button>
 
       {result && (

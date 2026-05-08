@@ -171,7 +171,7 @@ export default function PrivacidadePage() {
       <p>O Voem. utiliza apenas:</p>
       <ul>
         <li>
-          <strong>Cookie de sessão</strong> (<code>authjs.session-token</code>): necessário para
+          <strong>Cookie de sessão</strong> (mantém você conectado entre páginas — nome técnico: <code>authjs.session-token</code>): necessário para
           manter você logado. Expira com a sessão do navegador ou em 30 dias.
         </li>
         <li>

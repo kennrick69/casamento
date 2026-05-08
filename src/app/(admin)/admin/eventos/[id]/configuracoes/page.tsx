@@ -279,7 +279,7 @@ function FeaturesForm({ event }: { event: { id: string; features: unknown } }) {
     { key: "photoWall", label: "Mural de fotos" },
     { key: "chat", label: "Chat ao vivo" },
     { key: "playlist", label: "Sugestões de playlist" },
-    { key: "gamification", label: "Gamificação (pontos e missões)" },
+    { key: "gamification", label: "Gincana (pontos e missões)" },
     { key: "donations", label: "Lista de presentes / doações" },
   ];
 

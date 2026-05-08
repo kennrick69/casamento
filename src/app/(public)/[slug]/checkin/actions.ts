@@ -58,9 +58,9 @@ export async function doCheckin(formData: FormData): Promise<CheckinResult> {
   if (checkinCode.mission) {
     const result = await awardPoints(guest.id, event.id, checkinCode.mission.code);
     if (result.awarded) {
-      return { ok: true, message: "Check-in feito!", points: result.points };
+      return { ok: true, message: "Presença marcada! 🎉", points: result.points };
     }
   }
 
-  return { ok: true, message: "Check-in feito!" };
+  return { ok: true, message: "Presença marcada! 🎉" };
 }

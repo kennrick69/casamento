@@ -76,7 +76,7 @@ export default async function GincanaPage({ params }: Props) {
         href={`/${slug}/checkin`}
         className="block text-center mb-6 py-2 px-4 rounded-[var(--theme-radius)] border border-[var(--theme-border)] bg-[var(--theme-primary)] text-[var(--theme-primary-foreground)] text-sm font-medium"
       >
-        Fazer check-in no local
+        Marcar presença no local
       </Link>
 
       {/* Ranking */}

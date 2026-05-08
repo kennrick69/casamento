@@ -23,7 +23,7 @@ const ACTION_LABELS: Record<AuthAction, string> = {
   PASSWORD_CHANGED: "Senha alterada",
   EMAIL_CHANGED: "Email alterado",
   LOGOUT: "Logout",
-  RATE_LIMITED: "Rate limited",
+  RATE_LIMITED: "Limite de tentativas atingido",
   CAPTCHA_FAILED: "Captcha falhou",
   HONEYPOT_TRIGGERED: "Honeypot",
 };

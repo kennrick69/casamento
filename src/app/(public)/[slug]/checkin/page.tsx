@@ -37,7 +37,7 @@ export default async function CheckinPage({ params, searchParams }: Props) {
         className="text-xl font-semibold mb-1"
         style={{ fontFamily: "var(--theme-font-heading)" }}
       >
-        Check-in
+        Marcar presença
       </h1>
       <p className="text-sm text-[var(--theme-secondary)] mb-6">
         Digite o código distribuído no evento para ganhar seus pontos.
@@ -50,7 +50,7 @@ export default async function CheckinPage({ params, searchParams }: Props) {
           <Link href={`/${slug}/rsvp`} className="underline font-medium">
             Confirme sua presença
           </Link>{" "}
-          para fazer check-in.
+          para marcar sua presença na festa.
         </div>
       )}
     </div>

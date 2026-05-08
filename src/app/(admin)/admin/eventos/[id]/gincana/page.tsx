@@ -108,7 +108,7 @@ export default async function GincanaAdminPage({ params }: Props) {
 
         {/* Check-in Codes */}
         <section>
-          <h2 className="text-lg font-semibold mb-3">Códigos de check-in</h2>
+          <h2 className="text-lg font-semibold mb-3">Códigos dos locais</h2>
 
           <form action={createCheckinCode} className="flex flex-col gap-3 border rounded-lg p-4 mb-4 bg-muted/40">
             <input type="hidden" name="eventId" value={eventId} />
@@ -127,7 +127,7 @@ export default async function GincanaAdminPage({ params }: Props) {
                 <label className="text-xs font-medium">Descrição</label>
                 <input
                   name="purpose"
-                  placeholder="Check-in cerimônia"
+                  placeholder="Cerimônia"
                   maxLength={60}
                   className="border rounded px-3 py-2 text-sm bg-background"
                 />

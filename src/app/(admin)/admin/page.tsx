@@ -82,9 +82,6 @@ export default async function AdminPage() {
                         ? "Arquivado"
                         : "Rascunho"}
                     </span>
-                    {role === "OWNER" && (
-                      <span className="text-xs text-muted-foreground">owner</span>
-                    )}
                   </div>
                 </Link>
               </li>

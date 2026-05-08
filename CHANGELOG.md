@@ -1,5 +1,25 @@
 # Changelog
 
+## [R.1 — Auditoria de jargão e tom] — 2026-05-08
+
+### Changed
+
+- `(admin)/admin/page.tsx` — removido badge "owner" do card de evento (inglês invisível)
+- `(public)/[slug]/checkin/page.tsx` — `<h1>Check-in</h1>` → "Marcar presença"; instrução "para fazer check-in." → "para marcar sua presença na festa."
+- `(public)/[slug]/checkin/checkin-form.tsx` — label "Código de check-in" → "Código do local"; botão "Fazer check-in" → "Já cheguei!"
+- `(public)/[slug]/checkin/actions.ts` — mensagem de sucesso "Check-in feito!" → "Presença marcada! 🎉" (ambas as ocorrências)
+- `(public)/[slug]/gincana/page.tsx` — link "Fazer check-in no local" → "Marcar presença no local"
+- `(admin)/admin/eventos/[id]/gincana/page.tsx` — heading "Códigos de check-in" → "Códigos dos locais"; placeholder "Check-in cerimônia" → "Cerimônia"
+- `(admin)/admin/eventos/[id]/configuracoes/page.tsx` — feature toggle "Gamificação (pontos e missões)" → "Gincana (pontos e missões)"
+- `(admin)/admin/dev-tools/page.tsx` — status "Rate limited" → "Limite de tentativas atingido"
+- `(legal)/privacidade/page.tsx` — cookie de sessão: nome técnico agora acompanhado de descrição em linguagem simples
+
+### Audit kept as-is (LOW)
+- Playlist, Chat, link mágico, PIX, hash irreversível — termos consolidados no Brasil
+- RSVP — apenas em textos legais, com parentético explicativo; não aparece em nenhuma UI visível
+
+---
+
 ## [Bloco A — Auth profissional] — 2026-05-08
 
 ### Added
