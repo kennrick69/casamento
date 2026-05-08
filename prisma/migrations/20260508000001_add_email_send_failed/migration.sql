@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "AuthAction" ADD VALUE 'EMAIL_SEND_FAILED';

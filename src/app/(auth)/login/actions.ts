@@ -174,8 +174,23 @@ export async function signupAction(formData: FormData): Promise<AuthState> {
       text: welcomeVerifyText({ name: user.firstName || firstName, verifyUrl }),
       idempotencyKey: `welcome-${user.id}`,
     });
-  } catch {
-    // Não bloqueia o cadastro se o email falhar
+  } catch (emailError) {
+    const reason = emailError instanceof Error ? emailError.message : String(emailError);
+    const border = "═".repeat(64);
+    console.error(`\n${border}`);
+    console.error("🚨  [EMAIL FALHOU] Bem-vindo / verificação não enviado");
+    console.error(border);
+    console.error(`Para:   ${email}`);
+    console.error(`Motivo: ${reason}`);
+    console.error("Dica:   Verifique RESEND_API_KEY e se o domínio está verificado no Resend.");
+    console.error(`${border}\n`);
+    await logAuthEvent({
+      action: "EMAIL_SEND_FAILED",
+      ip,
+      userAgent,
+      email,
+      metadata: { type: "welcome_verify", reason },
+    });
   }
 
   try {

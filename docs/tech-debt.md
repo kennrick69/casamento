@@ -4,6 +4,18 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 ---
 
+## 🔴 ALTA — Desabilitar /admin/dev-tools antes de virar produto comercial
+
+**Status:** página ativa, acessível a qualquer usuário autenticado.
+
+**O que tem lá:** tokens de verificação em texto puro (clicáveis), hashes de reset de senha (mascarados), e todos os AuthLogs. Não deve ser exposto a clientes finais.
+
+**Como desabilitar:** configurar `DEV_TOOLS_ENABLED=false` no Railway (ou qualquer env). A página retorna 404 automaticamente.
+
+**Gatilho:** antes de onboarding de qualquer casal externo ao projeto piloto.
+
+---
+
 ## 🟡 MÉDIA — Substituir hero minimalista por ilustração final
 
 **Status:** hero atual usa tipografia + gradiente CSS (Voem., céu dia/noite).
