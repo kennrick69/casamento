@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { TERMS_VERSION, PRIVACY_VERSION } from "@/lib/legal/versions";
+import { Toaster } from "sonner";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -16,5 +17,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect("/aceitar-termos");
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <Toaster richColors closeButton position="bottom-right" />
+    </>
+  );
 }

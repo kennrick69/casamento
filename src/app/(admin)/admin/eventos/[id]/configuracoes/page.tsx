@@ -10,16 +10,18 @@ import { Button } from "@/components/ui/button";
 import {
   updateEventLocation,
   updateEventTheme,
-  publishEvent,
   updateEventBasic,
   updateEventFeatures,
 } from "./actions";
+import { WizardBasicForm } from "./wizard-basic-form";
+import { WizardLocationForm } from "./wizard-location-form";
+import { WizardPublishForm } from "./wizard-publish-form";
 import { THEMES } from "@/lib/themes";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Configurações" };
 
-const STEPS = ["1 Básico", "2 Local", "3 Tema", "4 Publicar"];
+const STEPS = ["Dados básicos", "Local", "Tema visual", "Publicar"];
 
 export default async function ConfiguracoesPage({
   params,
@@ -48,62 +50,156 @@ export default async function ConfiguracoesPage({
   });
   if (!event) notFound();
 
+  // P4-C: wizard só faz sentido para rascunhos
+  if (step === 4 && event.status !== "DRAFT") {
+    redirect(`/admin/eventos/${id}/configuracoes`);
+  }
+
   const themes = await prisma.theme.findMany({ orderBy: { name: "asc" } });
+
+  const dateStr = event.ceremonyDate.toISOString().split("T")[0];
+  const timeStr = event.ceremonyDate.toISOString().split("T")[1]?.slice(0, 5) ?? "16:00";
+  const deadlineStr = event.rsvpEarlyDeadline
+    ? event.rsvpEarlyDeadline.toISOString().split("T")[0]
+    : undefined;
+
+  const features = event.features as Record<string, boolean>;
 
   return (
     <div className="min-h-screen bg-muted/30 px-4 py-8">
       <div className="max-w-lg mx-auto">
-        <div className="mb-6">
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
           <Link href="/admin" className="text-sm text-muted-foreground hover:text-foreground">
             ← Meus eventos
           </Link>
         </div>
 
+        {/* Progress bar (wizard only) */}
         {isWizard && (
-          <div className="flex gap-2 mb-8 text-xs font-mono flex-wrap">
-            {STEPS.map((s, i) => (
-              <span
-                key={s}
-                className={`px-3 py-1 rounded-full ${
-                  i + 1 === step
-                    ? "bg-primary text-primary-foreground"
-                    : i + 1 < step
-                    ? "bg-green-100 text-green-800"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {s}
-              </span>
-            ))}
+          <>
+            <div className="flex gap-2 mb-2 text-xs font-medium flex-wrap">
+              {STEPS.map((s, i) => (
+                <span
+                  key={s}
+                  className={`px-3 py-1 rounded-full ${
+                    i + 1 === step
+                      ? "bg-primary text-primary-foreground"
+                      : i + 1 < step
+                      ? "bg-green-100 text-green-800"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {i + 1} {s}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mb-6">Passo {step} de 4</p>
+          </>
+        )}
+
+        {/* F1: Back button (steps 2–4) */}
+        {isWizard && step > 1 && (
+          <div className="mb-4">
+            <Link
+              href={`?step=${step - 1}`}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              ← Passo {step - 1}: {STEPS[step - 2]}
+            </Link>
           </div>
         )}
 
+        {/* Event nav (non-wizard only) */}
         {!isWizard && <EventNav eventId={id} />}
 
-        {(step === 0 || step === 1) && (
-          <BasicForm event={event} isWizard={isWizard} />
-        )}
-        {step === 2 && <LocationForm event={event} />}
-        {step === 3 && <ThemeForm event={event} themes={themes} />}
-        {step === 4 && <PublishForm event={event} />}
-
+        {/* ── Step 0: normal config (all forms) ── */}
         {step === 0 && (
           <>
+            <BasicForm event={event} />
             <LocationForm event={event} />
             <ThemeForm event={event} themes={themes} />
             <FeaturesForm event={event} />
           </>
+        )}
+
+        {/* ── Step 1: dados básicos (voltou do passo 2) ── */}
+        {step === 1 && (
+          <div className="bg-background rounded-lg border border-border p-6 mb-6">
+            <h2 className="text-base font-semibold mb-5">Dados básicos</h2>
+            <WizardBasicForm
+              eventId={id}
+              timezone={event.timezone}
+              defaultValues={{
+                coupleNames: event.coupleNames,
+                ceremonyDate: dateStr,
+                ceremonyTime: timeStr,
+                rsvpEarlyDeadline: deadlineStr,
+              }}
+            />
+          </div>
+        )}
+
+        {/* ── Step 2: local ── */}
+        {step === 2 && (
+          <div className="bg-background rounded-lg border border-border p-6 mb-6">
+            <h2 className="text-base font-semibold mb-5">Local</h2>
+            <WizardLocationForm
+              eventId={id}
+              defaultValues={{
+                ceremonyLocation: event.ceremonyLocation ?? undefined,
+                ceremonyAddress: event.ceremonyAddress ?? undefined,
+                receptionLocation: event.receptionLocation ?? undefined,
+                receptionAddress: event.receptionAddress ?? undefined,
+                mapsLink: event.mapsLink ?? undefined,
+                dresscode: event.dresscode ?? undefined,
+              }}
+            />
+          </div>
+        )}
+
+        {/* ── Step 3: tema ── */}
+        {step === 3 && <ThemeForm event={event} themes={themes} isWizard />}
+
+        {/* ── Step 4: publicar (apenas rascunhos — veja P4-C acima) ── */}
+        {step === 4 && (
+          <div className="bg-background rounded-lg border border-border p-6 mb-6">
+            <h2 className="text-base font-semibold mb-2">Publicar evento</h2>
+            <p className="text-sm text-muted-foreground mb-5">
+              Após publicar, o link do convite ficará ativo. Você pode editar as configurações
+              depois.
+            </p>
+            <WizardPublishForm
+              eventId={id}
+              slug={event.slug}
+              defaultValues={{
+                guestApprovalRequired: event.guestApprovalRequired,
+                donationMode:
+                  event.donationMode === "PIX_PROOF" ? "PIX_PROOF" : "TRUST",
+                pixKey: event.pixKey ?? undefined,
+              }}
+              hasDonations={features.donations === true}
+            />
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-// ── Formulário de dados básicos ───────────────────────────────────────────
+// ── Formulário de dados básicos (step=0, não-wizard) ─────────────────────────
 
-function BasicForm({ event, isWizard }: {
-  event: { id: string; slug: string; coupleNames: string; ceremonyDate: Date; timezone: string; rsvpEarlyDeadline: Date | null };
-  isWizard: boolean;
+function BasicForm({
+  event,
+}: {
+  event: {
+    id: string;
+    slug: string;
+    coupleNames: string;
+    ceremonyDate: Date;
+    timezone: string;
+    rsvpEarlyDeadline: Date | null;
+  };
 }) {
   const dateStr = event.ceremonyDate.toISOString().split("T")[0];
   const timeStr = event.ceremonyDate.toISOString().split("T")[1]?.slice(0, 5) ?? "16:00";
@@ -113,57 +209,85 @@ function BasicForm({ event, isWizard }: {
 
   return (
     <div className="bg-background rounded-lg border border-border p-6 mb-6">
-      <h2 className="text-base font-semibold mb-5">{isWizard ? "Dados básicos" : "Dados do evento"}</h2>
-      <form action={isWizard ? undefined : updateEventBasic} className="flex flex-col gap-4">
+      <h2 className="text-base font-semibold mb-5">Dados do evento</h2>
+      <form action={updateEventBasic} className="flex flex-col gap-4">
         <input type="hidden" name="eventId" value={event.id} />
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="coupleNames">Nome do casal</Label>
-          <Input id="coupleNames" name="coupleNames" defaultValue={event.coupleNames} required className="h-11" />
+          <Input
+            id="coupleNames"
+            name="coupleNames"
+            defaultValue={event.coupleNames}
+            required
+            className="h-11"
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="ceremonyDate">Data</Label>
-            <Input id="ceremonyDate" name="ceremonyDate" type="date" defaultValue={dateStr} required className="h-11" />
+            <Input
+              id="ceremonyDate"
+              name="ceremonyDate"
+              type="date"
+              defaultValue={dateStr}
+              required
+              className="h-11"
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="ceremonyTime">Horário</Label>
-            <Input id="ceremonyTime" name="ceremonyTime" type="time" defaultValue={timeStr} required className="h-11" />
+            <Input
+              id="ceremonyTime"
+              name="ceremonyTime"
+              type="time"
+              defaultValue={timeStr}
+              required
+              className="h-11"
+            />
           </div>
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="rsvpEarlyDeadline">Prazo limite para confirmação de presença</Label>
-          <Input id="rsvpEarlyDeadline" name="rsvpEarlyDeadline" type="date" defaultValue={deadlineStr} className="h-11" />
+          <Input
+            id="rsvpEarlyDeadline"
+            name="rsvpEarlyDeadline"
+            type="date"
+            defaultValue={deadlineStr}
+            className="h-11"
+          />
           <p className="text-xs text-muted-foreground">
             Convidados que confirmarem antes desta data ganham pontos extras.
           </p>
         </div>
-        {!isWizard && (
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="slug">
-              URL do convite
-              <span className="ml-1 font-normal text-xs text-muted-foreground">(letras, números e hífen)</span>
-            </Label>
-            <div className="flex items-center gap-1">
-              <span className="text-muted-foreground text-sm shrink-0">casamento.app/</span>
-              <Input
-                id="slug"
-                name="slug"
-                defaultValue={event.slug}
-                required
-                pattern="[a-z0-9-]+"
-                className="h-11"
-              />
-            </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="slug">
+            URL do convite
+            <span className="ml-1 font-normal text-xs text-muted-foreground">
+              (letras, números e hífen)
+            </span>
+          </Label>
+          <div className="flex items-center gap-1">
+            <span className="text-muted-foreground text-sm shrink-0">casamento.app/</span>
+            <Input
+              id="slug"
+              name="slug"
+              defaultValue={event.slug}
+              required
+              pattern="[a-z0-9-]+"
+              className="h-11"
+            />
           </div>
-        )}
+        </div>
         <input type="hidden" name="timezone" value={event.timezone} />
-        {!isWizard && <Button type="submit" className="h-11">Salvar</Button>}
+        <Button type="submit" className="h-11">
+          Salvar
+        </Button>
       </form>
     </div>
   );
 }
 
-// ── Formulário de local ───────────────────────────────────────────────────
+// ── Formulário de local (step=0, não-wizard) ──────────────────────────────────
 
 function LocationForm({
   event,
@@ -185,42 +309,82 @@ function LocationForm({
         <input type="hidden" name="eventId" value={event.id} />
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="ceremonyLocation">Local da cerimônia</Label>
-          <Input id="ceremonyLocation" name="ceremonyLocation" defaultValue={event.ceremonyLocation ?? ""} placeholder="Igreja São João" className="h-11" />
+          <Input
+            id="ceremonyLocation"
+            name="ceremonyLocation"
+            defaultValue={event.ceremonyLocation ?? ""}
+            placeholder="Igreja São João"
+            className="h-11"
+          />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="ceremonyAddress">Endereço da cerimônia</Label>
-          <Input id="ceremonyAddress" name="ceremonyAddress" defaultValue={event.ceremonyAddress ?? ""} placeholder="Rua das Flores, 100 — São Paulo, SP" className="h-11" />
+          <Input
+            id="ceremonyAddress"
+            name="ceremonyAddress"
+            defaultValue={event.ceremonyAddress ?? ""}
+            placeholder="Rua das Flores, 100 — São Paulo, SP"
+            className="h-11"
+          />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="receptionLocation">Local da recepção</Label>
-          <Input id="receptionLocation" name="receptionLocation" defaultValue={event.receptionLocation ?? ""} placeholder="Espaço Villa Eventos" className="h-11" />
+          <Input
+            id="receptionLocation"
+            name="receptionLocation"
+            defaultValue={event.receptionLocation ?? ""}
+            placeholder="Espaço Villa Eventos"
+            className="h-11"
+          />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="receptionAddress">Endereço da recepção</Label>
-          <Input id="receptionAddress" name="receptionAddress" defaultValue={event.receptionAddress ?? ""} className="h-11" />
+          <Input
+            id="receptionAddress"
+            name="receptionAddress"
+            defaultValue={event.receptionAddress ?? ""}
+            className="h-11"
+          />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="mapsLink">Link do Google Maps (opcional)</Label>
-          <Input id="mapsLink" name="mapsLink" type="url" defaultValue={event.mapsLink ?? ""} placeholder="https://maps.google.com/..." className="h-11" />
+          <Input
+            id="mapsLink"
+            name="mapsLink"
+            type="url"
+            defaultValue={event.mapsLink ?? ""}
+            placeholder="https://maps.google.com/..."
+            className="h-11"
+          />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="dresscode">Traje</Label>
-          <Input id="dresscode" name="dresscode" defaultValue={event.dresscode ?? ""} placeholder="Passeio completo" className="h-11" />
+          <Input
+            id="dresscode"
+            name="dresscode"
+            defaultValue={event.dresscode ?? ""}
+            placeholder="Passeio completo"
+            className="h-11"
+          />
         </div>
-        <Button type="submit" className="h-11">Salvar local →</Button>
+        <Button type="submit" className="h-11">
+          Salvar local →
+        </Button>
       </form>
     </div>
   );
 }
 
-// ── Seleção de tema ───────────────────────────────────────────────────────
+// ── Seleção de tema ───────────────────────────────────────────────────────────
 
 function ThemeForm({
   event,
   themes,
+  isWizard = false,
 }: {
   event: { id: string; theme: { key: string; name: string } };
   themes: { id: string; key: string; name: string }[];
+  isWizard?: boolean;
 }) {
   const themeColors: Record<string, string> = {
     rustic: "#7C5C3E",
@@ -238,7 +402,8 @@ function ThemeForm({
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {themes.map((theme) => {
             const themeData = THEMES.find((t) => t.key === theme.key);
-            const color = themeData?.tokens.colors.primary ?? themeColors[theme.key] ?? "#1A1A1A";
+            const color =
+              themeData?.tokens.colors.primary ?? themeColors[theme.key] ?? "#1A1A1A";
             return (
               <label
                 key={theme.id}
@@ -255,22 +420,21 @@ function ThemeForm({
                   defaultChecked={event.theme.key === theme.key}
                   className="sr-only"
                 />
-                <div
-                  className="w-10 h-10 rounded-full"
-                  style={{ background: color }}
-                />
+                <div className="w-10 h-10 rounded-full" style={{ background: color }} />
                 <span className="text-xs text-center leading-tight">{theme.name}</span>
               </label>
             );
           })}
         </div>
-        <Button type="submit" className="h-11">Salvar tema →</Button>
+        <Button type="submit" className="h-11">
+          {isWizard ? "Próximo: Publicar →" : "Salvar tema →"}
+        </Button>
       </form>
     </div>
   );
 }
 
-// ── Funcionalidades ───────────────────────────────────────────────────────
+// ── Funcionalidades (step=0 apenas) ──────────────────────────────────────────
 
 function FeaturesForm({ event }: { event: { id: string; features: unknown } }) {
   const features = event.features as Record<string, boolean>;
@@ -301,68 +465,8 @@ function FeaturesForm({ event }: { event: { id: string; features: unknown } }) {
             </label>
           ))}
         </div>
-        <Button type="submit" className="h-11">Salvar funcionalidades</Button>
-      </form>
-    </div>
-  );
-}
-
-// ── Publicação ────────────────────────────────────────────────────────────
-
-function PublishForm({ event }: { event: { id: string; slug: string; status: string; guestApprovalRequired: boolean; donationMode: string; pixKey: string | null } }) {
-  return (
-    <div className="bg-background rounded-lg border border-border p-6 mb-6">
-      <h2 className="text-base font-semibold mb-2">Publicar evento</h2>
-      <p className="text-sm text-muted-foreground mb-5">
-        Após publicar, o link do convite ficará ativo. Você pode editar as configurações depois.
-      </p>
-
-      {/* Preview readonly da URL gerada automaticamente */}
-      <div className="mb-5 rounded-lg bg-muted px-4 py-3">
-        <p className="text-xs text-muted-foreground mb-1">Seu convite estará em:</p>
-        <p className="font-mono text-sm font-medium break-all">casamento.app/{event.slug}</p>
-        <p className="text-xs text-muted-foreground mt-1.5">
-          Para alterar a URL, acesse Configurações após publicar.
-        </p>
-      </div>
-      <form action={publishEvent} className="flex flex-col gap-4">
-        <input type="hidden" name="eventId" value={event.id} />
-        <label className="flex items-start gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            name="guestApprovalRequired"
-            defaultChecked={event.guestApprovalRequired}
-            className="mt-0.5 size-4"
-          />
-          <span className="text-sm">
-            Requerer aprovação manual de convidados antes de mostrar o convite completo
-          </span>
-        </label>
-        <div className="flex flex-col gap-1.5">
-          <Label>Modo de doação</Label>
-          <div className="flex flex-col gap-2">
-            {(["TRUST", "PIX_PROOF"] as const).map((mode) => (
-              <label key={mode} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="donationMode"
-                  value={mode}
-                  defaultChecked={event.donationMode === mode}
-                  className="size-4"
-                />
-                <span className="text-sm">
-                  {mode === "TRUST" ? "Confiança (sem confirmação)" : "Comprovante PIX"}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="pixKey">Chave PIX (opcional)</Label>
-          <Input id="pixKey" name="pixKey" defaultValue={event.pixKey ?? ""} placeholder="CPF, email ou chave aleatória" className="h-11" />
-        </div>
         <Button type="submit" className="h-11">
-          {event.status === "PUBLISHED" ? "Salvar configurações" : "Publicar evento 🎉"}
+          Salvar funcionalidades
         </Button>
       </form>
     </div>
