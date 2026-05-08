@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { nanoid } from "nanoid";
 import { seedDefaultMissions } from "@/lib/points";
+import { isReservedSlug } from "@/lib/utils/slug-validation";
 
 const BasicSchema = z.object({
   coupleNames: z.string().min(3, "Nome do casal obrigatório"),
@@ -31,7 +32,9 @@ function generateSlugFromNames(coupleNames: string): string {
 }
 
 async function generateUniqueSlug(coupleNames: string): Promise<string> {
-  const base = generateSlugFromNames(coupleNames);
+  const rawBase = generateSlugFromNames(coupleNames);
+  // Suffix reserved slugs so they don't conflict with app routes
+  const base = isReservedSlug(rawBase) ? `${rawBase}-evento` : rawBase;
 
   const existing = await prisma.event.findUnique({
     where: { slug: base },

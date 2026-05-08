@@ -7,6 +7,7 @@ import { requireOrganizer } from "@/lib/authorization";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { isHttpUrl } from "@/lib/utils/safe-href";
+import { isReservedSlug } from "@/lib/utils/slug-validation";
 
 async function withOrganizer(eventId: string) {
   const session = await auth();
@@ -28,6 +29,7 @@ const BasicSchema = z.object({
     .min(3)
     .max(60)
     .regex(/^[a-z0-9-]+$/, "Somente letras minúsculas, números e hífens")
+    .refine((s) => !isReservedSlug(s), "Esta URL não está disponível")
     .optional(),
 });
 
