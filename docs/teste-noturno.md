@@ -161,35 +161,25 @@ e marca cada item.
 
 ## [2026-05-08] A.5 — Cloudflare Turnstile (CAPTCHA)
 
-**O que foi:** widget Turnstile adicionado ao login e signup. Verificação server-side opcional via TURNSTILE_SECRET_KEY.
+**O que foi:** widget Turnstile adicionado ao login e signup. Verificação server-side via TURNSTILE_SECRET_KEY.
 
-**Onde testar:** `/login` com Turnstile configurado no Railway
+**Status:** ✅ Chaves reais configuradas no Railway em 2026-05-08 (NEXT_PUBLIC_TURNSTILE_SITE_KEY + TURNSTILE_SECRET_KEY). Turnstile está ativo em produção.
 
-**Pré-requisito:** configurar no Railway:
-- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` = sua site key do Cloudflare Turnstile
-- `TURNSTILE_SECRET_KEY` = sua secret key
+**Onde testar:** `/login` em `https://casamento-production-2c06.up.railway.app`
 
-**Chaves de teste oficiais do Cloudflare (sem criar conta):**
-- Site key always-pass: `1x00000000000000000000AA`
-- Secret key always-pass: `1x0000000000000000000000000000000AA`
-- Site key always-block: `2x00000000000000000000AB`
-- Secret key always-fail: `2x0000000000000000000000000000000AB`
-
-**O que validar (com chaves always-pass):**
-- [ ] Widget aparece no formulário de login (geralmente checkbox ou invisível)
+**O que validar (chaves reais em produção):**
+- [ ] Widget Turnstile aparece no formulário de login (checkbox ou invisível dependendo da configuração)
 - [ ] Widget aparece no formulário de signup
 - [ ] Widget fica numa posição que não quebra o layout mobile
-- [ ] Login com chaves always-pass → sucesso normal
-- [ ] Signup com chaves always-pass → sucesso normal
-
-**O que validar (sem chaves configuradas — dev mode):**
-- [ ] Formulários funcionam normalmente sem widget aparecer
-- [ ] Nenhum erro no console relacionado a Turnstile
+- [ ] Login com credenciais corretas → widget resolve automaticamente → sucesso normal
+- [ ] Signup com dados válidos → widget resolve → sucesso normal
+- [ ] Nenhum erro de console relacionado a Turnstile (CSP permite `challenges.cloudflare.com`)
 
 **Edge cases:**
-- [ ] Trocar para chave always-block → login bloqueado com erro "Verificação de segurança falhou."
-- [ ] AuthLog em `/admin/dev-tools` mostra CAPTCHA_FAILED para tentativa bloqueada
 - [ ] Token Turnstile expirado (aguardar 5 min sem enviar) → widget recarrega automaticamente
+- [ ] AuthLog em `/admin/dev-tools` mostra CAPTCHA_FAILED para tentativa bloqueada (verificar se ocorre)
+
+**Nota:** as chaves de teste do Cloudflare (always-pass/always-block) não são mais necessárias — chaves reais estão ativas. Para testar o caso always-block seria necessário trocar temporariamente a secret key no Railway.
 
 ---
 
