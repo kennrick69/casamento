@@ -26,6 +26,8 @@ const ACTION_LABELS: Record<AuthAction, string> = {
   RATE_LIMITED: "Limite de tentativas atingido",
   CAPTCHA_FAILED: "Captcha falhou",
   HONEYPOT_TRIGGERED: "Honeypot",
+  BACKUP_CREATED: "Backup criado",
+  BACKUP_FAILED: "Backup falhou",
 };
 
 interface Props {

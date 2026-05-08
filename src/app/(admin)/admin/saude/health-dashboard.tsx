@@ -160,6 +160,12 @@ export default function HealthDashboard() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-8">
+        <div className="flex gap-3 mb-6">
+          <Link href="/admin/saude/backups" className="text-sm text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2">
+            Ver backups →
+          </Link>
+        </div>
+
         {lastUpdated && (
           <p className="text-xs text-muted-foreground mb-6">
             Última verificação: {lastUpdated.toLocaleTimeString("pt-BR")} · atualiza a cada 30s
