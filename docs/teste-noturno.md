@@ -14,53 +14,159 @@ e marca cada item.
 
 ---
 
-## [2026-05-08] R.6 — Toasts de feedback admin
-
-**O que foi:** Ações admin agora mostram toast sonner de sucesso/erro.
-
-**Onde testar:** painel admin — conta, presentes, mural, moderação, convidados
-
-**O que validar:**
-- [ ] Salvar dados pessoais (conta) → toast "Dados salvos!"
-- [ ] Salvar preferências de notificações → toast "Preferências salvas!"
-- [ ] Adicionar presente → toast "Presente adicionado!"; form reseta
-- [ ] Marcar presente como recebido → toast "Presente marcado como recebido!"
-- [ ] Desmarcar presente → toast "Presente desmarcado."
-- [ ] Remover presente → toast "Presente removido."
-- [ ] Aprovar foto no mural → toast "Foto aprovada!"
-- [ ] Remover foto no mural → toast "Foto removida."
-- [ ] Banir convidado → toast "Convidado banido."; desbanir → "Convidado desbanido."
-- [ ] Remover convidado → toast "Convidado removido."
-- [ ] Resolver denúncia (remover) → toast "Conteúdo removido."
-- [ ] Descartar denúncia → toast "Denúncia descartada."
+## [2026-05-08] Bloco R — UX / Auditoria (R.1 a R.6)
 
 ---
 
-## [2026-05-08] R.5 — Estados de loading
+### R.1 — Jargão e tom
 
-**O que foi:** 4 botões com `isPending` sem feedback visual corrigidos.
+**O que mudou:** 9 textos visíveis ao usuário trocados de jargão técnico/inglês para português natural — "marcar presença" no lugar de "check-in", "Gincana" no lugar de "Gamificação", "Já cheguei!" no botão de chegada.
 
-**Onde testar:** fluxos que envolvem ações assíncronas
+**Onde testar:** `/[slug]/checkin`, `/[slug]/gincana`, `/admin/eventos/[id]/configuracoes`, `/admin/eventos/[id]/gincana`, `/admin/dev-tools`
 
 **O que validar:**
-- [ ] Convidados admin: banir/desbanir → botão mostra "Banindo…"/"Desbanindo…" durante ação
-- [ ] Convidados admin: remover → botão mostra "Removendo…" durante ação
-- [ ] Presentes: reservar → botão mostra "Reservando…"; cancelar → "Cancelando…"
-- [ ] Chat: enviar mensagem → botão "Enviar" muda para "Enviando…"
-- [ ] Playlist: votar → coração fica com opacidade 50% durante processamento
+- [ ] `/[slug]/checkin` — título da página é "Marcar presença" (não "Check-in")
+- [ ] Formulário de checkin — label "Código do local" (não "Código de check-in")
+- [ ] Formulário de checkin — botão "Já cheguei!" (não "Fazer check-in")
+- [ ] Após checkin bem-sucedido → mensagem "Presença marcada! 🎉"
+- [ ] `/[slug]/gincana` — link para checkin diz "Marcar presença no local"
+- [ ] Admin gincana → seção chamada "Códigos dos locais" (não "Códigos de check-in")
+- [ ] Admin configurações → feature toggle "Gincana (pontos e missões)" (não "Gamificação")
+- [ ] `/admin/dev-tools` → status de rate limit: "Limite de tentativas atingido"
+- [ ] Admin painel de evento → nenhum badge "owner" em inglês visível
+
+**Edge cases:**
+- [ ] Código de checkin via QR code — URL `/[slug]/checkin?code=XXX` — label e botão corretos com código pré-preenchido
 
 ---
 
-## [2026-05-08] R.4 — Auditoria de mensagens de erro
+### R.2.B — Wizard de criação de evento
 
-**O que foi:** Strings em inglês em rotas de API substituídas por português; fallback de upload de foto melhorado.
+**O que mudou:** react-hook-form + zodResolver em todos os 4 passos do wizard — erros inline em pt-BR, botão "← Voltar", indicador "Passo X de 4", campos de doação/PIX condicionais ao feature flag, guard que redireciona step=4 em eventos publicados.
 
-**Onde testar:** fluxos onde mensagens de erro aparecem
+**Onde testar:** `/admin/eventos/novo` → wizard completo; `/admin/eventos/[id]/configuracoes`
+
+#### Passo 1 — Dados básicos
 
 **O que validar:**
-- [ ] Upload de foto com rede lenta/falha → mensagem "Falha ao enviar. Tente novamente." aparece
-- [ ] Tentar exportar CSV de convidados sem autenticação → resposta HTTP com "Não autorizado" (verificar no DevTools)
-- [ ] Nenhuma mensagem em inglês visível em qualquer tela de erro
+- [ ] "Nome do casal" em branco → erro inline "Informe o nome do casal (mínimo 3 caracteres)"
+- [ ] Sem data → erro "Escolha a data do casamento"
+- [ ] Prazo de confirmação posterior à data → erro "O prazo de confirmação deve ser antes da data do casamento"
+- [ ] Campos válidos → botão ativa, mostra "Criando evento…" durante submit, avança para passo 2
+- [ ] Pílulas de progresso em fonte normal (não monospace); "Passo 1 de 4" abaixo das pílulas
+
+#### Passo 2 — Local
+
+**O que validar:**
+- [ ] Botão "← Passo 1: Dados básicos" visível e funcional
+- [ ] Link do Maps sem `https://` → erro "Cole o link completo do Maps, começando com https://"
+- [ ] Submit → "Salvando…" durante processamento, avança para passo 3
+- [ ] Todos os campos opcionais — pode avançar sem preencher nada
+
+#### Passo 3 — Tema visual
+
+**O que validar:**
+- [ ] Botão "← Passo 2: Local" visível e funcional
+- [ ] Botão de avanço diz "Próximo: Publicar →" (não "Salvar tema →")
+
+#### Passo 4 — Publicar
+
+**O que validar:**
+- [ ] Botão "← Passo 3: Tema visual" visível e funcional
+- [ ] Feature flag `donations = false` → campos "Modo de doação" e "Chave PIX" **não aparecem**
+- [ ] Feature flag `donations = true` → campos aparecem normalmente
+- [ ] Checkbox de aprovação: label "Revisar cada convidado antes de liberar o convite" + helper text
+- [ ] Botão "Publicar evento 🎉" → "Publicando…" durante submit → redireciona para `/admin/eventos/[id]`
+
+**Edge cases:**
+- [ ] Acessar `?step=4` num evento já publicado (URL manual) → redireciona para `/configuracoes`
+- [ ] Falha de servidor no submit → toast de erro aparece (não página de erro)
+
+---
+
+### R.3 — Email de confirmação de presença
+
+**O que mudou:** template rico com data, local cerimônia + recepção, link "Ver meu convite", link mural, link "Atualize sua resposta". Headers anti-spam. Banner visível no log de dev.
+
+**Onde testar:** `/[slug]/rsvp` → confirmar presença com e-mail válido
+
+**O que validar:**
+- [ ] Email recebido com assunto "Presença confirmada — [nome do evento]"
+- [ ] Email exibe data/horário formatado em português
+- [ ] Email exibe local da cerimônia (se cadastrado no evento)
+- [ ] Email exibe local da recepção (se cadastrado)
+- [ ] Botão "Ver meu convite" → abre a landing do evento
+- [ ] Link "Mural do evento" → abre `/[slug]/mural`
+- [ ] Link "Atualize sua resposta" → abre `/[slug]/rsvp`
+- [ ] Nenhuma ocorrência da palavra "RSVP" no corpo do email
+
+**Edge cases:**
+- [ ] Evento sem local cadastrado → seção de local omitida do email (não aparece vazia)
+- [ ] Evento com apenas cerimônia → só cerimônia aparece; campo recepção omitido
+- [ ] Dev sem RESEND_API_KEY → log mostra banner `✅ [DEV] EMAIL DE CONFIRMAÇÃO DE PRESENÇA` com URLs visíveis
+
+---
+
+### R.4 — Mensagens de erro
+
+**O que mudou:** 8 strings em inglês em rotas de API trocadas por português (`"Unauthorized"` → `"Não autorizado"`, `"Forbidden"` → `"Acesso negado"`, `"Bad request"` → `"Requisição inválida"`, `"Not found"` → `"Não encontrado"`). Fallback de erro no upload de foto melhorado.
+
+**Onde testar:** fluxos de erro — upload de foto com falha, DevTools → Network
+
+**O que validar:**
+- [ ] Upload de foto com conexão ruim / arquivo corrompido → mensagem "Falha ao enviar. Tente novamente." (não "Erro ao enviar.")
+- [ ] Nenhuma string em inglês visível em qualquer tela de erro da UI
+
+**Edge cases:**
+- [ ] Tentar acessar `/api/admin/eventos/[id]/convidados/export` sem estar logado (aba anônima) → resposta HTTP contém "Não autorizado" (verificar no DevTools → Network → Response)
+
+---
+
+### R.5 — Estados de loading
+
+**O que mudou:** 4 botões que desabilitavam silenciosamente agora mostram gerúndio durante a ação; vote-button ganha `opacity-50 cursor-wait`.
+
+**Onde testar:** ações que disparam server actions com latência visível
+
+**O que validar:**
+- [ ] Admin convidados → banir → botão exibe "Banindo…" durante processamento
+- [ ] Admin convidados → desbanir → botão exibe "Desbanindo…"
+- [ ] Admin convidados → remover → botão exibe "Removendo…"
+- [ ] Público presentes → reservar → botão exibe "Reservando…"
+- [ ] Público presentes → cancelar reserva → botão exibe "Cancelando…"
+- [ ] Público chat → enviar mensagem → botão "Enviar" exibe "Enviando…"
+- [ ] Público playlist → votar → coração fica com opacidade reduzida + cursor wait
+
+**Edge cases:**
+- [ ] Clicar rapidamente duas vezes em "Banir" → segundo clique ignorado (botão desabilitado após primeiro)
+
+---
+
+### R.6 — Toasts de feedback admin
+
+**O que mudou:** 6 seções do admin convertidas de `<form action={serverAction}>` para client components com `useTransition` + sonner — feedback visual imediato após cada ação.
+
+**Onde testar:** `/admin/conta`, `/admin/eventos/[id]/presentes`, `/admin/eventos/[id]/mural`, `/admin/eventos/[id]/moderacao`, `/admin/eventos/[id]/convidados`
+
+**O que validar:**
+- [ ] Conta → salvar dados pessoais → toast "Dados salvos!" (bottom-right)
+- [ ] Conta → salvar preferências de notificações → toast "Preferências salvas!"
+- [ ] Presentes → adicionar presente → toast "Presente adicionado!" + formulário reseta
+- [ ] Presentes → marcar como recebido → toast "Presente marcado como recebido!"
+- [ ] Presentes → desmarcar recebido → toast "Presente desmarcado."
+- [ ] Presentes → remover presente → toast "Presente removido."
+- [ ] Mural → aprovar foto → toast "Foto aprovada!" + foto sai da fila de pendentes
+- [ ] Mural → remover foto → toast "Foto removida."
+- [ ] Convidados → banir → toast "Convidado banido."
+- [ ] Convidados → desbanir → toast "Convidado desbanido."
+- [ ] Convidados → remover → toast "Convidado removido."
+- [ ] Moderação → "Remover conteúdo" → toast "Conteúdo removido."
+- [ ] Moderação → "Descartar" → toast "Denúncia descartada."
+
+**Edge cases:**
+- [ ] Toast aparece mesmo com latência alta (simular rede lenta via DevTools → Network → Slow 3G)
+- [ ] Toast não aparece duplicado em clique duplo rápido (botão desabilitado no isPending)
+- [ ] Dados pessoais inválidos (nome < 2 chars) → toast de erro aparece (não toast de sucesso)
 
 ---
 
@@ -233,8 +339,6 @@ e marca cada item.
 
 ---
 
----
-
 ## [2026-05-08] A.6 — Password Reset
 
 **O que foi:** fluxo completo de redefinição de senha. `/forgot-password` com anti-enumeration, `/reset-password?token=...` com zxcvbn (score ≥ 2), invalidação de sessões anteriores via `passwordChangedAt`, notificação de segurança por email.
@@ -316,7 +420,7 @@ Atenção: o link no email tem o token PLAIN (não o hash). O que está no banco
 - [ ] Campo e-mail readonly (não editável)
 - [ ] Badge "✓ verificado" aparece se email verificado, "verificar" se não
 - [ ] Campo telefone opcional, aceita vazio
-- [ ] Salvar → dados atualizados (recarregar página para confirmar)
+- [ ] Salvar → toast "Dados salvos!" aparece (R.6)
 
 ### Segurança — alterar senha
 
@@ -336,7 +440,7 @@ Atenção: o link no email tem o token PLAIN (não o hash). O que está no banco
 
 **O que validar:**
 - [ ] Checkbox "marketingOptIn" carrega com o estado atual do usuário
-- [ ] Salvar preferências → atualiza no banco (verificar via /admin/dev-tools AuthLog ou direto no banco)
+- [ ] Salvar → toast "Preferências salvas!" aparece (R.6)
 
 ---
 
@@ -465,73 +569,3 @@ do Bloco A documentados.
 - [ ] Acessar https://securityheaders.com → analisar `https://casamento-production-2c06.up.railway.app`
 - [ ] Nota mínima esperada: **A** (todos os 5 headers principais presentes)
 - [ ] Nota A+ bloqueada pelo `unsafe-inline` até implementar nonces (aceitável como baseline)
-
----
-
-## [2026-05-08] R.3 — Email de confirmação de presença
-
-**O que foi:** Template rico `rsvpConfirmationHtml/Text` com cerimônia + recepção, link para editar resposta, link para o mural. Headers anti-spam. Banner de log em dev.
-
-**Onde testar:** Página `/[slug]/rsvp` → confirmar presença
-
-**O que validar:**
-- [ ] Após confirmar presença com e-mail válido → email recebido com assunto "Presença confirmada — [nome do evento]"
-- [ ] Email mostra: data/horário, local da cerimônia (se cadastrado), local da recepção (se cadastrado)
-- [ ] Botão "Ver meu convite" → abre a landing do evento
-- [ ] Link "Mural do evento" → abre `/[slug]/mural`
-- [ ] Link "Atualize sua resposta" → abre `/[slug]/rsvp`
-- [ ] Texto visível: "Presença confirmada", "confirmação de presença" — sem uso de "RSVP"
-- [ ] Dev (sem RESEND_API_KEY): banner no log `✅ [DEV] EMAIL DE CONFIRMAÇÃO DE PRESENÇA` com links visíveis
-
----
-
-## [2026-05-08] R.2.B — Wizard de criação de evento (react-hook-form + navegação)
-
-**O que foi:** Validação client-side com react-hook-form + zodResolver em todos os passos do
-wizard. Botão "← Voltar" entre passos. Indicador "Passo X de 4". Toast de erro em falhas de
-servidor. Campos de doação/PIX condicionais ao feature flag. Label de aprovação simplificado.
-Redirect de ?step=4 para eventos já publicados.
-
-**Onde testar:** `/admin/eventos/novo` → wizard de 4 passos
-
-### Passo 1 — Dados básicos (novo evento)
-
-**O que validar:**
-- [ ] Campo "Nome do casal" em branco → erro inline "Informe o nome do casal (mínimo 3 caracteres)"
-- [ ] Sem data → erro "Escolha a data do casamento"
-- [ ] Prazo de confirmação posterior à data do casamento → erro "O prazo de confirmação deve ser antes da data do casamento"
-- [ ] Campos válidos → botão ativa, "Criando evento…" durante submit, avança para passo 2
-- [ ] Pílulas de progresso em font normal (não monospace), "Passo 1 de 4" abaixo
-
-### Passo 2 — Local
-
-**O que validar:**
-- [ ] Botão "← Passo 1: Dados básicos" visível e volta corretamente
-- [ ] Link do Maps com texto inválido (sem https://) → erro "Cole o link completo do Maps, começando com https://"
-- [ ] Link do Maps válido → aceito sem erro
-- [ ] Submit → "Salvando…" durante processamento, avança para passo 3
-- [ ] Todos os campos opcionais (pode avançar sem preencher)
-
-### Passo 3 — Tema visual
-
-**O que validar:**
-- [ ] Botão "← Passo 2: Local" visível e funcional
-- [ ] Selecionar tema → botão "Próximo: Publicar →" (não "Salvar tema →")
-- [ ] Avança para passo 4 ao clicar
-
-### Passo 4 — Publicar
-
-**O que validar:**
-- [ ] Botão "← Passo 3: Tema visual" visível e funcional
-- [ ] Se `donations = false` → campos "Modo de doação" e "Chave PIX" NÃO aparecem
-- [ ] Se `donations = true` → campos aparecem normalmente
-- [ ] Label do checkbox: "Revisar cada convidado antes de liberar o convite" + helper text
-- [ ] Botão "Publicar evento 🎉" e indicador "Publicando…" durante submit
-- [ ] Após publicar → redirecionado para `/admin/eventos/[id]`
-
-### Guard P4-C
-
-**O que validar:**
-- [ ] Acessar manualmente `?step=4` num evento já publicado → redirecionado para `/configuracoes` (sem query string)
-
-*Última atualização: 2026-05-08*
