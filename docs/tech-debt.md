@@ -14,6 +14,22 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 ---
 
+## 🔴 ALTA — Verificação de email obrigatória antes de criar evento
+
+**Status:** implementação parcial — campo `emailVerified` é gravado no banco quando o link mágico é clicado, mas `/admin` não bloqueia acesso de usuário não-verificado.
+
+**Razão do adiamento:** domínio próprio não verificado no Resend em desenvolvimento. Emails só chegam para `casamento290527@gmail.com` (conta dona do Resend). Verificação obrigatória sem domínio funcional bloquearia o desenvolvedor.
+
+**Gatilho para ativar:** quando domínio próprio estiver verificado no Resend e `EMAIL_FROM` apontar para ele.
+
+**O que precisa ser feito:**
+1. No middleware (`src/middleware.ts`): checar `session.user.emailVerified` em rotas `/admin`
+2. Se não verificado: redirecionar para `/verify-email` com banner "Confirme seu e-mail para continuar"
+3. Criar página `/verify-email` com instrução + botão "Reenviar link"
+4. Em `/verify-email`, chamar `signIn("resend", { email, redirect: false })` para reenvio
+
+---
+
 ## 🔴 ALTA — Migrar storage para Cloudflare R2
 
 **Status:** Ativo — em uso o volume persistente do Railway.

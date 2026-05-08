@@ -24,7 +24,7 @@ export function GuestActions({
   }
 
   function handleRemove() {
-    if (!confirm("Remover este convidado? A ação pode ser desfeita recriando o RSVP.")) return;
+    if (!confirm("Remover este convidado? A ação pode ser desfeita recriando a confirmação de presença.")) return;
     startTransition(async () => {
       const fd = new FormData();
       fd.set("guestId", guestId);

@@ -101,7 +101,10 @@ export default async function ConfiguracoesPage({
 
 // ── Formulário de dados básicos ───────────────────────────────────────────
 
-function BasicForm({ event, isWizard }: { event: { id: string; coupleNames: string; ceremonyDate: Date; timezone: string; rsvpEarlyDeadline: Date | null }; isWizard: boolean }) {
+function BasicForm({ event, isWizard }: {
+  event: { id: string; slug: string; coupleNames: string; ceremonyDate: Date; timezone: string; rsvpEarlyDeadline: Date | null };
+  isWizard: boolean;
+}) {
   const dateStr = event.ceremonyDate.toISOString().split("T")[0];
   const timeStr = event.ceremonyDate.toISOString().split("T")[1]?.slice(0, 5) ?? "16:00";
   const deadlineStr = event.rsvpEarlyDeadline
@@ -128,9 +131,31 @@ function BasicForm({ event, isWizard }: { event: { id: string; coupleNames: stri
           </div>
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="rsvpEarlyDeadline">Prazo RSVP antecipado</Label>
+          <Label htmlFor="rsvpEarlyDeadline">Prazo limite para confirmação de presença</Label>
           <Input id="rsvpEarlyDeadline" name="rsvpEarlyDeadline" type="date" defaultValue={deadlineStr} className="h-11" />
+          <p className="text-xs text-muted-foreground">
+            Convidados que confirmarem antes desta data ganham pontos extras.
+          </p>
         </div>
+        {!isWizard && (
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="slug">
+              URL do convite
+              <span className="ml-1 font-normal text-xs text-muted-foreground">(letras, números e hífen)</span>
+            </Label>
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground text-sm shrink-0">casamento.app/</span>
+              <Input
+                id="slug"
+                name="slug"
+                defaultValue={event.slug}
+                required
+                pattern="[a-z0-9-]+"
+                className="h-11"
+              />
+            </div>
+          </div>
+        )}
         <input type="hidden" name="timezone" value={event.timezone} />
         {!isWizard && <Button type="submit" className="h-11">Salvar</Button>}
       </form>
@@ -250,7 +275,7 @@ function ThemeForm({
 function FeaturesForm({ event }: { event: { id: string; features: unknown } }) {
   const features = event.features as Record<string, boolean>;
   const featureList = [
-    { key: "rsvp", label: "Confirmação de presença (RSVP)" },
+    { key: "rsvp", label: "Confirmação de presença" },
     { key: "photoWall", label: "Mural de fotos" },
     { key: "chat", label: "Chat ao vivo" },
     { key: "playlist", label: "Sugestões de playlist" },
@@ -284,13 +309,22 @@ function FeaturesForm({ event }: { event: { id: string; features: unknown } }) {
 
 // ── Publicação ────────────────────────────────────────────────────────────
 
-function PublishForm({ event }: { event: { id: string; status: string; guestApprovalRequired: boolean; donationMode: string; pixKey: string | null } }) {
+function PublishForm({ event }: { event: { id: string; slug: string; status: string; guestApprovalRequired: boolean; donationMode: string; pixKey: string | null } }) {
   return (
     <div className="bg-background rounded-lg border border-border p-6 mb-6">
       <h2 className="text-base font-semibold mb-2">Publicar evento</h2>
       <p className="text-sm text-muted-foreground mb-5">
         Após publicar, o link do convite ficará ativo. Você pode editar as configurações depois.
       </p>
+
+      {/* Preview readonly da URL gerada automaticamente */}
+      <div className="mb-5 rounded-lg bg-muted px-4 py-3">
+        <p className="text-xs text-muted-foreground mb-1">Seu convite estará em:</p>
+        <p className="font-mono text-sm font-medium break-all">casamento.app/{event.slug}</p>
+        <p className="text-xs text-muted-foreground mt-1.5">
+          Para alterar a URL, acesse Configurações após publicar.
+        </p>
+      </div>
       <form action={publishEvent} className="flex flex-col gap-4">
         <input type="hidden" name="eventId" value={event.id} />
         <label className="flex items-start gap-3 cursor-pointer">

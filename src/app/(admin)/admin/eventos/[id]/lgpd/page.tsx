@@ -41,7 +41,7 @@ export default async function LgpdPage({ params }: Props) {
           <div className="border rounded-lg p-4">
             <h2 className="font-semibold text-sm mb-1">Exportar dados dos convidados</h2>
             <p className="text-xs text-muted-foreground mb-3">
-              Download CSV com todos os dados pessoais (nome, email, telefone, RSVP).
+              Download CSV com todos os dados pessoais (nome, email, telefone, confirmação de presença).
             </p>
             <Link
               href={`/api/admin/eventos/${eventId}/convidados/export`}

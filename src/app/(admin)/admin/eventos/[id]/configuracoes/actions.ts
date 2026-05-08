@@ -22,19 +22,36 @@ const BasicSchema = z.object({
   ceremonyTime: z.string(),
   timezone: z.string(),
   rsvpEarlyDeadline: z.string().optional(),
+  slug: z
+    .string()
+    .min(3)
+    .max(60)
+    .regex(/^[a-z0-9-]+$/, "Somente letras minúsculas, números e hífens")
+    .optional(),
 });
 
 export async function updateEventBasic(formData: FormData): Promise<void> {
   const parsed = BasicSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) return;
 
-  const { eventId, coupleNames, ceremonyDate, ceremonyTime, timezone, rsvpEarlyDeadline } =
+  const { eventId, coupleNames, ceremonyDate, ceremonyTime, timezone, rsvpEarlyDeadline, slug } =
     parsed.data;
 
   try {
     await withOrganizer(eventId);
   } catch {
     return;
+  }
+
+  // Resolve novo slug se fornecido e diferente do atual
+  let resolvedSlug: string | undefined;
+  if (slug) {
+    const conflict = await prisma.event.findFirst({
+      where: { slug, NOT: { id: eventId } },
+      select: { id: true },
+    });
+    if (!conflict) resolvedSlug = slug;
+    // Se houver conflito, mantém o slug atual (sem feedback inline por ora)
   }
 
   await prisma.event.update({
@@ -45,6 +62,7 @@ export async function updateEventBasic(formData: FormData): Promise<void> {
       ceremonyDate: new Date(`${ceremonyDate}T${ceremonyTime}:00`),
       timezone,
       rsvpEarlyDeadline: rsvpEarlyDeadline ? new Date(rsvpEarlyDeadline) : null,
+      ...(resolvedSlug ? { slug: resolvedSlug } : {}),
     },
   });
 

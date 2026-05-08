@@ -51,26 +51,6 @@ export default async function NovoEventoPage() {
               />
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="slug">
-                URL do convite
-                <span className="ml-1 text-muted-foreground font-normal text-xs">
-                  (somente letras, números e hífen)
-                </span>
-              </Label>
-              <div className="flex items-center gap-1">
-                <span className="text-muted-foreground text-sm shrink-0">casamento.app/</span>
-                <Input
-                  id="slug"
-                  name="slug"
-                  placeholder="ana-e-bruno"
-                  required
-                  pattern="[a-z0-9-]+"
-                  className="h-11"
-                />
-              </div>
-            </div>
-
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="ceremonyDate">Data da cerimônia</Label>
@@ -97,7 +77,7 @@ export default async function NovoEventoPage() {
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="rsvpEarlyDeadline">
-                Prazo do RSVP antecipado
+                Prazo limite para confirmação de presença
                 <span className="ml-1 text-muted-foreground font-normal text-xs">(opcional)</span>
               </Label>
               <Input
