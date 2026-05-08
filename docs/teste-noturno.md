@@ -193,4 +193,72 @@ e marca cada item.
 
 ---
 
+---
+
+## [2026-05-08] A.6 — Password Reset
+
+**O que foi:** fluxo completo de redefinição de senha. `/forgot-password` com anti-enumeration, `/reset-password?token=...` com zxcvbn (score ≥ 2), invalidação de sessões anteriores via `passwordChangedAt`, notificação de segurança por email.
+
+**Onde testar:** `/forgot-password` → email → `/reset-password?token=...` → `/admin`
+
+### /forgot-password
+
+**O que validar:**
+- [ ] Link "Esqueci minha senha" aparece no form de login (abaixo do campo senha)
+- [ ] Página carrega com visual igual ao /login (gradiente + card branco)
+- [ ] Campo e-mail + botão "Receber link de redefinição"
+- [ ] E-mail inválido → erro de validação client-side
+- [ ] E-mail válido cadastrado → estado de sucesso ("Se esse e-mail estiver cadastrado…")
+- [ ] **Anti-enumeration:** e-mail NÃO cadastrado → mesma mensagem de sucesso (nunca "E-mail não encontrado")
+- [ ] Após sucesso, link "Voltar para o login" aparece
+
+**Edge cases:**
+- [ ] 3 tentativas em 60 min pelo mesmo IP → rate limit
+- [ ] Preencher e-mail de conta inexistente → mesmo UX que conta existente
+
+### /admin/dev-tools — PasswordResets
+
+**O que validar:**
+- [ ] Após solicitar reset, `PasswordReset` aparece na seção de resets com status "válido"
+- [ ] Expira em 30 min (verificar coluna "Expira")
+- [ ] Botão "Invalidar" marca como usado → status muda para "usado"
+
+### /reset-password?token=...
+
+**Onde testar:** copiar link do console (dev) ou do email, ou pegar token direto de /admin/dev-tools → construir `https://<url>/reset-password?token=<hash-plain>`
+
+Atenção: o link no email tem o token PLAIN (não o hash). O que está no banco é o hash SHA-256.
+
+**O que validar:**
+- [ ] Link válido → formulário com campos "Nova senha" e "Confirmar nova senha"
+- [ ] Barra de força de senha aparece ao digitar
+- [ ] Senha muito fraca (score < 2, ex: "abc12345") → erro "Senha muito fraca…"
+- [ ] Senha razoável (score ≥ 2) → aceita
+- [ ] Senhas diferentes → "Senhas não conferem"
+- [ ] Submit com senha válida → redireciona para `/admin`
+- [ ] Verificar em /admin/dev-tools → token marcado como "usado"
+- [ ] AuthLog em /admin/dev-tools → PASSWORD_RESET_COMPLETED aparece
+
+**Edge cases:**
+- [ ] Token inválido (url digitada manualmente) → tela 🔒 "Link inválido" + botão "Solicitar novo link"
+- [ ] Token já usado (clicar no link duas vezes) → tela 🔒 "Este link já foi utilizado."
+- [ ] Token expirado (aguardar 30 min) → tela 🔒 com mensagem de expirado
+
+### Invalidação de sessões anteriores
+
+**Como testar:**
+1. Faça login em dois "dispositivos" (browser normal + aba anônima)
+2. No browser anônimo, solicite reset e redefina a senha
+3. No browser normal (sessão antiga), acesse /admin → deve ser redirecionado para /login
+
+**O que validar:**
+- [ ] Sessão antiga é invalidada após reset de senha (logout forçado em outros dispositivos)
+- [ ] A sessão criada pelo próprio reset continua válida e acessa /admin normalmente
+
+### Email de notificação de segurança
+
+**O que validar:**
+- [ ] Após reset bem-sucedido, email "Sua senha foi alterada" é enviado (ou log no console)
+- [ ] Email contém instrução de contato em caso de não ter sido o usuário
+
 *Última atualização: 2026-05-08*

@@ -9,6 +9,30 @@ import { authConfig } from "./config";
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma),
+  callbacks: {
+    session({ session, token }) {
+      if (token.sub) session.user.id = token.sub;
+      return session;
+    },
+    async jwt({ token, user }) {
+      // No sign-in inicial, o user object está presente — apenas passa o token
+      if (user) return token;
+      if (!token.sub || !token.iat) return token;
+
+      // Verifica se a senha foi alterada após emissão deste token.
+      // Se sim, invalida o token (força re-auth em todos os dispositivos).
+      const dbUser = await prisma.user.findUnique({
+        where: { id: token.sub },
+        select: { passwordChangedAt: true },
+      });
+      if (dbUser?.passwordChangedAt) {
+        const changedAt = Math.floor(dbUser.passwordChangedAt.getTime() / 1000);
+        if (changedAt > (token.iat as number)) return null;
+      }
+
+      return token;
+    },
+  },
   providers: [
     Resend({
       apiKey: process.env.RESEND_API_KEY,

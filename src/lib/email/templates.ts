@@ -125,6 +125,66 @@ export function rsvpDeclineText(o: RsvpDeclineOpts): string {
   ].join("\n");
 }
 
+// ── Redefinição de senha ──────────────────────────────────────────────────
+
+export interface PasswordResetOpts {
+  name: string;
+  resetUrl: string;
+}
+
+export function passwordResetHtml(o: PasswordResetOpts): string {
+  return wrap(`
+    <h1 style="margin:0 0 24px;font-size:24px;color:#1a1a1a;font-family:Georgia,serif">Redefinir senha</h1>
+    ${p(`Olá, <strong>${o.name}</strong>!`)}
+    ${p("Recebemos uma solicitação para redefinir a senha da sua conta no Voem. Clique no botão abaixo para criar uma nova senha:")}
+    <div style="text-align:center;margin:24px 0">
+      ${btn(o.resetUrl, "Redefinir minha senha")}
+    </div>
+    ${p('<span style="color:#888;font-size:13px">Este link expira em 30 minutos e é de uso único. Se você não solicitou a redefinição, ignore este e-mail — sua senha permanece a mesma.</span>')}
+  `);
+}
+
+export function passwordResetText(o: PasswordResetOpts): string {
+  return [
+    "Voem. — Redefinição de senha",
+    "",
+    `Olá, ${o.name}!`,
+    "",
+    "Acesse o link abaixo para criar uma nova senha (expira em 30 minutos):",
+    "",
+    o.resetUrl,
+    "",
+    "Se não solicitou, ignore este e-mail.",
+  ].join("\n");
+}
+
+// ── Notificação de senha alterada ─────────────────────────────────────────
+
+export interface PasswordChangedOpts {
+  name: string;
+}
+
+export function passwordChangedHtml(o: PasswordChangedOpts): string {
+  return wrap(`
+    <h1 style="margin:0 0 24px;font-size:24px;color:#1a1a1a;font-family:Georgia,serif">Senha alterada</h1>
+    ${p(`Olá, <strong>${o.name}</strong>!`)}
+    ${p("Sua senha foi alterada com sucesso.")}
+    ${p('<span style="color:#c00;font-size:13px"><strong>Não foi você?</strong> Entre em contato imediatamente respondendo este e-mail — sua conta pode estar comprometida.</span>')}
+  `);
+}
+
+export function passwordChangedText(o: PasswordChangedOpts): string {
+  return [
+    "Voem. — Senha alterada",
+    "",
+    `Olá, ${o.name}!`,
+    "",
+    "Sua senha foi alterada com sucesso.",
+    "",
+    "Não foi você? Responda este e-mail imediatamente.",
+  ].join("\n");
+}
+
 // ── Recuperação de acesso ─────────────────────────────────────────────────
 
 export interface RecoveryOpts {

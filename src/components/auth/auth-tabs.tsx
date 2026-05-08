@@ -10,8 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { loginAction, signupAction } from '@/app/(auth)/login/actions';
-import { getPasswordScore } from '@/lib/auth/validate-password';
 import { TurnstileWidget } from './turnstile-widget';
+import { PasswordStrengthBar } from './password-strength-bar';
+
+import Link from 'next/link';
 
 const CF_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
@@ -47,34 +49,6 @@ type SignupInput = z.infer<typeof signupSchema>;
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return <p className="mt-1 text-xs text-destructive">{message}</p>;
-}
-
-function PasswordStrengthBar({ password }: { password: string }) {
-  if (!password) return null;
-  const score = getPasswordScore(password);
-  const colors = [
-    'bg-red-500',
-    'bg-orange-400',
-    'bg-yellow-400',
-    'bg-green-400',
-    'bg-green-600',
-  ];
-  const labels = ['Muito fraca', 'Fraca', 'Razoável', 'Boa', 'Excelente'];
-  const filled = colors[score];
-
-  return (
-    <div className="mt-1.5 space-y-1">
-      <div className="flex gap-1">
-        {[0, 1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className={`h-1 flex-1 rounded-full transition-colors ${i < score ? filled : 'bg-border'}`}
-          />
-        ))}
-      </div>
-      <p className="text-xs text-muted-foreground">{labels[score]}</p>
-    </div>
-  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -156,6 +130,11 @@ function LoginForm({ turnstileToken }: { turnstileToken: string | null }) {
           {...form.register('password')}
         />
         <FieldError message={form.formState.errors.password?.message} />
+        <div className="flex justify-end">
+          <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            Esqueci minha senha
+          </Link>
+        </div>
       </div>
 
       {form.formState.errors.root && (
