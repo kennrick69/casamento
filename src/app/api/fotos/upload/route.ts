@@ -9,6 +9,23 @@ import { awardPoints } from "@/lib/points";
 const MAX_SIZE = 8 * 1024 * 1024; // 8 MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic"];
 
+// Magic bytes map: type → [offset, bytes]
+const MAGIC: Record<string, [number, number[]][]> = {
+  "image/jpeg": [[0, [0xff, 0xd8, 0xff]]],
+  "image/png":  [[0, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]]],
+  "image/gif":  [[0, [0x47, 0x49, 0x46, 0x38]]],
+  "image/webp": [[0, [0x52, 0x49, 0x46, 0x46]], [8, [0x57, 0x45, 0x42, 0x50]]],
+  "image/heic": [[4, [0x66, 0x74, 0x79, 0x70]]],
+};
+
+function matchesMagic(buf: Buffer, type: string): boolean {
+  const checks = MAGIC[type];
+  if (!checks) return false;
+  return checks.every(([offset, bytes]) =>
+    bytes.every((b, i) => buf[offset + i] === b)
+  );
+}
+
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
@@ -49,9 +66,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Mural desativado." }, { status: 403 });
   }
 
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  if (!matchesMagic(buffer, file.type)) {
+    return NextResponse.json({ error: "Arquivo inválido ou corrompido." }, { status: 400 });
+  }
+
   const ext = file.type.split("/")[1]?.replace("jpeg", "jpg") ?? "jpg";
   const key = `${slug}/fotos/${nanoid(12)}.${ext}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
 
   await storage.upload(key, buffer, file.type);
 
