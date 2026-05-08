@@ -1,8 +1,10 @@
 "use server";
 
 import { z } from "zod";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
 import { signRecoveryToken } from "@/lib/auth/guest";
+import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { email } from "@/lib/email";
 import { recoveryHtml, recoveryText } from "@/lib/email/templates";
 
@@ -16,6 +18,13 @@ export type RecoverResult =
   | { ok: false; message: string };
 
 export async function requestRecoveryLink(formData: FormData): Promise<RecoverResult> {
+  const h = await headers();
+  const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rl = await checkRateLimit(`recovery:${ip}`, ip, 5, 60);
+  if (!rl.allowed) {
+    return { ok: true }; // Anti-enumeration: não revelar que foi bloqueado
+  }
+
   const parsed = Schema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) {
     return { ok: false, message: parsed.error.issues[0]?.message ?? "Dados inválidos" };

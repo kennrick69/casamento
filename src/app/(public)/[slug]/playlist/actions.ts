@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentGuest } from "@/lib/auth/guest";
+import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { revalidatePath } from "next/cache";
 import { awardPoints } from "@/lib/points";
 
@@ -21,6 +22,9 @@ export async function addSong(formData: FormData) {
 
   const guest = await getCurrentGuest(slug);
   if (!guest || guest.banned) return;
+
+  const rl = await checkRateLimit(`playlist:${guest.id}`, guest.id, 10, 60);
+  if (!rl.allowed) return;
 
   const event = await prisma.event.findUnique({
     where: { slug },

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentGuest } from "@/lib/auth/guest";
+import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { storage } from "@/lib/storage";
 import { prisma } from "@/lib/db";
 import { nanoid } from "nanoid";
@@ -23,6 +24,11 @@ export async function POST(req: NextRequest) {
   }
   if (guest.banned) {
     return NextResponse.json({ error: "Conta suspensa." }, { status: 403 });
+  }
+
+  const rl = await checkRateLimit(`upload:${guest.id}`, guest.id, 20, 60);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: "Muitos envios. Aguarde um momento." }, { status: 429 });
   }
 
   if (!ALLOWED_TYPES.includes(file.type)) {

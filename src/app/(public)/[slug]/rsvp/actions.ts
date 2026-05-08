@@ -1,8 +1,10 @@
 "use server";
 
 import { z } from "zod";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
 import { generateSessionToken, setGuestCookie, signRecoveryToken } from "@/lib/auth/guest";
+import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { awardPoints } from "@/lib/points";
 import { getMainLocation } from "@/lib/locations";
 import { email } from "@/lib/email";
@@ -35,6 +37,13 @@ export type RsvpActionResult =
   | { ok: false; type: "ERROR"; message: string };
 
 export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> {
+  const h = await headers();
+  const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rl = await checkRateLimit(`rsvp:${ip}`, ip, 5, 60);
+  if (!rl.allowed) {
+    return { ok: false, type: "ERROR", message: `Muitas tentativas. Aguarde ${Math.ceil(rl.retryAfterSeconds / 60)} minuto(s).` };
+  }
+
   const raw = Object.fromEntries(formData.entries());
   const parsed = RsvpSchema.safeParse(raw);
 

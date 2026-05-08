@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentGuest } from "@/lib/auth/guest";
 import { realtime } from "@/lib/realtime";
 import { awardPoints } from "@/lib/points";
+import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { z } from "zod";
@@ -21,6 +22,9 @@ export async function sendMessage(formData: FormData) {
 
   const guest = await getCurrentGuest(slug);
   if (!guest || guest.banned) return null;
+
+  const rl = await checkRateLimit(`chat:${guest.id}`, guest.id, 30, 60);
+  if (!rl.allowed) return null;
 
   const event = await prisma.event.findUnique({
     where: { slug },
