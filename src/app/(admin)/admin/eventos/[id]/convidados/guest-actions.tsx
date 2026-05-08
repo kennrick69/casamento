@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { toast } from "sonner";
 import { toggleGuestBan, removeGuest } from "./actions";
 
 export function GuestActions({
@@ -20,7 +21,10 @@ export function GuestActions({
       const fd = new FormData();
       fd.set("guestId", guestId);
       fd.set("eventId", eventId);
-      await toggleGuestBan(fd);
+      const result = await toggleGuestBan(fd);
+      if (result.ok) {
+        toast.success(result.nowBanned ? "Convidado banido." : "Convidado desbanido.");
+      }
     });
   }
 
@@ -30,7 +34,8 @@ export function GuestActions({
       const fd = new FormData();
       fd.set("guestId", guestId);
       fd.set("eventId", eventId);
-      await removeGuest(fd);
+      const result = await removeGuest(fd);
+      if (result.ok) toast.success("Convidado removido.");
     });
   }
 

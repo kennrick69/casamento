@@ -3,7 +3,7 @@ import { requireOrganizer } from "@/lib/authorization";
 import { notFound } from "next/navigation";
 import { EventNav } from "@/components/admin/event-nav";
 import { AdminHeader } from "@/components/admin/admin-header";
-import { approvePhoto, removePhoto } from "./actions";
+import { PhotoCardActions } from "./photo-card-actions";
 import Image from "next/image";
 
 interface Props { params: Promise<{ id: string }> }
@@ -80,24 +80,7 @@ function PhotoCard({
       </div>
       <div className="p-2 flex flex-col gap-1">
         <p className="text-xs text-muted-foreground truncate">{photo.guest.name}</p>
-        <div className="flex gap-1">
-          {showApprove && (
-            <form action={approvePhoto} className="flex-1">
-              <input type="hidden" name="eventId" value={eventId} />
-              <input type="hidden" name="photoId" value={photo.id} />
-              <button type="submit" className="w-full text-xs py-1 rounded bg-green-600 text-white hover:bg-green-700 transition-colors">
-                Aprovar
-              </button>
-            </form>
-          )}
-          <form action={removePhoto} className="flex-1">
-            <input type="hidden" name="eventId" value={eventId} />
-            <input type="hidden" name="photoId" value={photo.id} />
-            <button type="submit" className="w-full text-xs py-1 rounded border border-red-200 text-red-600 hover:bg-red-50 transition-colors">
-              Remover
-            </button>
-          </form>
-        </div>
+        <PhotoCardActions eventId={eventId} photoId={photo.id} showApprove={showApprove} />
       </div>
     </div>
   );

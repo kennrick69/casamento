@@ -1,5 +1,28 @@
 # Changelog
 
+## [R.6 — Toasts de feedback em ações admin] — 2026-05-08
+
+### Added
+
+- `conta/profile-form.tsx` — client component: toast "Dados salvos!" / erro ao salvar perfil
+- `conta/notifications-form.tsx` — client component: toast "Preferências salvas!" ao atualizar notificações
+- `presentes/add-gift-form.tsx` — client component: toast "Presente adicionado!" + reset de form
+- `presentes/gift-item-actions.tsx` — client component: toast contextual para marcar/desmarcar/remover presente
+- `mural/photo-card-actions.tsx` — client component: toast "Foto aprovada!" / "Foto removida."
+- `moderacao/report-actions.tsx` — client component: toast "Conteúdo removido." / "Denúncia descartada."
+
+### Changed
+
+- `conta/actions.ts` — `updateProfile` e `updateNotifications` retornam `{ok, error?}` em vez de `void`
+- `presentes/actions.ts` — `createGift`, `deleteGift`, `toggleFulfilled` retornam resultado tipado
+- `mural/actions.ts` — `approvePhoto`, `removePhoto` retornam `{ok: boolean}`
+- `moderacao/actions.ts` — `resolveReport` retorna `{ok, action?}`
+- `convidados/actions.ts` — `toggleGuestBan` retorna `{ok, nowBanned}`, `removeGuest` retorna `{ok}`
+- `convidados/guest-actions.tsx` — adiciona `toast.success()` após ban/deban/remover com mensagem contextual
+- `conta/page.tsx`, `presentes/page.tsx`, `mural/page.tsx`, `moderacao/page.tsx` — usam novos client components
+
+---
+
 ## [R.5 — Auditoria de estados de loading] — 2026-05-08
 
 ### Changed

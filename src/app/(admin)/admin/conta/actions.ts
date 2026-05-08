@@ -31,16 +31,16 @@ const profileSchema = z.object({
 
 export type AccountState = { ok: boolean; error?: string } | null;
 
-export async function updateProfile(formData: FormData): Promise<void> {
+export async function updateProfile(formData: FormData): Promise<{ ok: boolean; error?: string }> {
   const session = await requireSession().catch(() => null);
-  if (!session) return;
+  if (!session) return { ok: false, error: "Não autenticado." };
 
   const parsed = profileSchema.safeParse({
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
     phone: (formData.get("phone") as string) || undefined,
   });
-  if (!parsed.success) return;
+  if (!parsed.success) return { ok: false, error: "Preencha os campos obrigatórios." };
 
   const { firstName, lastName, phone } = parsed.data;
   await prisma.user.update({
@@ -49,6 +49,7 @@ export async function updateProfile(formData: FormData): Promise<void> {
   });
 
   revalidatePath("/admin/conta");
+  return { ok: true };
 }
 
 // ── Alterar senha ──────────────────────────────────────────────────────────
@@ -121,9 +122,9 @@ export async function updatePassword(formData: FormData): Promise<AccountState> 
 
 // ── Notificações ───────────────────────────────────────────────────────────
 
-export async function updateNotifications(formData: FormData): Promise<void> {
+export async function updateNotifications(formData: FormData): Promise<{ ok: boolean }> {
   const session = await requireSession().catch(() => null);
-  if (!session) return;
+  if (!session) return { ok: false };
 
   const marketingOptIn = formData.get("marketingOptIn") === "on";
   await prisma.user.update({
@@ -132,4 +133,5 @@ export async function updateNotifications(formData: FormData): Promise<void> {
   });
 
   revalidatePath("/admin/conta");
+  return { ok: true };
 }

@@ -14,6 +14,28 @@ e marca cada item.
 
 ---
 
+## [2026-05-08] R.6 — Toasts de feedback admin
+
+**O que foi:** Ações admin agora mostram toast sonner de sucesso/erro.
+
+**Onde testar:** painel admin — conta, presentes, mural, moderação, convidados
+
+**O que validar:**
+- [ ] Salvar dados pessoais (conta) → toast "Dados salvos!"
+- [ ] Salvar preferências de notificações → toast "Preferências salvas!"
+- [ ] Adicionar presente → toast "Presente adicionado!"; form reseta
+- [ ] Marcar presente como recebido → toast "Presente marcado como recebido!"
+- [ ] Desmarcar presente → toast "Presente desmarcado."
+- [ ] Remover presente → toast "Presente removido."
+- [ ] Aprovar foto no mural → toast "Foto aprovada!"
+- [ ] Remover foto no mural → toast "Foto removida."
+- [ ] Banir convidado → toast "Convidado banido."; desbanir → "Convidado desbanido."
+- [ ] Remover convidado → toast "Convidado removido."
+- [ ] Resolver denúncia (remover) → toast "Conteúdo removido."
+- [ ] Descartar denúncia → toast "Denúncia descartada."
+
+---
+
 ## [2026-05-08] R.5 — Estados de loading
 
 **O que foi:** 4 botões com `isPending` sem feedback visual corrigidos.

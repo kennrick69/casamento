@@ -2,11 +2,9 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { ChangePasswordForm } from "./change-password-form";
-import { updateProfile, updateNotifications } from "./actions";
+import { ProfileForm } from "./profile-form";
+import { NotificationsForm } from "./notifications-form";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Minha conta" };
@@ -55,46 +53,26 @@ export default async function ContaPage({ searchParams }: Props) {
 
         {/* ── Dados pessoais ─────────────────────────────────────────── */}
         <section className="bg-background rounded-lg border border-border p-6">
-          <h2 className="text-base font-semibold mb-5">Dados pessoais</h2>
-          <form action={updateProfile} className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="firstName">Nome</Label>
-                <Input id="firstName" name="firstName" defaultValue={user.firstName} required className="h-11" />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="lastName">Sobrenome</Label>
-                <Input id="lastName" name="lastName" defaultValue={user.lastName} required className="h-11" />
-              </div>
+          <h2 className="text-base font-semibold mb-4">Dados pessoais</h2>
+          <div className="flex flex-col gap-1.5 mb-4">
+            <label className="text-sm font-medium">E-mail</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="email"
+                value={user.email}
+                readOnly
+                className="h-11 flex-1 rounded-md border border-input bg-muted px-3 text-sm cursor-not-allowed text-muted-foreground"
+              />
+              {user.emailVerified ? (
+                <span className="text-xs text-green-600 whitespace-nowrap">✓ verificado</span>
+              ) : (
+                <Link href="/verify-email" className="text-xs text-amber-600 whitespace-nowrap underline underline-offset-2">
+                  verificar
+                </Link>
+              )}
             </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="email">E-mail</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="email"
-                  type="email"
-                  value={user.email}
-                  readOnly
-                  className="h-11 bg-muted cursor-not-allowed text-muted-foreground"
-                />
-                {user.emailVerified ? (
-                  <span className="text-xs text-green-600 whitespace-nowrap">✓ verificado</span>
-                ) : (
-                  <Link href="/verify-email" className="text-xs text-amber-600 whitespace-nowrap underline underline-offset-2">
-                    verificar
-                  </Link>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="phone">Telefone <span className="text-xs text-muted-foreground font-normal">(opcional)</span></Label>
-              <Input id="phone" name="phone" type="tel" defaultValue={user.phone ?? ""} placeholder="+55 11 99999-9999" className="h-11" />
-            </div>
-
-            <Button type="submit" className="h-11 self-start px-6">Salvar</Button>
-          </form>
+          </div>
+          <ProfileForm firstName={user.firstName} lastName={user.lastName} phone={user.phone} />
         </section>
 
         {/* ── Segurança / Alterar senha ───────────────────────────────── */}
@@ -119,18 +97,7 @@ export default async function ContaPage({ searchParams }: Props) {
         {/* ── Notificações ───────────────────────────────────────────── */}
         <section className="bg-background rounded-lg border border-border p-6">
           <h2 className="text-base font-semibold mb-5">Notificações</h2>
-          <form action={updateNotifications} className="flex flex-col gap-4">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                name="marketingOptIn"
-                defaultChecked={user.marketingOptIn}
-                className="mt-0.5 size-4"
-              />
-              <span className="text-sm">Receber novidades, dicas de planejamento e atualizações do Voem.</span>
-            </label>
-            <Button type="submit" className="h-11 self-start px-6">Salvar preferências</Button>
-          </form>
+          <NotificationsForm marketingOptIn={user.marketingOptIn} />
         </section>
       </main>
     </div>

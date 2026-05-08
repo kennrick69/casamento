@@ -3,7 +3,7 @@ import { requireOrganizer } from "@/lib/authorization";
 import { notFound } from "next/navigation";
 import { EventNav } from "@/components/admin/event-nav";
 import { AdminHeader } from "@/components/admin/admin-header";
-import { resolveReport } from "./actions";
+import { ReportActions } from "./report-actions";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -58,26 +58,12 @@ export default async function ModeracaoPage({ params }: Props) {
                 {report.chatMessage.content}
               </div>
             )}
-            <div className="flex gap-2">
-              <form action={resolveReport}>
-                <input type="hidden" name="eventId" value={eventId} />
-                <input type="hidden" name="reportId" value={report.id} />
-                <input type="hidden" name="action" value="REMOVED" />
-                {report.photoId && <input type="hidden" name="photoId" value={report.photoId} />}
-                {report.chatMessageId && <input type="hidden" name="chatMessageId" value={report.chatMessageId} />}
-                <button type="submit" className="text-sm px-3 py-1.5 rounded bg-red-600 text-white hover:bg-red-700 transition-colors">
-                  Remover conteúdo
-                </button>
-              </form>
-              <form action={resolveReport}>
-                <input type="hidden" name="eventId" value={eventId} />
-                <input type="hidden" name="reportId" value={report.id} />
-                <input type="hidden" name="action" value="DISMISSED" />
-                <button type="submit" className="text-sm px-3 py-1.5 rounded border border-border hover:bg-muted transition-colors">
-                  Descartar
-                </button>
-              </form>
-            </div>
+            <ReportActions
+              eventId={eventId}
+              reportId={report.id}
+              photoId={report.photoId}
+              chatMessageId={report.chatMessageId}
+            />
           </div>
         ))}
 
