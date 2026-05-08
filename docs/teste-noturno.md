@@ -170,6 +170,180 @@ e marca cada item.
 
 ---
 
+## [2026-05-08] Bloco S — Features / Segurança (S.1 a S.11)
+
+---
+
+### S.1 — Templates de email
+
+**O que mudou:** layout base `_layout.ts` com tokens rose-to-slate, primitivos HTML. 9 templates migrados: welcomeVerify, passwordReset, passwordChanged, rsvpConfirmation, rsvpConfirm (legado), rsvpDecline, recovery, reminder, massEmail.
+
+**Onde testar:** qualquer ação que dispara email (RSVP, reset de senha, cadastro)
+
+**O que validar:**
+- [ ] Email de confirmação de presença renderiza corretamente no Gmail (cabeçalho gradiente rose → slate)
+- [ ] Email de reset de senha exibe infoBox laranja com aviso de expiração em 30 min
+- [ ] Email de senha alterada exibe infoBox vermelho com CTA "Não foi você?"
+- [ ] Email de lembrete mostra countdown ("É amanhã! 🎉" ou "Faltam X dias")
+- [ ] Versão texto simples (plain text) funciona em clientes sem HTML
+- [ ] Dev sem RESEND_API_KEY → log mostra banner colorido com link clicável
+
+---
+
+### S.2 — Wizard auto-save
+
+**O que mudou:** onBlur nos campos de texto/data dispara save silencioso. onChange em radio/checkbox idem. Indicador "Salvando…" → "✓ Salvo" por 2s ao lado do botão Próximo.
+
+**Onde testar:** `/admin/eventos/[id]/configuracoes?step=1` a `?step=4`
+
+**O que validar:**
+- [ ] Passo 1 — digitar nome do casal → sair do campo → indicador "Salvando…" aparece → "✓ Salvo"
+- [ ] Passo 1 — alterar data/horário → onBlur → salva sem navegar
+- [ ] Passo 2 — preencher local da cerimônia → sair → "✓ Salvo"
+- [ ] Passo 3 — clicar em outro tema → "Salvando…" imediato (onChange)
+- [ ] Passo 4 — marcar/desmarcar checkbox de aprovação → "Salvando…" → "✓ Salvo"
+- [ ] Campos com erro de validação não disparam auto-save
+
+**Edge cases:**
+- [ ] Auto-save não causa redirect (somente o botão "Próximo" navega)
+- [ ] Clicar "Próximo" logo após auto-save não salva duas vezes com conflito
+
+---
+
+### S.3 — Lista de convidados profissional
+
+**O que mudou:** GuestList cliente com busca, filtros por status, seleção múltipla, ações em massa, importação CSV.
+
+**Onde testar:** `/admin/eventos/[id]/convidados`
+
+**O que validar:**
+- [ ] Campo de busca filtra por nome E por e-mail em tempo real
+- [ ] Abas de filtro: Todos / Confirmados / Recusados / Pendentes / Banidos + contador
+- [ ] Checkbox por linha seleciona individualmente
+- [ ] "Selecionar todos" seleciona todos os visíveis no filtro atual
+- [ ] Barra de ações em massa aparece quando ≥1 selecionado: Banir / Desbanir / Remover
+- [ ] "Banir selecionados" → toast "X convidados banidos."
+- [ ] "Remover selecionados" → toast "X convidados removidos." + saem da lista
+- [ ] Importar CSV com colunas `name,email,phone,plusOnes,dietary` → toast com contagem
+- [ ] CSV com cabeçalho → cabeçalho é detectado e pulado (não vira convidado)
+- [ ] Link "Exportar CSV" na cabeçalho → download do arquivo
+
+**Edge cases:**
+- [ ] CSV com e-mail já existente → linha é pulada (skipped), não duplica
+- [ ] CSV com e-mail inválido → toast de erro descritivo por linha
+- [ ] Busca com 0 resultados → "Nenhum resultado para esta busca."
+
+---
+
+### S.4 — Dashboard do evento
+
+**O que mudou:** countdown, atividade recente, alerta de denúncias, quick links com ícones.
+
+**Onde testar:** `/admin/eventos/[id]`
+
+**O que validar:**
+- [ ] Countdown mostra dias corretos até a cerimônia (gradiente rose-to-slate)
+- [ ] No dia do evento → "Hoje é o grande dia! 🎉"
+- [ ] Evento passado → "Celebrado há X dias" (fundo cinza, não gradiente)
+- [ ] Stats: Confirmados (com "X c/ acomp."), Recusados, Pendentes, Fotos
+- [ ] Se houver denúncias pendentes → alerta "⚠ X denúncia(s)" com link para /moderacao
+- [ ] Atividade recente lista últimas ações (guest confirmou, foto enviada) com tempo relativo
+- [ ] Quick links (8 botões com ícones) todos redirecionam corretamente
+
+---
+
+### S.5 — Tipografia e espaçamento
+
+**O que mudou:** touch targets ≥44px em event-nav e botões ▲▼; py-1 → py-1.5 nos badges de passo; texto "Segurança" com mb-3.
+
+**Onde testar:** mobile (viewport 390px) nos formulários do wizard e nas páginas de roteiro/locais
+
+**O que validar:**
+- [ ] Links de navegação do EventNav têm altura ≥44px (fáceis de tocar no mobile)
+- [ ] Botões ▲▼ de reordenar roteiro/locais — área clicável visível ao hover (8×8 com fundo)
+- [ ] Badges "Passo 1 de 4" — texto legível (text-sm, não text-xs)
+- [ ] Seção "Segurança" em /admin/conta tem espaço adequado entre título e campos
+
+---
+
+### S.6 — Bug sweep
+
+**O que mudou:** cross-event bypass em 3 actions; preço "0" em presente não virava null.
+
+**O que validar:**
+- [ ] Criar presente com preço "0" → salva R$ 0,00 (não campo vazio)
+- [ ] Remover presente → confirmar que presente do evento A não pode ser removido por organizador do evento B (verificar via Prisma Studio ou log de erros)
+
+---
+
+### S.7 — Rate limiting global
+
+**O que mudou:** rate limit estendido para RSVP (5/h IP), chat (30/h guestId), playlist (10/h guestId), upload (20/h guestId), recuperar (5/h IP).
+
+**Onde testar:** ações repetidas rapidamente (usar loop manual ou script simples)
+
+**O que validar:**
+- [ ] RSVP repetido >5× do mesmo IP em 1h → mensagem "Muitas tentativas. Aguarde X minuto(s)."
+- [ ] Chat com >30 mensagens/h → mensagem silenciosamente bloqueada (sem feedback de erro no UI)
+- [ ] Upload >20 fotos/h → HTTP 429 "Muitos envios. Aguarde um momento."
+- [ ] Magic link recuperar >5× IP/h → retorna `ok: true` (anti-enumeração, não revela bloqueio)
+
+---
+
+### S.8 — Sanitização de URLs (XSS)
+
+**O que mudou:** safeHref() filtra javascript: e data: em presentes e playlist; isHttpUrl() no Zod de externalLink e mapsLink.
+
+**O que validar:**
+- [ ] Criar presente com `externalLink = "javascript:alert(1)"` → Zod rejeita com erro
+- [ ] Adicionar música com `externalLink = "javascript:alert(1)"` → Zod rejeita
+- [ ] Link do Maps com protocolo não-https → rejeitado pelo Zod no admin
+- [ ] Caso hipotético: se URL maliciosa chegasse ao banco, safeHref() retorna "#" no href
+
+---
+
+### S.9 — Validação de upload por magic bytes
+
+**O que mudou:** matchesMagic() verifica assinatura binária antes de aceitar o upload.
+
+**O que validar:**
+- [ ] Renomear um arquivo .txt para .jpg e tentar fazer upload → 400 "Arquivo inválido ou corrompido."
+- [ ] Upload de JPEG real → aceito normalmente
+- [ ] Upload de PNG real → aceito normalmente
+- [ ] Upload de WebP real → aceito normalmente
+
+---
+
+### S.10 — Validação de slug
+
+**O que mudou:** lista de slugs reservados; Zod rejeita slugs reservados em updateEventBasic; auto-slug suffix "-evento" para nomes reservados.
+
+**O que validar:**
+- [ ] Tentar salvar slug "login" em configurações → erro "Esta URL não está disponível"
+- [ ] Tentar salvar slug "admin" → mesmo erro
+- [ ] Slug válido e único → salvo normalmente
+- [ ] Criar evento onde coupleNames gera slug reservado → recebe sufixo "-evento" automaticamente
+
+---
+
+### S.11 — Dashboard global /admin/visao-geral
+
+**O que mudou:** nova página com métricas agregadas de todos os eventos.
+
+**Onde testar:** `/admin/visao-geral`
+
+**O que validar:**
+- [ ] Link "Visão geral" visível no header de /admin
+- [ ] Cards: total eventos, convidados, confirmados, fotos (soma de todos os eventos)
+- [ ] Seção "Publicados": countdown em dias, confirmados/pendentes/recusados/fotos por evento
+- [ ] Evento com denúncias pendentes → "⚠ X denúncia(s)" em vermelho no card
+- [ ] Alerta global de denúncias aparece no topo se algum evento tiver denúncias
+- [ ] Seção "Rascunhos" com link direto para continuar wizard
+- [ ] Seção "Arquivados" colapsada com `<details>`
+- [ ] Sem eventos → redireciona para /admin (não página vazia)
+
+---
+
 ## [2026-05-07] A.1 — Landing page + botão CTA
 
 **O que foi:** ProtoScene.tsx — hero estático com botão "Criar meu convite" que redireciona para /admin.
