@@ -5,8 +5,6 @@ import { getCurrentGuest } from "@/lib/auth/guest";
 import { realtime } from "@/lib/realtime";
 import { awardPoints } from "@/lib/points";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { z } from "zod";
 
 const Schema = z.object({
@@ -49,13 +47,51 @@ export async function sendMessage(formData: FormData) {
     content: msg.content,
     guestName: msg.guest.name,
     guestId: msg.guestId,
-    createdAt: format(msg.createdAt, "HH:mm", { locale: ptBR }),
+    reactions: {} as Record<string, string[]>,
+    createdAt: msg.createdAt.toISOString(),
   };
 
   void awardPoints(guest.id, event.id, "chat_message");
-
-  // Dispara evento Pusher (noop em dev sem Pusher configurado)
   await realtime.trigger(`event-${event.id}`, "chat-message", payload).catch(() => null);
 
   return { message: payload };
+}
+
+const ReactionSchema = z.object({
+  slug: z.string(),
+  messageId: z.string(),
+  emoji: z.string().max(8),
+});
+
+export async function toggleReaction(formData: FormData) {
+  const parsed = ReactionSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return null;
+
+  const { slug, messageId, emoji } = parsed.data;
+  const guest = await getCurrentGuest(slug);
+  if (!guest || guest.banned) return null;
+
+  const msg = await prisma.chatMessage.findFirst({
+    where: { id: messageId, removedAt: null },
+    select: { id: true, eventId: true, reactions: true },
+  });
+  if (!msg) return null;
+
+  const reactions = (msg.reactions ?? {}) as Record<string, string[]>;
+  const current = reactions[emoji] ?? [];
+  const has = current.includes(guest.id);
+  reactions[emoji] = has ? current.filter((id) => id !== guest.id) : [...current, guest.id];
+  if (reactions[emoji].length === 0) delete reactions[emoji];
+
+  await prisma.chatMessage.update({
+    where: { id: messageId },
+    data: { reactions },
+  });
+
+  await realtime.trigger(`event-${msg.eventId}`, "chat-reaction", {
+    messageId,
+    reactions,
+  }).catch(() => null);
+
+  return { reactions };
 }

@@ -382,6 +382,7 @@ model ChatMessage {
   eventId   String
   guestId   String
   content   String    @db.Text
+  reactions Json      @default("{}")
   removedAt DateTime?
   createdAt DateTime  @default(now())
 

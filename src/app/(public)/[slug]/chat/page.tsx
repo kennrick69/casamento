@@ -2,8 +2,6 @@ import { notFound } from "next/navigation";
 import { validateEventAccess } from "@/lib/auth/guest";
 import { prisma } from "@/lib/db";
 import { ChatRoom } from "./chat-room";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Chat" };
@@ -32,19 +30,35 @@ export default async function ChatPage({
     );
   }
 
-  const messages = await prisma.chatMessage.findMany({
-    where: { eventId: event.id, removedAt: null },
-    orderBy: { createdAt: "asc" },
-    take: 100,
-    include: { guest: { select: { name: true } } },
-  });
+  const [messages, organizers] = await Promise.all([
+    prisma.chatMessage.findMany({
+      where: { eventId: event.id, removedAt: null },
+      orderBy: { createdAt: "asc" },
+      take: 100,
+      include: { guest: { select: { name: true } } },
+    }),
+    prisma.eventOrganizer.findMany({
+      where: { eventId: event.id },
+      include: { user: { select: { email: true } } },
+    }),
+  ]);
+
+  const organizerEmails = organizers.map((o) => o.user.email).filter(Boolean) as string[];
+  const coupleGuestRecords = organizerEmails.length > 0
+    ? await prisma.guest.findMany({
+        where: { eventId: event.id, email: { in: organizerEmails } },
+        select: { id: true },
+      })
+    : [];
+  const coupleGuestIds = new Set<string>(coupleGuestRecords.map((g) => g.id));
 
   const serialized = messages.map((m) => ({
     id: m.id,
     content: m.content,
     guestName: m.guest.name,
     guestId: m.guestId,
-    createdAt: format(m.createdAt, "HH:mm", { locale: ptBR }),
+    reactions: (m.reactions ?? {}) as Record<string, string[]>,
+    createdAt: m.createdAt.toISOString(),
   }));
 
   return (
@@ -54,6 +68,7 @@ export default async function ChatPage({
       initialMessages={serialized}
       guestId={guest?.id ?? null}
       guestName={guest?.name ?? null}
+      coupleGuestIds={[...coupleGuestIds]}
       pusherKey={process.env.NEXT_PUBLIC_PUSHER_KEY ?? null}
       pusherCluster={process.env.NEXT_PUBLIC_PUSHER_CLUSTER ?? null}
     />
