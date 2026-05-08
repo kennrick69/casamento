@@ -32,9 +32,9 @@ export function VoteButton({
     <button
       onClick={handleClick}
       disabled={isPending || disabled}
-      aria-label={voted ? "Remover voto" : "Votar"}
-      className={`flex flex-col items-center gap-0.5 min-w-[2.5rem] transition-colors ${
-        disabled ? "opacity-40 cursor-default" : "cursor-pointer"
+      aria-label={isPending ? "Processando…" : voted ? "Remover voto" : "Votar"}
+      className={`flex flex-col items-center gap-0.5 min-w-[2.5rem] transition-all ${
+        disabled ? "opacity-40 cursor-default" : isPending ? "opacity-50 cursor-wait" : "cursor-pointer"
       }`}
     >
       <span className={`text-lg ${voted ? "text-[var(--theme-accent)]" : "text-[var(--theme-secondary)]"}`}>

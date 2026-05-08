@@ -1,5 +1,16 @@
 # Changelog
 
+## [R.5 — Auditoria de estados de loading] — 2026-05-08
+
+### Changed
+
+- `convidados/guest-actions.tsx` — dois `useTransition` separados; botões mostram "Banindo…"/"Desbanindo…"/"Removendo…" durante ação
+- `presentes/reserve-button.tsx` — `"…"` → `"Reservando…"` / `"Cancelando…"` (contextual)
+- `chat/chat-room.tsx` — botão Enviar mostra `"Enviando…"` durante `isPending`
+- `playlist/vote-button.tsx` — adiciona `opacity-50 cursor-wait` e `aria-label="Processando…"` durante voto
+
+---
+
 ## [R.4 — Auditoria de mensagens de erro] — 2026-05-08
 
 ### Changed

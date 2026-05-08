@@ -33,7 +33,7 @@ export function ReserveButton({
           : "bg-[var(--theme-primary)] text-[var(--theme-primary-foreground)] border-[var(--theme-primary)]"
       }`}
     >
-      {isPending ? "…" : reserved ? "Cancelar reserva" : "Reservar presente"}
+      {isPending ? (reserved ? "Cancelando…" : "Reservando…") : reserved ? "Cancelar reserva" : "Reservar presente"}
     </button>
   );
 }

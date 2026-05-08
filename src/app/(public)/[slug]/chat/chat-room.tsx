@@ -158,7 +158,7 @@ export function ChatRoom({
             disabled={isPending || !text.trim()}
             className="rounded-full bg-[var(--theme-primary)] text-[var(--theme-primary-foreground)] px-4 py-2 text-sm disabled:opacity-40 transition-opacity"
           >
-            Enviar
+            {isPending ? "Enviando…" : "Enviar"}
           </button>
         </form>
       ) : (

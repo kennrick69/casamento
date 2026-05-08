@@ -12,10 +12,11 @@ export function GuestActions({
   eventId: string;
   banned: boolean;
 }) {
-  const [isPending, startTransition] = useTransition();
+  const [isBanPending, startBanTransition] = useTransition();
+  const [isRemovePending, startRemoveTransition] = useTransition();
 
   function handleBan() {
-    startTransition(async () => {
+    startBanTransition(async () => {
       const fd = new FormData();
       fd.set("guestId", guestId);
       fd.set("eventId", eventId);
@@ -25,7 +26,7 @@ export function GuestActions({
 
   function handleRemove() {
     if (!confirm("Remover este convidado? A ação pode ser desfeita recriando a confirmação de presença.")) return;
-    startTransition(async () => {
+    startRemoveTransition(async () => {
       const fd = new FormData();
       fd.set("guestId", guestId);
       fd.set("eventId", eventId);
@@ -37,17 +38,17 @@ export function GuestActions({
     <div className="flex gap-2 shrink-0 ml-3">
       <button
         onClick={handleBan}
-        disabled={isPending}
+        disabled={isBanPending || isRemovePending}
         className="text-xs text-muted-foreground hover:text-foreground transition-colors"
       >
-        {banned ? "Desbanir" : "Banir"}
+        {isBanPending ? (banned ? "Desbanindo…" : "Banindo…") : (banned ? "Desbanir" : "Banir")}
       </button>
       <button
         onClick={handleRemove}
-        disabled={isPending}
+        disabled={isBanPending || isRemovePending}
         className="text-xs text-red-500 hover:text-red-700 transition-colors"
       >
-        Remover
+        {isRemovePending ? "Removendo…" : "Remover"}
       </button>
     </div>
   );

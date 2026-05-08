@@ -14,6 +14,21 @@ e marca cada item.
 
 ---
 
+## [2026-05-08] R.5 — Estados de loading
+
+**O que foi:** 4 botões com `isPending` sem feedback visual corrigidos.
+
+**Onde testar:** fluxos que envolvem ações assíncronas
+
+**O que validar:**
+- [ ] Convidados admin: banir/desbanir → botão mostra "Banindo…"/"Desbanindo…" durante ação
+- [ ] Convidados admin: remover → botão mostra "Removendo…" durante ação
+- [ ] Presentes: reservar → botão mostra "Reservando…"; cancelar → "Cancelando…"
+- [ ] Chat: enviar mensagem → botão "Enviar" muda para "Enviando…"
+- [ ] Playlist: votar → coração fica com opacidade 50% durante processamento
+
+---
+
 ## [2026-05-08] R.4 — Auditoria de mensagens de erro
 
 **O que foi:** Strings em inglês em rotas de API substituídas por português; fallback de upload de foto melhorado.
