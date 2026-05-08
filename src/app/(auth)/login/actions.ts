@@ -12,6 +12,7 @@ import { checkRateLimit, clearRateLimit } from "@/lib/auth/rate-limit";
 import { logAuthEvent } from "@/lib/auth/auth-log";
 import { email as emailProvider } from "@/lib/email";
 import { welcomeVerifyHtml, welcomeVerifyText } from "@/lib/email/templates";
+import { verifyTurnstile } from "@/lib/auth/turnstile";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -51,6 +52,12 @@ export async function loginAction(formData: FormData): Promise<AuthState> {
   }
 
   const { email, password } = parsed.data;
+
+  const cfToken = (formData.get("cf-turnstile-response") as string) ?? "";
+  if (!await verifyTurnstile(cfToken)) {
+    await logAuthEvent({ action: "CAPTCHA_FAILED", ip, userAgent, email });
+    return { error: "Verificação de segurança falhou. Recarregue a página e tente novamente." };
+  }
 
   const rl = await checkRateLimit(`login:${email}:${ip}`, ip, 5, 15, userAgent);
   if (!rl.allowed) {
@@ -109,6 +116,12 @@ export async function signupAction(formData: FormData): Promise<AuthState> {
   }
 
   const { firstName, lastName, email, password } = parsed.data;
+
+  const cfToken = (formData.get("cf-turnstile-response") as string) ?? "";
+  if (!await verifyTurnstile(cfToken)) {
+    await logAuthEvent({ action: "CAPTCHA_FAILED", ip, userAgent, email });
+    return { error: "Verificação de segurança falhou. Recarregue a página e tente novamente." };
+  }
 
   const emailResult = validateEmail(email);
   if (!emailResult.ok) {

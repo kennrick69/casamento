@@ -11,6 +11,9 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { loginAction, signupAction } from '@/app/(auth)/login/actions';
 import { getPasswordScore } from '@/lib/auth/validate-password';
+import { TurnstileWidget } from './turnstile-widget';
+
+const CF_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Schemas (client-side validation)
@@ -78,17 +81,23 @@ function PasswordStrengthBar({ password }: { password: string }) {
 // Login form
 // ─────────────────────────────────────────────────────────────────────────────
 
-function LoginForm() {
+function LoginForm({ turnstileToken }: { turnstileToken: string | null }) {
   const form = useForm<LoginInput>({ resolver: zodResolver(loginSchema) });
   const [isPending, startTransition] = useTransition();
   const [magicPending, setMagicPending] = useState(false);
   const [magicSent, setMagicSent] = useState(false);
 
   const onSubmit = form.handleSubmit((data) => {
+    if (CF_SITE_KEY && !turnstileToken) {
+      form.setError('root', { message: 'Complete a verificação de segurança.' });
+      return;
+    }
+
     const fd = new FormData();
     fd.append('email', data.email);
     fd.append('password', data.password);
     fd.append('website', ''); // honeypot — vazio em submissão legítima
+    fd.append('cf-turnstile-response', turnstileToken ?? '');
 
     startTransition(async () => {
       const result = await loginAction(fd);
@@ -191,19 +200,25 @@ function LoginForm() {
 // Signup form
 // ─────────────────────────────────────────────────────────────────────────────
 
-function SignupForm() {
+function SignupForm({ turnstileToken }: { turnstileToken: string | null }) {
   const form = useForm<SignupInput>({ resolver: zodResolver(signupSchema) });
   const [isPending, startTransition] = useTransition();
   // eslint-disable-next-line react-hooks/incompatible-library
   const password = form.watch('password') ?? '';
 
   const onSubmit = form.handleSubmit((data) => {
+    if (CF_SITE_KEY && !turnstileToken) {
+      form.setError('root', { message: 'Complete a verificação de segurança.' });
+      return;
+    }
+
     const fd = new FormData();
     fd.append('firstName', data.firstName);
     fd.append('lastName', data.lastName);
     fd.append('email', data.email);
     fd.append('password', data.password);
     fd.append('website', ''); // honeypot
+    fd.append('cf-turnstile-response', turnstileToken ?? '');
 
     startTransition(async () => {
       const result = await signupAction(fd);
@@ -316,6 +331,8 @@ function SignupForm() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function AuthTabs({ defaultTab = 'login' }: { defaultTab?: 'login' | 'signup' }) {
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
   return (
     <Tabs defaultValue={defaultTab}>
       <TabsList className="w-full">
@@ -328,12 +345,17 @@ export function AuthTabs({ defaultTab = 'login' }: { defaultTab?: 'login' | 'sig
       </TabsList>
 
       <TabsContent value="login" className="mt-5">
-        <LoginForm />
+        <LoginForm turnstileToken={turnstileToken} />
       </TabsContent>
 
       <TabsContent value="signup" className="mt-5">
-        <SignupForm />
+        <SignupForm turnstileToken={turnstileToken} />
       </TabsContent>
+
+      {/* Widget vive fora das abas para não desmontar ao trocar de aba */}
+      <div className="mt-4">
+        <TurnstileWidget onToken={setTurnstileToken} />
+      </div>
     </Tabs>
   );
 }
