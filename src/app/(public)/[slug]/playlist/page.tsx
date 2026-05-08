@@ -3,6 +3,7 @@ import { validateEventAccess } from "@/lib/auth/guest";
 import { prisma } from "@/lib/db";
 import { AddSongForm } from "./add-song-form";
 import { VoteButton } from "./vote-button";
+import { safeHref } from "@/lib/utils/safe-href";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Playlist" };
@@ -90,7 +91,7 @@ export default async function PlaylistPage({
                 <p className="text-sm text-[var(--theme-secondary)] truncate">{s.artist}</p>
                 {s.externalLink && (
                   <a
-                    href={s.externalLink}
+                    href={safeHref(s.externalLink)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-[var(--theme-primary)] hover:underline"

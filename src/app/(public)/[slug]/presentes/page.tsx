@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { validateEventAccess } from "@/lib/auth/guest";
 import { prisma } from "@/lib/db";
 import { ReserveButton } from "./reserve-button";
+import { safeHref } from "@/lib/utils/safe-href";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Presentes" };
@@ -101,7 +102,7 @@ export default async function PresentesPage({
                   </div>
                   {gift.externalLink && (
                     <a
-                      href={gift.externalLink}
+                      href={safeHref(gift.externalLink)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-[var(--theme-primary)] hover:underline shrink-0"

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentGuest } from "@/lib/auth/guest";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
+import { isHttpUrl } from "@/lib/utils/safe-href";
 import { revalidatePath } from "next/cache";
 import { awardPoints } from "@/lib/points";
 
@@ -11,7 +12,7 @@ const SongSchema = z.object({
   slug: z.string(),
   trackName: z.string().min(1).max(100),
   artist: z.string().min(1).max(100),
-  externalLink: z.string().url().optional().or(z.literal("")),
+  externalLink: z.string().url().refine((u) => isHttpUrl(u), "URL deve começar com https://").optional().or(z.literal("")),
 });
 
 export async function addSong(formData: FormData) {

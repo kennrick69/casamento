@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { requireOrganizer } from "@/lib/authorization";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { isHttpUrl } from "@/lib/utils/safe-href";
 
 async function withOrganizer(eventId: string) {
   const session = await auth();
@@ -77,7 +78,7 @@ const LocationSchema = z.object({
   ceremonyAddress: z.string().optional(),
   receptionLocation: z.string().optional(),
   receptionAddress: z.string().optional(),
-  mapsLink: z.string().url().optional().or(z.literal("")),
+  mapsLink: z.string().url().refine((u) => isHttpUrl(u), "URL deve começar com https://").optional().or(z.literal("")),
   dresscode: z.string().optional(),
 });
 

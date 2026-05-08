@@ -4,13 +4,14 @@ import { prisma } from "@/lib/db";
 import { requireOrganizer } from "@/lib/authorization";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { isHttpUrl } from "@/lib/utils/safe-href";
 
 const GiftSchema = z.object({
   eventId: z.string(),
   name: z.string().min(1).max(120),
   description: z.string().max(300).optional(),
   price: z.string().optional(),
-  externalLink: z.string().url().optional().or(z.literal("")),
+  externalLink: z.string().url().refine((u) => isHttpUrl(u), "URL deve começar com https://").optional().or(z.literal("")),
 });
 
 export async function createGift(formData: FormData): Promise<{ ok: boolean; error?: string }> {
