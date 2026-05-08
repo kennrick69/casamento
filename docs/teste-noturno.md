@@ -261,4 +261,41 @@ Atenção: o link no email tem o token PLAIN (não o hash). O que está no banco
 - [ ] Após reset bem-sucedido, email "Sua senha foi alterada" é enviado (ou log no console)
 - [ ] Email contém instrução de contato em caso de não ter sido o usuário
 
+---
+
+## [2026-05-08] A.7 — Configurações de conta (/admin/conta)
+
+**O que foi:** página de conta com 3 seções — dados pessoais, alterar senha (com strength bar + invalidação de sessões), preferências de notificação. Link "Minha conta" no header do painel.
+
+**Onde testar:** `/admin` → "Minha conta" no header, ou direto `/admin/conta`
+
+### Dados pessoais
+
+**O que validar:**
+- [ ] Nome e sobrenome carregam com os valores do cadastro
+- [ ] Campo e-mail readonly (não editável)
+- [ ] Badge "✓ verificado" aparece se email verificado, "verificar" se não
+- [ ] Campo telefone opcional, aceita vazio
+- [ ] Salvar → dados atualizados (recarregar página para confirmar)
+
+### Segurança — alterar senha
+
+**O que validar:**
+- [ ] Seção mostra formulário se conta tem senha (cadastro por e-mail+senha)
+- [ ] Seção mostra mensagem + link "Defina uma senha" se conta é magic-link only
+- [ ] Senha atual incorreta → "Senha atual incorreta."
+- [ ] Senhas novas não conferem → "Senhas não conferem"
+- [ ] Nova senha muito fraca (score < 2) → "Nova senha muito fraca."
+- [ ] Sucesso → redireciona para /admin/conta?changed=1 com banner verde
+- [ ] Barra de força aparece ao digitar a nova senha
+
+**Invalidação de sessões (mesmo teste do A.6):**
+- [ ] Login em dois browsers; alterar senha no browser 1 → browser 2 perde sessão
+
+### Notificações
+
+**O que validar:**
+- [ ] Checkbox "marketingOptIn" carrega com o estado atual do usuário
+- [ ] Salvar preferências → atualiza no banco (verificar via /admin/dev-tools AuthLog ou direto no banco)
+
 *Última atualização: 2026-05-08*

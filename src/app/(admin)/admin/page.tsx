@@ -21,6 +21,9 @@ export default async function AdminPage() {
         <h1 className="font-semibold text-lg">Painel dos noivos</h1>
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
           <span>{session.user.email}</span>
+          <Link href="/admin/conta" className="hover:text-foreground transition-colors">
+            Minha conta
+          </Link>
           <Link href="/api/auth/signout" className="hover:text-foreground transition-colors">
             Sair
           </Link>
