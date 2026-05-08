@@ -1,5 +1,20 @@
 # Changelog
 
+## [R.3 — Email de confirmação de presença] — 2026-05-08
+
+### Added
+
+- `rsvpConfirmationHtml/Text` — template rico com cerimônia + recepção, link para editar resposta, link para o mural, branding "Voem."
+- `SendEmailOpts.headers` — suporte a headers customizados em todos os provedores
+- Headers anti-spam nos emails de confirmação: `Precedence: transactional`, `X-Entity-Ref-ID`
+- `ConsoleEmailProvider` loga banner visível para emails de confirmação em dev
+
+### Changed
+
+- `rsvp/actions.ts` — usa novo template rico; busca local de recepção via `getMainLocation`; substitui `baseUrl` por `appUrl` consolidado
+
+---
+
 ## [R.2.B — Wizard de criação de evento] — 2026-05-08
 
 ### Changed

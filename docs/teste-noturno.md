@@ -418,6 +418,23 @@ do Bloco A documentados.
 
 ---
 
+## [2026-05-08] R.3 — Email de confirmação de presença
+
+**O que foi:** Template rico `rsvpConfirmationHtml/Text` com cerimônia + recepção, link para editar resposta, link para o mural. Headers anti-spam. Banner de log em dev.
+
+**Onde testar:** Página `/[slug]/rsvp` → confirmar presença
+
+**O que validar:**
+- [ ] Após confirmar presença com e-mail válido → email recebido com assunto "Presença confirmada — [nome do evento]"
+- [ ] Email mostra: data/horário, local da cerimônia (se cadastrado), local da recepção (se cadastrado)
+- [ ] Botão "Ver meu convite" → abre a landing do evento
+- [ ] Link "Mural do evento" → abre `/[slug]/mural`
+- [ ] Link "Atualize sua resposta" → abre `/[slug]/rsvp`
+- [ ] Texto visível: "Presença confirmada", "confirmação de presença" — sem uso de "RSVP"
+- [ ] Dev (sem RESEND_API_KEY): banner no log `✅ [DEV] EMAIL DE CONFIRMAÇÃO DE PRESENÇA` com links visíveis
+
+---
+
 ## [2026-05-08] R.2.B — Wizard de criação de evento (react-hook-form + navegação)
 
 **O que foi:** Validação client-side com react-hook-form + zodResolver em todos os passos do
