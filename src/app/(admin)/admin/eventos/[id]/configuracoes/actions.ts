@@ -171,6 +171,76 @@ export async function updateEventFeatures(formData: FormData): Promise<void> {
   revalidatePath(`/admin/eventos/${eventId}/configuracoes`);
 }
 
+// ── Variantes de rascunho (sem redirect — usadas pelo auto-save onBlur) ───
+
+export async function saveEventLocationDraft(formData: FormData): Promise<{ ok: boolean }> {
+  const parsed = LocationSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return { ok: false };
+
+  const { eventId, mapsLink, ...data } = parsed.data;
+  try {
+    await withOrganizer(eventId);
+  } catch {
+    return { ok: false };
+  }
+
+  await prisma.event.update({
+    where: { id: eventId },
+    data: { ...data, mapsLink: mapsLink || null },
+  });
+  revalidatePath(`/admin/eventos/${eventId}/configuracoes`);
+  return { ok: true };
+}
+
+export async function saveEventThemeDraft(formData: FormData): Promise<{ ok: boolean }> {
+  const parsed = ThemeSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return { ok: false };
+
+  const { eventId, themeKey } = parsed.data;
+  try {
+    await withOrganizer(eventId);
+  } catch {
+    return { ok: false };
+  }
+
+  const theme = await prisma.theme.findUnique({ where: { key: themeKey } });
+  if (!theme) return { ok: false };
+
+  await prisma.event.update({ where: { id: eventId }, data: { themeId: theme.id } });
+  revalidatePath(`/admin/eventos/${eventId}/configuracoes`);
+  return { ok: true };
+}
+
+const PublishSettingsSchema = z.object({
+  eventId: z.string(),
+  guestApprovalRequired: z.string().optional(),
+  donationMode: z.enum(["TRUST", "PIX_PROOF"]).default("TRUST"),
+  pixKey: z.string().optional(),
+});
+
+export async function savePublishSettings(formData: FormData): Promise<{ ok: boolean }> {
+  const parsed = PublishSettingsSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return { ok: false };
+
+  const { eventId, guestApprovalRequired, donationMode, pixKey } = parsed.data;
+  try {
+    await withOrganizer(eventId);
+  } catch {
+    return { ok: false };
+  }
+
+  await prisma.event.update({
+    where: { id: eventId },
+    data: {
+      guestApprovalRequired: guestApprovalRequired === "on",
+      donationMode,
+      pixKey: pixKey || null,
+    },
+  });
+  revalidatePath(`/admin/eventos/${eventId}/configuracoes`);
+  return { ok: true };
+}
+
 // ── Publicar ──────────────────────────────────────────────────────────────
 
 const PublishSchema = z.object({

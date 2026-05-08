@@ -9,14 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
   updateEventLocation,
-  updateEventTheme,
   updateEventBasic,
   updateEventFeatures,
 } from "./actions";
 import { WizardBasicForm } from "./wizard-basic-form";
 import { WizardLocationForm } from "./wizard-location-form";
+import { WizardThemeForm } from "./wizard-theme-form";
 import { WizardPublishForm } from "./wizard-publish-form";
-import { THEMES } from "@/lib/themes";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Configurações" };
@@ -118,7 +117,14 @@ export default async function ConfiguracoesPage({
           <>
             <BasicForm event={event} />
             <LocationForm event={event} />
-            <ThemeForm event={event} themes={themes} />
+            <div className="bg-background rounded-lg border border-border p-6 mb-6">
+              <h2 className="text-base font-semibold mb-5">Tema visual</h2>
+              <WizardThemeForm
+                eventId={id}
+                currentThemeKey={event.theme.key}
+                themes={themes}
+              />
+            </div>
             <FeaturesForm event={event} />
           </>
         )}
@@ -159,7 +165,17 @@ export default async function ConfiguracoesPage({
         )}
 
         {/* ── Step 3: tema ── */}
-        {step === 3 && <ThemeForm event={event} themes={themes} isWizard />}
+        {step === 3 && (
+          <div className="bg-background rounded-lg border border-border p-6 mb-6">
+            <h2 className="text-base font-semibold mb-5">Tema visual</h2>
+            <WizardThemeForm
+              eventId={id}
+              currentThemeKey={event.theme.key}
+              themes={themes}
+              isWizard
+            />
+          </div>
+        )}
 
         {/* ── Step 4: publicar (apenas rascunhos — veja P4-C acima) ── */}
         {step === 4 && (
@@ -369,65 +385,6 @@ function LocationForm({
         </div>
         <Button type="submit" className="h-11">
           Salvar local →
-        </Button>
-      </form>
-    </div>
-  );
-}
-
-// ── Seleção de tema ───────────────────────────────────────────────────────────
-
-function ThemeForm({
-  event,
-  themes,
-  isWizard = false,
-}: {
-  event: { id: string; theme: { key: string; name: string } };
-  themes: { id: string; key: string; name: string }[];
-  isWizard?: boolean;
-}) {
-  const themeColors: Record<string, string> = {
-    rustic: "#7C5C3E",
-    classic: "#2C2C2C",
-    minimal: "#1A1A1A",
-    boho: "#8B6356",
-    beach: "#2E7D9A",
-  };
-
-  return (
-    <div className="bg-background rounded-lg border border-border p-6 mb-6">
-      <h2 className="text-base font-semibold mb-5">Tema visual</h2>
-      <form action={updateEventTheme} className="flex flex-col gap-4">
-        <input type="hidden" name="eventId" value={event.id} />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {themes.map((theme) => {
-            const themeData = THEMES.find((t) => t.key === theme.key);
-            const color =
-              themeData?.tokens.colors.primary ?? themeColors[theme.key] ?? "#1A1A1A";
-            return (
-              <label
-                key={theme.id}
-                className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                  event.theme.key === theme.key
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/40"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="themeKey"
-                  value={theme.key}
-                  defaultChecked={event.theme.key === theme.key}
-                  className="sr-only"
-                />
-                <div className="w-10 h-10 rounded-full" style={{ background: color }} />
-                <span className="text-xs text-center leading-tight">{theme.name}</span>
-              </label>
-            );
-          })}
-        </div>
-        <Button type="submit" className="h-11">
-          {isWizard ? "Próximo: Publicar →" : "Salvar tema →"}
         </Button>
       </form>
     </div>

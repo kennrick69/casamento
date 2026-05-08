@@ -2,10 +2,10 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { updateEventLocation } from "./actions";
+import { updateEventLocation, saveEventLocationDraft } from "./actions";
 import { isRedirectError } from "@/lib/utils/redirect";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +35,7 @@ const schema = z.object({
 });
 
 type FormValues = z.infer<typeof schema>;
+type DraftStatus = "idle" | "saving" | "saved";
 
 interface Props {
   eventId: string;
@@ -50,24 +51,44 @@ interface Props {
 
 export function WizardLocationForm({ eventId, defaultValues }: Props) {
   const [isPending, startTransition] = useTransition();
+  const [draftStatus, setDraftStatus] = useState<DraftStatus>("idle");
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues });
 
+  function buildFd(data: FormValues): FormData {
+    const fd = new FormData();
+    fd.set("eventId", eventId);
+    fd.set("ceremonyLocation", data.ceremonyLocation ?? "");
+    fd.set("ceremonyAddress", data.ceremonyAddress ?? "");
+    fd.set("receptionLocation", data.receptionLocation ?? "");
+    fd.set("receptionAddress", data.receptionAddress ?? "");
+    fd.set("mapsLink", data.mapsLink ?? "");
+    fd.set("dresscode", data.dresscode ?? "");
+    return fd;
+  }
+
+  async function autoSave() {
+    const data = getValues();
+    const result = schema.safeParse(data);
+    if (!result.success) return;
+    setDraftStatus("saving");
+    try {
+      await saveEventLocationDraft(buildFd(result.data));
+      setDraftStatus("saved");
+      setTimeout(() => setDraftStatus((s) => (s === "saved" ? "idle" : s)), 2000);
+    } catch {
+      setDraftStatus("idle");
+    }
+  }
+
   function onSubmit(data: FormValues) {
     startTransition(async () => {
-      const fd = new FormData();
-      fd.set("eventId", eventId);
-      fd.set("ceremonyLocation", data.ceremonyLocation ?? "");
-      fd.set("ceremonyAddress", data.ceremonyAddress ?? "");
-      fd.set("receptionLocation", data.receptionLocation ?? "");
-      fd.set("receptionAddress", data.receptionAddress ?? "");
-      fd.set("mapsLink", data.mapsLink ?? "");
-      fd.set("dresscode", data.dresscode ?? "");
       try {
-        await updateEventLocation(fd);
+        await updateEventLocation(buildFd(data));
       } catch (e) {
         if (isRedirectError(e)) throw e;
         toast.error("Algo deu errado. Tente novamente.");
@@ -83,7 +104,7 @@ export function WizardLocationForm({ eventId, defaultValues }: Props) {
           id="ceremonyLocation"
           placeholder="Igreja São João"
           className="h-11"
-          {...register("ceremonyLocation")}
+          {...register("ceremonyLocation", { onBlur: autoSave })}
         />
       </div>
       <div className="flex flex-col gap-1.5">
@@ -92,7 +113,7 @@ export function WizardLocationForm({ eventId, defaultValues }: Props) {
           id="ceremonyAddress"
           placeholder="Rua das Flores, 100 — São Paulo, SP"
           className="h-11"
-          {...register("ceremonyAddress")}
+          {...register("ceremonyAddress", { onBlur: autoSave })}
         />
       </div>
       <div className="flex flex-col gap-1.5">
@@ -101,7 +122,7 @@ export function WizardLocationForm({ eventId, defaultValues }: Props) {
           id="receptionLocation"
           placeholder="Espaço Villa Eventos"
           className="h-11"
-          {...register("receptionLocation")}
+          {...register("receptionLocation", { onBlur: autoSave })}
         />
       </div>
       <div className="flex flex-col gap-1.5">
@@ -109,7 +130,7 @@ export function WizardLocationForm({ eventId, defaultValues }: Props) {
         <Input
           id="receptionAddress"
           className="h-11"
-          {...register("receptionAddress")}
+          {...register("receptionAddress", { onBlur: autoSave })}
         />
       </div>
       <div className="flex flex-col gap-1.5">
@@ -119,7 +140,7 @@ export function WizardLocationForm({ eventId, defaultValues }: Props) {
           type="url"
           placeholder="https://maps.google.com/..."
           className="h-11"
-          {...register("mapsLink")}
+          {...register("mapsLink", { onBlur: autoSave })}
         />
         {errors.mapsLink && (
           <p className="text-xs text-destructive">{errors.mapsLink.message}</p>
@@ -131,13 +152,22 @@ export function WizardLocationForm({ eventId, defaultValues }: Props) {
           id="dresscode"
           placeholder="Passeio completo"
           className="h-11"
-          {...register("dresscode")}
+          {...register("dresscode", { onBlur: autoSave })}
         />
       </div>
 
-      <Button type="submit" className="h-11" disabled={isPending}>
-        {isPending ? "Salvando…" : "Próximo: Tema →"}
-      </Button>
+      <div className="flex items-center justify-between gap-3">
+        {draftStatus !== "idle" ? (
+          <span className="text-xs text-muted-foreground">
+            {draftStatus === "saving" ? "Salvando…" : "✓ Salvo"}
+          </span>
+        ) : (
+          <span />
+        )}
+        <Button type="submit" className="h-11" disabled={isPending}>
+          {isPending ? "Salvando…" : "Próximo: Tema →"}
+        </Button>
+      </div>
     </form>
   );
 }
