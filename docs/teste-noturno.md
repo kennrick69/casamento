@@ -743,3 +743,222 @@ do Bloco A documentados.
 - [ ] Acessar https://securityheaders.com → analisar `https://casamento-production-2c06.up.railway.app`
 - [ ] Nota mínima esperada: **A** (todos os 5 headers principais presentes)
 - [ ] Nota A+ bloqueada pelo `unsafe-inline` até implementar nonces (aceitável como baseline)
+
+---
+
+## [2026-05-08] Megabatch 2 — M2.1 a M2.9
+
+---
+
+### M2.1 — Health endpoints + dashboard `/admin/saude`
+
+**O que mudou:** `/api/health` público, `/api/health/deep` autenticado, dashboard `/admin/saude` com refresh automático a cada 30s.
+
+**Onde testar:** `/api/health`, `/admin/saude`
+
+**O que validar:**
+- [ ] `GET /api/health` retorna JSON `{ status, db, pusher, storage, memory, timestamp }` HTTP 200
+- [ ] `db.status` é `"ok"` com `latencyMs` numérico
+- [ ] `GET /api/health` sem auth → status 200 (endpoint público)
+- [ ] `/admin/saude` carrega com cards para cada serviço (DB, Pusher, Storage, Memória)
+- [ ] Dashboard atualiza automaticamente a cada 30s (verificar Network → /api/health no DevTools)
+- [ ] Countdown de 30s visível no dashboard
+- [ ] Badge verde "ok" / laranja "degradado" / vermelho "erro" conforme status
+
+**Edge cases:**
+- [ ] `GET /api/health/deep` sem sessão → HTTP 401
+- [ ] `GET /api/health/deep` autenticado → retorna `{ db, security, data, uptime, nodeVersion }`
+- [ ] `security.authErrors24h` é número inteiro (pode ser 0)
+
+---
+
+### M2.2 — Backup cron com retenção 60 dias + `/admin/saude/backups`
+
+**O que mudou:** cron de backup deleta arquivos com mais de 60 dias, registra `BACKUP_CREATED`/`BACKUP_FAILED` no AuthLog, nova página `/admin/saude/backups`.
+
+**Onde testar:** `/admin/saude/backups`; acionar backup manualmente via `/api/cron/backup` com header `Authorization: Bearer <CRON_SECRET>`
+
+**O que validar:**
+- [ ] `/admin/saude/backups` carrega sem erro
+- [ ] Lista de backups exibe nome do arquivo, tamanho e data de modificação
+- [ ] AuthLog na mesma página mostra entradas `BACKUP_CREATED` e/ou `BACKUP_FAILED`
+- [ ] Arquivo com mais de 60 dias seria deletado (verificar lógica em staging ou com data futura)
+
+**Edge cases:**
+- [ ] Nenhum backup ainda → página exibe "Nenhum backup encontrado." sem erro
+- [ ] `BACKUP_FAILED` no log → linha exibe metadata com `slug` e `error`
+
+---
+
+### M2.3 — Photo wall: upload com compressão, legenda, reações anônimas, modal
+
+**O que mudou:** compressão client-side (canvas JPEG 85%, max 1920px), preview antes do envio, textarea de legenda (280 chars), reações anônimas por sessionId (❤️ 😂 🥹 🎉), PhotoModal com navegação teclado + swipe.
+
+**Onde testar:** `/[slug]/mural` com um evento publicado e guestId válido
+
+**O que validar:**
+- [ ] Botão "+ Foto" abre preview fullscreen com campo de legenda
+- [ ] Legenda aceita até 280 caracteres (contador visível)
+- [ ] Botão "Cancelar" fecha o preview sem enviar
+- [ ] Botão "Publicar" envia a foto e atualiza o grid
+- [ ] Foto maior que 2 MB após compressão mostra erro "Imagem muito grande mesmo após compressão."
+- [ ] Arquivo não-imagem (ex: .pdf) → erro "Apenas imagens são aceitas."
+- [ ] Clicar numa foto abre o PhotoModal
+- [ ] Modal: `←` e `→` navegam entre fotos
+- [ ] Modal: tecla Escape fecha o modal
+- [ ] Modal: swipe lateral no mobile navega entre fotos
+- [ ] Botão ✕ no modal tem `aria-label` (verificar HTML)
+- [ ] Reações: clicar em emoji incrementa o contador
+- [ ] Clicar de novo no mesmo emoji remove a reação (toggle)
+- [ ] Reação persiste após recarregar a página (sessionStorage mantém sessionId)
+
+**Edge cases:**
+- [ ] Usuário banido → upload rejeitado (HTTP 403)
+- [ ] Foto pendente de aprovação → não aparece no grid público (só no admin)
+- [ ] Admin `/admin/eventos/[id]/mural` → aprovar foto em lote → fotos aparecem no grid público
+
+---
+
+### M2.4 — Chat: typing indicator, timestamps, reações, auto-scroll, paste de imagem, badge casal
+
+**O que mudou:** indicador de digitação via Pusher, timestamps humanizados (date-fns ptBR), duplo clique abre seletor de reação, banner "X novas mensagens", paste de imagem envia para mural, badge "Casal" para organizadores.
+
+**Onde testar:** `/[slug]/chat` com dois dispositivos/abas com guests diferentes
+
+**O que validar:**
+- [ ] Mensagem enviada aparece para o remetente imediatamente
+- [ ] Mensagem aparece para outro usuário via Pusher (tempo real)
+- [ ] Timestamps exibem formato relativo em português ("há 2 minutos", "agora")
+- [ ] Digitar no chat → outro usuário vê "[Nome] está digitando…" por ~3s
+- [ ] Duplo clique numa mensagem → seletor de emojis aparece (❤️ 😂 🥹 🎉 👏)
+- [ ] Clicar emoji → reação aparece como bolinha abaixo da mensagem
+- [ ] Clicar novamente no mesmo emoji → remove a reação
+- [ ] Rolar para cima → banner "X novas mensagens ↓" aparece ao receber msg nova
+- [ ] Clicar no banner → rola para o final
+- [ ] Mensagem enviada pelo organizador exibe badge "Casal" ao lado do nome
+- [ ] Usuário sem guestId (não autenticado) vê link "Confirme sua presença" no lugar do input
+
+**Edge cases:**
+- [ ] Colar imagem no input de chat → foto aparece no mural (sem mensagem de texto)
+- [ ] Pusher não configurado → chat carrega sem erro, sem indicador de digitação (graceful degradation)
+- [ ] Admin `/admin/eventos/[id]/chat` → remover mensagem → mensagem some para todos
+
+---
+
+### M2.5 — Playlist: Spotify search, limite 3 sugestões, status, admin
+
+**O que mudou:** integração Spotify Client Credentials com cache de token, busca debounced (400ms), seleção de faixa com art do álbum, prévia de 30s, modo manual fallback, limite de 3 sugestões por convidado, sistema de status (PENDING/APPROVED/PLAYED).
+
+**Onde testar:** `/[slug]/playlist` com `SPOTIFY_CLIENT_ID` e `SPOTIFY_CLIENT_SECRET` configurados
+
+**O que validar:**
+- [ ] Botão "+ Sugerir música (X restante(s))" aparece com contagem correta
+- [ ] Clicar abre formulário com campo de busca
+- [ ] Digitar 2+ caracteres → resultados aparecem em ~400ms
+- [ ] Resultado exibe foto do álbum, nome e artista
+- [ ] Clicar em resultado seleciona a faixa (campo passa a mostrar card da faixa selecionada)
+- [ ] Botão ▶ toca preview de 30s; ⏸ pausa
+- [ ] Submit → música adicionada à lista com status "Pendente"
+- [ ] Após 3 sugestões → mensagem "Você já sugeriu 3 músicas (limite atingido)."
+- [ ] Spotify não configurado → mensagem "Busca Spotify não configurada." + link "Inserir manualmente"
+- [ ] Modo manual → campos Música, Artista, Link (opcional) + botão sugerir
+
+**Edge cases:**
+- [ ] Query sem resultados no Spotify → lista vazia (sem erro)
+- [ ] Admin `/admin/eventos/[id]/playlist` → mudar status para PLAYED → exibe badge correto
+- [ ] Admin aprova/rejeita música → status atualizado na lista pública
+
+---
+
+### M2.6 — Gincana: barra de progresso, missões customizadas, QR codes, ranking completo
+
+**O que mudou:** barra de progresso animada com mensagens motivacionais por faixa de pontos, formulário de missão customizada no admin, geração de QR code client-side para códigos de check-in, ranking completo sem limite com medalhas para top-3.
+
+**Onde testar:** `/[slug]/gincana` (público), `/admin/eventos/[id]/gincana` (admin)
+
+**O que validar — público:**
+- [ ] Barra de progresso exibe `meusPontos / maxPontos` corretamente
+- [ ] 0 pontos → mensagem motivacional de boas-vindas
+- [ ] 1–49 pontos → segunda faixa de mensagem
+- [ ] 50–149 pontos → terceira faixa
+- [ ] 150–299 pontos → quarta faixa
+- [ ] 300+ pontos → quinta faixa (celebração)
+- [ ] Lista de missões mostra pontos e status (completa / pendente)
+- [ ] `?rank=1` na URL exibe ranking completo
+- [ ] Top 3 do ranking exibe medalhas 🥇🥈🥉
+
+**O que validar — admin:**
+- [ ] Formulário "Nova missão" aceita título, pontos, dailyCap e descrição
+- [ ] Missão criada aparece na lista com código `custom_<timestamp>`
+- [ ] Botão de deletar visível apenas em missões customizadas (não nas padrão)
+- [ ] QR code gerado visualmente para cada código de check-in
+- [ ] QR code aponta para URL `/<slug>/checkin?code=<code>` (verificar hover/inspect da imagem)
+- [ ] Deletar código de check-in → some da lista
+
+**Edge cases:**
+- [ ] Convidado com 0 atividades não aparece no ranking (ou aparece no final sem pontos)
+- [ ] Check-in duplicado → segundo scan não adiciona pontos extra
+
+---
+
+### M2.7 — Performance: CSP Spotify CDN, otimização de imagens, OG metadata
+
+**O que mudou:** CSP expandido com domínios Spotify (`i.scdn.co`, `mosaic.scdn.co`, `images-ak.spotifycdn.com`) em `img-src` e `connect-src`. `next.config.ts` com `remotePatterns` para Spotify e `formats: ["image/avif", "image/webp"]`. `generateMetadata` na landing de evento com título, descrição e OpenGraph.
+
+**Onde testar:** `/[slug]` (landing do evento), `/[slug]/playlist` com Spotify configurado
+
+**O que validar:**
+- [ ] Console do browser: zero erros de CSP em `/[slug]/playlist` ao buscar músicas Spotify
+- [ ] Imagens do álbum Spotify carregam sem erro (não bloqueadas pelo CSP)
+- [ ] `<head>` da landing `/[slug]` contém `<meta property="og:title">` com o nome do casal
+- [ ] `<meta property="og:description">` presente e não vazia
+- [ ] Imagens na playlist otimizadas pelo Next.js Image (verificar `_next/image` no Network)
+
+**Edge cases:**
+- [ ] Abrir `/[slug]` sem evento no banco → 404 (não crash com metadata undefined)
+- [ ] Compartilhar URL `/[slug]` no WhatsApp → preview mostra título do evento (og:title)
+
+---
+
+### M2.8 — WCAG AA: skip-to-content, labels, aria
+
+**O que mudou:** link "Ir para o conteúdo" visível no foco no layout público, `<label>` sr-only + `id` no input do chat, busca Spotify e textarea de legenda de foto, `aria-label` nos botões de navegação do modal de foto.
+
+**Onde testar:** `/[slug]/chat`, `/[slug]/playlist`, `/[slug]/mural`
+
+**O que validar:**
+- [ ] Pressionar Tab ao abrir qualquer página pública → primeiro foco vai para link "Ir para o conteúdo"
+- [ ] Pressionar Enter nesse link → foco vai para `#main-content` (área principal)
+- [ ] Inspecionar `#chat-input` → tem `<label for="chat-input">` (sr-only) associado
+- [ ] Campo de busca Spotify tem `id="spotify-search"` e `<label for="spotify-search">`
+- [ ] Textarea de legenda tem `id="photo-caption"` e `<label for="photo-caption">` (sr-only)
+- [ ] Botões ←, → e ✕ do PhotoModal têm `aria-label` descritivo (verificar no DevTools → Elements)
+- [ ] `pnpm test:a11y` passa sem violações WCAG AA críticas nas páginas acima
+
+**Edge cases:**
+- [ ] Screen reader (VoiceOver/NVDA): anunciar foco em botões de emoji do chat → nome legível
+- [ ] Tab-only navigation no formulário de sugestão de música → todos os campos acessíveis
+
+---
+
+### M2.9 — seed:dev
+
+**O que mudou:** `prisma/seed-dev.ts` com guard de ambiente, `pnpm seed:dev` no package.json.
+
+**Onde testar:** ambiente local com PostgreSQL em localhost
+
+**O que validar:**
+- [ ] `pnpm seed:dev` executa sem erro com `.env.local` apontando para localhost
+- [ ] Log mostra: `✓ Evento: /dev-casamento-rico`, `✓ 10 missões`, `✓ 50 convidados (1 banido)`, `✓ 30 fotos`, `✓ 100 mensagens no chat`, `✓ 20 músicas na playlist`, `✓ 5 doações`
+- [ ] URL impressa ao final (`http://localhost:3000/dev-casamento-rico?k=...`) abre o evento no browser
+- [ ] Evento tem status `PUBLISHED` e features: rsvp, photoWall, chat, playlist, gamification, donations
+- [ ] `/dev-casamento-rico/mural` exibe fotos (25 aprovadas)
+- [ ] `/dev-casamento-rico/chat` exibe mensagens
+- [ ] `/dev-casamento-rico/playlist` exibe músicas
+- [ ] `/dev-casamento-rico/gincana` exibe missões e ranking
+- [ ] Admin `/admin/eventos` lista o evento "Casamento de Luísa e Miguel"
+
+**Edge cases:**
+- [ ] Rodar `pnpm seed:dev` duas vezes → idempotente (upsert não duplica evento nem convidados)
+- [ ] Tentar rodar com `DATABASE_URL` de produção (sem localhost e sem `DEV_SEED_ALLOW=1`) → processo encerra com mensagem `❌ seed:dev abortado`
+- [ ] Convidado 50 (`dev.guest.50@seed.local`) tem `banned: true` — verificar no admin
