@@ -78,7 +78,7 @@ test.describe("Auth — guards de sessão (sem cookie)", () => {
 test.describe("Auth — comportamento de formulários", () => {
   test("login com credenciais inválidas mostra erro sem vazar info do usuário", async ({ page }) => {
     await page.goto("/login");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Aguarda Turnstile auto-resolver (se configurado com always-pass keys)
     await page.waitForTimeout(2500);
@@ -96,7 +96,7 @@ test.describe("Auth — comportamento de formulários", () => {
 
   test("forgot-password com e-mail inexistente mostra mensagem de sucesso (anti-enumeration)", async ({ page }) => {
     await page.goto("/forgot-password");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(2500);
 
     await page.getByRole("textbox").fill("email-inexistente-xyz123@notexist.example");
@@ -158,7 +158,7 @@ test.describe("Auth — login com credenciais válidas", () => {
     test.skip(!email || !password, "TEST_USER_EMAIL / TEST_USER_PASSWORD não configurados — skipping");
 
     await page.goto("/login");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(2500); // Aguarda Turnstile
 
     await page.getByRole("tab", { name: "Entrar" }).click();
