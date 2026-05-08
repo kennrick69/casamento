@@ -203,6 +203,43 @@ export function reminderText(o: ReminderOpts): string {
   ].filter(Boolean).join("\n");
 }
 
+// ── Verificação de email (boas-vindas) ────────────────────────────────────
+
+export interface WelcomeVerifyOpts {
+  name: string;
+  verifyUrl: string;
+}
+
+export function welcomeVerifyHtml(o: WelcomeVerifyOpts): string {
+  const body = `
+    <h1 style="margin:0 0 8px;font-size:28px;color:#1a1a1a;font-family:Georgia,serif">Bem-vindo, ${o.name}!</h1>
+    <p style="margin:0 0 24px;font-size:13px;color:#888;font-family:Arial,sans-serif;text-transform:uppercase;letter-spacing:0.08em">Voem. — Convites de casamento</p>
+
+    ${p("Sua conta foi criada com sucesso. Confirme seu e-mail para ativar todas as funcionalidades:")}
+
+    <div style="text-align:center;margin:24px 0">
+      ${btn(o.verifyUrl, "Confirmar meu e-mail")}
+    </div>
+
+    ${p('<span style="color:#888;font-size:13px">Este link expira em 24 horas. Se não criou uma conta, ignore este e-mail.</span>')}
+  `;
+  return wrap(body);
+}
+
+export function welcomeVerifyText(o: WelcomeVerifyOpts): string {
+  return [
+    "Voem. — Convites de casamento",
+    "",
+    `Bem-vindo, ${o.name}!`,
+    "",
+    "Sua conta foi criada. Confirme seu e-mail clicando no link abaixo:",
+    "",
+    o.verifyUrl,
+    "",
+    "Este link expira em 24 horas.",
+  ].join("\n");
+}
+
 // ── Email em massa (organizador → convidados) ─────────────────────────────
 
 export interface MassEmailOpts {

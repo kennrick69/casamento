@@ -10,6 +10,10 @@ import { validateEmail } from "@/lib/auth/validate-email";
 import { validatePassword } from "@/lib/auth/validate-password";
 import { checkRateLimit, clearRateLimit } from "@/lib/auth/rate-limit";
 import { logAuthEvent } from "@/lib/auth/auth-log";
+import { email as emailProvider } from "@/lib/email";
+import { welcomeVerifyHtml, welcomeVerifyText } from "@/lib/email/templates";
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 export type AuthState = { error: string; field?: string } | null;
 
@@ -143,7 +147,7 @@ export async function signupAction(formData: FormData): Promise<AuthState> {
   }
 
   const passwordHash = await hashPassword(password);
-  await prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       email,
       name: `${firstName} ${lastName}`,
@@ -157,8 +161,25 @@ export async function signupAction(formData: FormData): Promise<AuthState> {
 
   await logAuthEvent({ action: "SIGNUP_COMPLETED", ip, userAgent, email });
 
+  // Generate verification token and send welcome email (best-effort, non-blocking)
   try {
-    await signIn("credentials", { email, password, redirectTo: "/admin" });
+    const token = crypto.randomUUID();
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await prisma.verificationToken.create({ data: { identifier: email, token, expires } });
+    const verifyUrl = `${BASE_URL}/api/auth/verify?token=${token}`;
+    await emailProvider.send({
+      to: email,
+      subject: "Confirme seu e-mail — Voem.",
+      html: welcomeVerifyHtml({ name: user.firstName || firstName, verifyUrl }),
+      text: welcomeVerifyText({ name: user.firstName || firstName, verifyUrl }),
+      idempotencyKey: `welcome-${user.id}`,
+    });
+  } catch {
+    // Não bloqueia o cadastro se o email falhar
+  }
+
+  try {
+    await signIn("credentials", { email, password, redirectTo: "/verify-email" });
   } catch (error) {
     if (error instanceof AuthError) {
       return { error: "Conta criada. Faça login para entrar.", field: undefined };
