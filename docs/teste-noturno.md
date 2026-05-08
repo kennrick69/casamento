@@ -334,4 +334,49 @@ iframes do Turnstile. `object-src 'none'`, `base-uri 'self'`, `form-action 'self
 - [ ] Abrir `/admin/conta` → alterar senha → re-auth funciona (form-action 'self' não bloqueia server actions)
 - [ ] Abrir `/[slug]/rsvp` → submeter RSVP → sem erros de CSP (fetch para própria origem)
 
+---
+
+## [2026-05-08] A.9 — Termos de Uso e Política de Privacidade
+
+**O que foi:** Documentos legais placeholder (v1.0) em `docs/legal/`. Páginas `/termos` e
+`/privacidade` reescritas com conteúdo real em prose. Admin layout verifica se o usuário
+aceitou a versão atual — se não, redireciona para `/aceitar-termos` (página bloqueante com
+checkbox obrigatório). Versão gerenciada em `src/lib/legal/versions.ts`.
+
+**Onde testar:** Criar conta nova → seguir fluxo, OU simular mudança de versão
+
+### Páginas de documento
+
+**O que validar:**
+- [ ] `/termos` carrega com conteúdo completo (10 seções) e badge de versão "v1.0"
+- [ ] `/privacidade` carrega com conteúdo completo (11 seções, tabelas) e badge "v1.0"
+- [ ] Links "← Início" funcionam
+- [ ] Link "Política de Privacidade" em /termos abre /privacidade e vice-versa
+- [ ] Badge amarelo "TODO: revisão jurídica" visível (placeholder explícito)
+
+### Fluxo de aceite (novo usuário)
+
+**O que validar:**
+- [ ] Após signup + verificação de email, ao tentar acessar `/admin` → redirecionado para `/aceitar-termos`
+- [ ] Página `/aceitar-termos` mostra card com 2 links (Termos e Privacidade) com versão "v1.0 ↗"
+- [ ] Links abrem em nova aba (target="_blank")
+- [ ] Botão "Aceitar e continuar" fica desabilitado enquanto checkbox não está marcado
+- [ ] Marcar checkbox → botão ativa
+- [ ] Aceitar → redirecionado para `/admin`
+- [ ] Voltar para `/aceitar-termos` após aceitar → redirecionado automaticamente para `/admin`
+
+### Fluxo de re-aceite (mudança de versão simulada)
+
+**Como simular:** No banco (`/admin/dev-tools` não tem interface, fazer via Railway Database UI
+ou prisma studio): definir `termsVersion = null` para um usuário existente.
+
+**O que validar:**
+- [ ] Usuário com `termsVersion = null` no banco → ao acessar qualquer rota `/admin/*` → redirecionado para `/aceitar-termos`
+- [ ] Após aceite → `termsVersion = "1.0"` e `termsAcceptedAt` preenchidos no banco
+
+**Edge cases:**
+- [ ] Acessar `/aceitar-termos` sem estar logado → redirecionado para `/login`
+- [ ] Acessar `/admin/conta` com termos pendentes → bloqueado (redireciona para `/aceitar-termos`)
+- [ ] Acessar `/termos` sem estar logado → página pública carrega normalmente
+
 *Última atualização: 2026-05-08*
