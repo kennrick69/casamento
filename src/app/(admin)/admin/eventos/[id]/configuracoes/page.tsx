@@ -77,11 +77,11 @@ export default async function ConfiguracoesPage({
         {/* Progress bar (wizard only) */}
         {isWizard && (
           <>
-            <div className="flex gap-2 mb-2 text-xs font-medium flex-wrap">
+            <div className="flex gap-2 mb-3 text-xs font-medium flex-wrap">
               {STEPS.map((s, i) => (
                 <span
                   key={s}
-                  className={`px-3 py-1 rounded-full ${
+                  className={`px-3 py-1.5 rounded-full ${
                     i + 1 === step
                       ? "bg-primary text-primary-foreground"
                       : i + 1 < step
@@ -93,7 +93,7 @@ export default async function ConfiguracoesPage({
                 </span>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground mb-6">Passo {step} de 4</p>
+            <p className="text-sm text-muted-foreground mb-6">Passo {step} de 4</p>
           </>
         )}
 

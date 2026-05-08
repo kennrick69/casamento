@@ -108,7 +108,7 @@ export default async function LocaisAdminPage({
                     <button
                       type="submit"
                       disabled={i === 0}
-                      className="block text-muted-foreground disabled:opacity-20 hover:text-foreground text-xs"
+                      className="flex items-center justify-center w-8 h-8 text-muted-foreground disabled:opacity-20 hover:text-foreground hover:bg-muted rounded transition-colors"
                     >
                       ▲
                     </button>
@@ -120,7 +120,7 @@ export default async function LocaisAdminPage({
                     <button
                       type="submit"
                       disabled={i === locations.length - 1}
-                      className="block text-muted-foreground disabled:opacity-20 hover:text-foreground text-xs"
+                      className="flex items-center justify-center w-8 h-8 text-muted-foreground disabled:opacity-20 hover:text-foreground hover:bg-muted rounded transition-colors"
                     >
                       ▼
                     </button>

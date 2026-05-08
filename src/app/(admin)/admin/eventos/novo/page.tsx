@@ -21,11 +21,11 @@ export default async function NovoEventoPage() {
           </Link>
         </div>
 
-        <div className="flex gap-2 mb-2 text-xs font-medium flex-wrap">
+        <div className="flex gap-2 mb-3 text-xs font-medium flex-wrap">
           {STEPS.map((s, i) => (
             <span
               key={s}
-              className={`px-3 py-1 rounded-full ${
+              className={`px-3 py-1.5 rounded-full ${
                 i === 0
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground"
@@ -35,7 +35,7 @@ export default async function NovoEventoPage() {
             </span>
           ))}
         </div>
-        <p className="text-xs text-muted-foreground mb-8">Passo 1 de 4</p>
+        <p className="text-sm text-muted-foreground mb-8">Passo 1 de 4</p>
 
         <div className="bg-background rounded-lg border border-border p-6">
           <h1 className="text-xl font-semibold mb-6">Dados básicos</h1>

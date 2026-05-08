@@ -32,7 +32,7 @@ export function EventNav({ eventId }: { eventId: string }) {
           <Link
             key={item.href}
             href={item.href}
-            className={`px-3 py-1.5 rounded text-sm transition-colors ${
+            className={`px-3 py-2 rounded text-sm transition-colors min-h-[44px] flex items-center ${
               active
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-muted"

@@ -77,10 +77,10 @@ export default async function ContaPage({ searchParams }: Props) {
 
         {/* ── Segurança / Alterar senha ───────────────────────────────── */}
         <section className="bg-background rounded-lg border border-border p-6">
-          <h2 className="text-base font-semibold mb-1">Segurança</h2>
+          <h2 className="text-base font-semibold mb-3">Segurança</h2>
           {user.passwordHash ? (
             <>
-              <p className="text-xs text-muted-foreground mb-5">Altere sua senha a qualquer momento.</p>
+              <p className="text-sm text-muted-foreground mb-5">Altere sua senha a qualquer momento.</p>
               <ChangePasswordForm />
             </>
           ) : (

@@ -73,7 +73,7 @@ export default async function RoteiroAdminPage({
                     <button
                       type="submit"
                       disabled={i === 0}
-                      className="block text-muted-foreground disabled:opacity-20 hover:text-foreground text-xs"
+                      className="flex items-center justify-center w-8 h-8 text-muted-foreground disabled:opacity-20 hover:text-foreground hover:bg-muted rounded transition-colors"
                     >
                       ▲
                     </button>
@@ -85,7 +85,7 @@ export default async function RoteiroAdminPage({
                     <button
                       type="submit"
                       disabled={i === items.length - 1}
-                      className="block text-muted-foreground disabled:opacity-20 hover:text-foreground text-xs"
+                      className="flex items-center justify-center w-8 h-8 text-muted-foreground disabled:opacity-20 hover:text-foreground hover:bg-muted rounded transition-colors"
                     >
                       ▼
                     </button>
@@ -106,7 +106,7 @@ export default async function RoteiroAdminPage({
                   <input type="hidden" name="eventId" value={id} />
                   <button
                     type="submit"
-                    className="text-xs text-red-400 hover:text-red-600 transition-colors"
+                    className="text-sm text-red-400 hover:text-red-600 transition-colors min-h-[44px] flex items-center px-2"
                   >
                     Remover
                   </button>
