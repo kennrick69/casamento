@@ -105,11 +105,14 @@ export function PhotoUploader({ slug, guestId }: { slug: string; guestId: string
           <div className="relative aspect-square rounded-xl overflow-hidden bg-muted">
             <Image src={preview} alt="Pré-visualização" fill className="object-cover" unoptimized />
           </div>
+          <label htmlFor="photo-caption" className="sr-only">Legenda (opcional)</label>
           <textarea
+            id="photo-caption"
             value={caption}
             onChange={(e) => setCaption(e.target.value.slice(0, CAPTION_MAX))}
             placeholder="Adicione uma legenda… (opcional)"
             rows={2}
+            aria-label="Legenda da foto (opcional)"
             className="w-full text-sm border border-border rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-primary"
           />
           <p className="text-xs text-muted-foreground text-right -mt-2">{caption.length}/{CAPTION_MAX}</p>

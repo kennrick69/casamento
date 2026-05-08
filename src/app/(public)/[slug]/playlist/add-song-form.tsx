@@ -133,7 +133,7 @@ export function AddSongForm({ slug, myCount, limit }: { slug: string; myCount: n
       {/* Spotify search or manual mode */}
       {!manualMode ? (
         <div className="relative">
-          <label className="text-sm font-medium mb-1 block">Buscar música</label>
+          <label htmlFor="spotify-search" className="text-sm font-medium mb-1 block">Buscar música</label>
           {selected ? (
             <div className="flex items-center gap-3 border border-[var(--theme-border)] rounded-[var(--theme-radius)] p-2 bg-[var(--theme-muted)]">
               {selected.albumArt && (
@@ -148,10 +148,13 @@ export function AddSongForm({ slug, myCount, limit }: { slug: string; myCount: n
           ) : (
             <>
               <input
+                id="spotify-search"
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Nome da música ou artista…"
+                aria-autocomplete="list"
+                aria-expanded={results.length > 0}
                 className="w-full rounded-[var(--theme-radius)] border border-[var(--theme-border)] bg-[var(--theme-muted)] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[var(--theme-primary)]"
               />
               {results.length > 0 && (

@@ -322,7 +322,9 @@ export function ChatRoom({
           onSubmit={handleSend}
           className="px-4 py-3 border-t border-[var(--theme-border)] flex gap-2 bg-[var(--theme-background)]"
         >
+          <label htmlFor="chat-input" className="sr-only">Mensagem</label>
           <input
+            id="chat-input"
             ref={inputRef}
             type="text"
             value={text}
@@ -331,6 +333,7 @@ export function ChatRoom({
             placeholder="Mensagem…"
             maxLength={500}
             disabled={isPending}
+            aria-label="Mensagem"
             className="flex-1 rounded-full border border-[var(--theme-border)] bg-[var(--theme-muted)] px-4 py-2 text-sm outline-none focus:ring-1 focus:ring-[var(--theme-primary)] disabled:opacity-60"
           />
           <button
