@@ -71,6 +71,7 @@ ACTUAL_MAJOR=$(node -v | sed 's/v//' | cut -d. -f1)
 if [ "$ACTUAL_MAJOR" -lt "$REQUIRED_MAJOR" ]; then
   echo "❌  Node 20+ necessário. Versão atual: $(node -v)"; exit 1
 fi
+TZ=UTC pnpm test
 node scripts/check-server-actions.mjs
 pnpm typecheck
 pnpm lint
@@ -79,9 +80,9 @@ HOOK
 chmod +x .git/hooks/pre-push
 ```
 
-O hook roda automaticamente em `git push` e valida: versão do Node, exports async,
-TypeScript e build Next.js (sem migrate — não requer banco). O mesmo check de exports
-async está em `pnpm test:all`.
+O hook roda automaticamente em `git push` e valida: versão do Node, testes unitários em
+UTC (simula CI), exports async, TypeScript, ESLint e build Next.js. `TZ=UTC` é essencial
+para pegar testes flaky dependentes de timezone antes que cheguem ao CI.
 
 ## Primeiro acesso como organizador
 

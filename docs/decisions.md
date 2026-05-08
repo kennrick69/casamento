@@ -128,6 +128,38 @@ Se não houver evidência disponível: **perguntar ao usuário** em vez de infer
 
 ---
 
+## ADR-008 — Testes com datas exigem tempo fixo; hook simula TZ=UTC
+
+**Data:** 2026-05-07
+**Status:** Aceito
+
+**Contexto:** o teste `bottom-nav.test.ts` falhava em CI intermitentemente com "expected length 5, got 4". Causa raiz: o teste usava `new Date()` + `setHours(12,0,0,0)` para construir uma data de cerimônia relativa ao "hoje". Em CI (Ubuntu, TZ=UTC) o push às 21:25 BRT ocorre às 00:25 UTC do dia seguinte — o "hoje" em UTC virou amanhã em relação ao que o teste esperava. Localmente (TZ=America/Sao_Paulo) o mesmo teste sempre passava porque `setHours` e o relógio interno da função usavam o mesmo fuso. O pre-push hook não pegou porque: (a) não rodava `pnpm test`, e (b) mesmo que rodasse, usaria o TZ local do dev.
+
+**Decisão:**
+
+1. **Testes que envolvem datas devem usar tempo determinístico.** Usar `vi.useFakeTimers()` + `vi.setSystemTime(FIXED_DATE)` em `beforeEach` e `vi.useRealTimers()` em `afterEach`. Nunca construir datas relativas a `new Date()` sem mock — esses testes são flaky por definição.
+
+2. **Usar ISO strings fixas para datas de teste**, não `new Date()` + `setHours()`. Exemplo correto: `const TODAY_ISO = "2025-06-15T15:00:00.000Z"`. Assim o teste tem o mesmo comportamento em qualquer TZ.
+
+3. **O hook pre-push roda os testes em `TZ=UTC`** para simular o ambiente do CI. Um teste que passa local (BRT) mas falha em UTC é detectado antes do push.
+
+**Como detectar testes flaky de TZ no futuro:**
+- Grep por `new Date()` sem mock nos arquivos de teste: `grep -rn "new Date()\|Date.now()" tests/ --include="*.ts"`
+- Candidatos de risco: testes que usam `new Date()` E fazem conversão de timezone, comparação de datas calendário, ou operações dependentes de "hoje"
+- Candidatos de baixo risco: testes que usam `Date.now()` apenas para criar timestamps relativos (ex.: `expiresAt = Date.now() + 86400000`) sem conversão de fuso
+
+**Auditoria (2026-05-07):**
+
+| Arquivo | `Date.now()`/`new Date()` sem mock | Risco TZ | Status |
+|---|---|---|---|
+| `bottom-nav.test.ts` | ✅ | ALTO (converte para SP) | **Corrigido** |
+| `co-org-token.test.ts` | timestamps relativos | BAIXO (sem conversão TZ) | Monitorar |
+| `scenarios/fase-0-1.test.ts` | timestamps relativos | BAIXO (sem conversão TZ) | Monitorar |
+
+**Consequências:** todos os testes de data passam tanto em BRT quanto em UTC. O hook pega regressões antes do push.
+
+---
+
 ## ADR-003 — Convidados sem login (apenas sessionToken em cookie)
 
 **Data:** 2026-05-05
