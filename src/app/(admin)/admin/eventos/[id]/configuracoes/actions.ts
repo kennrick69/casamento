@@ -217,7 +217,7 @@ export async function saveEventThemeDraft(formData: FormData): Promise<{ ok: boo
 const PublishSettingsSchema = z.object({
   eventId: z.string(),
   guestApprovalRequired: z.string().optional(),
-  donationMode: z.enum(["TRUST", "PIX_PROOF"]).default("TRUST"),
+  donationMode: z.enum(["TRUST", "PIX_PROOF", "MERCADO_PAGO"]).default("TRUST"),
   pixKey: z.string().optional(),
 });
 
@@ -249,7 +249,7 @@ export async function savePublishSettings(formData: FormData): Promise<{ ok: boo
 const PublishSchema = z.object({
   eventId: z.string(),
   guestApprovalRequired: z.string().optional(),
-  donationMode: z.enum(["TRUST", "PIX_PROOF"]).default("TRUST"),
+  donationMode: z.enum(["TRUST", "PIX_PROOF", "MERCADO_PAGO"]).default("TRUST"),
   pixKey: z.string().optional(),
 });
 

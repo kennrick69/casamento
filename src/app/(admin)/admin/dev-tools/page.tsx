@@ -30,6 +30,7 @@ const ACTION_LABELS: Record<AuthAction, string> = {
   BACKUP_FAILED: "Backup falhou",
   ACCOUNT_DELETED: "Conta excluída",
   SHARE_LINK: "Link compartilhado",
+  PAYMENT_WEBHOOK: "Webhook de pagamento",
 };
 
 interface Props {

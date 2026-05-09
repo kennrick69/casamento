@@ -104,6 +104,7 @@ enum AuthAction {
   BACKUP_FAILED
   ACCOUNT_DELETED
   SHARE_LINK
+  PAYMENT_WEBHOOK
 }
 
 // --- Auth.js v5 tables ---
@@ -168,6 +169,10 @@ model Event {
   features              Json
   donationMode          DonationMode   @default(TRUST)
   pixKey                String?
+  mpPublicKey           String?
+  mpAccessToken         String?
+  mpEnabled             Boolean        @default(false)
+  mpWebhookSecret       String?
   guestApprovalRequired Boolean        @default(false)
   contentModerationMode ModerationMode @default(REACTIVE)
   publicTokenK          String
@@ -214,6 +219,7 @@ enum DonationMode {
   TRUST
   PIX_PROOF
   GATEWAY
+  MERCADO_PAGO
 }
 
 enum ModerationMode {
@@ -365,8 +371,9 @@ model Gift {
   reservedAt        DateTime?
   fulfilled         Boolean   @default(false)
 
-  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  reserver Guest? @relation(fields: [reservedByGuestId], references: [id])
+  event     Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  reserver  Guest?     @relation(fields: [reservedByGuestId], references: [id])
+  donations Donation[]
 }
 
 model Photo {
@@ -526,6 +533,7 @@ model Donation {
   id               String         @id @default(cuid())
   eventId          String
   guestId          String
+  giftId           String?
   amount           Float
   mode             DonationMode
   status           DonationStatus @default(DECLARED)
@@ -539,10 +547,12 @@ model Donation {
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  guest Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  event Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest Guest  @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  gift  Gift?  @relation(fields: [giftId], references: [id], onDelete: SetNull)
 
   @@index([eventId, status])
+  @@index([gatewayPaymentId])
 }
 
 enum DonationStatus {

@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 
 const schema = z.object({
   guestApprovalRequired: z.boolean(),
-  donationMode: z.enum(["TRUST", "PIX_PROOF"]),
+  donationMode: z.enum(["TRUST", "PIX_PROOF", "MERCADO_PAGO"]),
   pixKey: z.string().optional(),
 });
 
@@ -96,7 +96,7 @@ export function WizardPublishForm({ eventId, slug, defaultValues, hasDonations }
           <div className="flex flex-col gap-1.5">
             <Label>Modo de doação</Label>
             <div className="flex flex-col gap-2">
-              {(["TRUST", "PIX_PROOF"] as const).map((mode) => (
+              {(["TRUST", "PIX_PROOF", "MERCADO_PAGO"] as const).map((mode) => (
                 <label key={mode} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
@@ -105,7 +105,7 @@ export function WizardPublishForm({ eventId, slug, defaultValues, hasDonations }
                     {...register("donationMode", { onChange: autoSave })}
                   />
                   <span className="text-sm">
-                    {mode === "TRUST" ? "Confiança (sem confirmação)" : "Comprovante PIX"}
+                    {mode === "TRUST" ? "Confiança (sem confirmação)" : mode === "PIX_PROOF" ? "Comprovante PIX" : "Mercado Pago (automático)"}
                   </span>
                 </label>
               ))}

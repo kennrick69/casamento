@@ -54,13 +54,11 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 ---
 
-## 🟡 MÉDIA — Gateway de pagamento real (Modo 3 de doação)
+## ✅ Gateway de pagamento — IMPLEMENTADO com Mercado Pago (2026-05-09)
 
-**Status:** Stub implementado em `/api/webhooks/payment/route.ts` e `DonationMode.GATEWAY` no schema.
+**Status:** Mercado Pago integrado via SDK oficial (v2.x). Credentials criptografadas com AES-256-GCM por evento. Webhook em `/api/webhooks/mercadopago` com verificação HMAC.
 
-**O que falta:** integrar Stripe, Pagar.me ou MercadoPago, processar webhook, confirmar doação automaticamente.
-
-**Impacto:** baixo para o casamento próprio (modos TRUST e PIX_PROOF cobrem o caso de uso).
+**Configuração:** cada casal configura suas próprias credentials em `/admin/eventos/[id]/configuracoes/pagamentos`.
 
 ---
 

@@ -54,3 +54,25 @@ export async function toggleFulfilled(formData: FormData): Promise<{ ok: boolean
   revalidatePath(`/admin/eventos/${eventId}/presentes`);
   return { ok: true, nowFulfilled: !fulfilled };
 }
+
+export async function approveDonation(eventId: string, donationId: string): Promise<{ ok: boolean }> {
+  try { await requireOrganizer(eventId); } catch { return { ok: false }; }
+
+  await prisma.donation.updateMany({
+    where: { id: donationId, eventId },
+    data: { status: "APPROVED", approvedAt: new Date() },
+  });
+  revalidatePath(`/admin/eventos/${eventId}/presentes`);
+  return { ok: true };
+}
+
+export async function rejectDonation(eventId: string, donationId: string): Promise<{ ok: boolean }> {
+  try { await requireOrganizer(eventId); } catch { return { ok: false }; }
+
+  await prisma.donation.updateMany({
+    where: { id: donationId, eventId },
+    data: { status: "REJECTED" },
+  });
+  revalidatePath(`/admin/eventos/${eventId}/presentes`);
+  return { ok: true };
+}

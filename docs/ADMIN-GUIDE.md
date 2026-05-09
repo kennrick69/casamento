@@ -147,6 +147,57 @@ A rota retorna 404 automaticamente. Não requer redeploy.
 
 ---
 
+## Mercado Pago (integração de pagamentos)
+
+A plataforma suporta 3 modos de doação, configuráveis por evento em `/admin/eventos/[id]/configuracoes/pagamentos`.
+
+### Como o casal obtém credentials
+
+1. Acesse [developers.mercadopago.com.br](https://www.mercadopago.com.br/developers)
+2. Login com conta Mercado Pago do casal
+3. **Criar aplicação** → nome livre (ex: "Casamento Ana e Carlos")
+4. Navegue para **Credenciais de produção**
+5. Copie **Public Key** e **Access Token**
+6. Cole na página de configuração e clique em **Testar conexão**
+
+### Configurar webhook no painel MP
+
+1. Na aplicação MP, vá em **Webhooks → Adicionar URL de webhook**
+2. URL: `https://[domínio]/api/webhooks/mercadopago`
+3. Eventos: selecionar **Pagamentos**
+4. Cole o **Webhook Secret** gerado na tela de configuração
+
+### Sandbox vs produção
+
+- **Sandbox:** use as credenciais de **Teste** (aba separada no painel MP)
+- **Produção:** use as credenciais de **Produção** — só ative após testes
+- Para testar pagamentos no sandbox, use os [cartões de teste do MP](https://www.mercadopago.com.br/developers/pt/docs/checkout-pro/additional-content/your-integrations/test/cards)
+
+### Requisitos de infraestrutura
+
+| Variável | Obrigatória para MP |
+|----------|-------------------|
+| `ENCRYPTION_KEY` | Sim — 64 chars hex (`openssl rand -hex 32`) |
+
+Sem `ENCRYPTION_KEY`, o botão "Salvar" retorna erro e as credentials não são salvas.
+
+### Troubleshooting
+
+**Webhook não chega:**
+- Verifique se o domínio é acessível publicamente (não localhost)
+- Confirme URL exata no painel MP (sem trailing slash)
+- Verifique no AuthLog (`/admin/dev-tools`) se há entradas `PAYMENT_WEBHOOK`
+
+**Pagamento pendente eterno:**
+- MP pode levar até 48h para aprovar PIX de primeira vez
+- Verifique no dashboard MP se o pagamento aparece como "pendente"
+
+**Credenciais inválidas:**
+- Use "Testar conexão" antes de salvar
+- Confirme que está usando as credenciais de **Produção** (não sandbox) para pagamentos reais
+
+---
+
 ## Escalar para múltiplos casais
 
 A plataforma é multi-tenant por slug desde o início. Para onboarding de um novo casal:
