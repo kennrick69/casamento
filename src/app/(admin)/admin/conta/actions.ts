@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { AuthError } from "next-auth";
-import { auth, signIn } from "@/lib/auth";
+import { auth, signIn, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { getPasswordScore } from "@/lib/auth/validate-password";
@@ -133,5 +133,36 @@ export async function updateNotifications(formData: FormData): Promise<{ ok: boo
   });
 
   revalidatePath("/admin/conta");
+  return { ok: true };
+}
+
+// ── Exclusão de conta (LGPD art. 18) ──────────────────────────────────────
+
+const deleteAccountSchema = z.object({ confirmation: z.literal("excluir minha conta") });
+
+export async function deleteAccount(formData: FormData): Promise<{ ok: boolean; error?: string }> {
+  const session = await requireSession().catch(() => null);
+  if (!session) return { ok: false, error: "Não autenticado." };
+
+  const parsed = deleteAccountSchema.safeParse({ confirmation: formData.get("confirmation") });
+  if (!parsed.success) return { ok: false, error: 'Digite exatamente "excluir minha conta" para confirmar.' };
+
+  const ip = await getIp();
+  const userId = session.user.id;
+
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+
+  await prisma.$transaction([
+    prisma.eventOrganizer.deleteMany({ where: { userId } }),
+    prisma.authLog.deleteMany({ where: { userId } }),
+    prisma.passwordReset.deleteMany({ where: { userId } }),
+    prisma.session.deleteMany({ where: { userId } }),
+    prisma.account.deleteMany({ where: { userId } }),
+    prisma.user.delete({ where: { id: userId } }),
+  ]);
+
+  await logAuthEvent({ action: "ACCOUNT_DELETED", ip, email: user?.email ?? "" });
+
+  await signOut({ redirectTo: "/" });
   return { ok: true };
 }

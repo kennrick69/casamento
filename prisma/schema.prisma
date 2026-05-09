@@ -102,6 +102,7 @@ enum AuthAction {
   HONEYPOT_TRIGGERED
   BACKUP_CREATED
   BACKUP_FAILED
+  ACCOUNT_DELETED
 }
 
 // --- Auth.js v5 tables ---
@@ -176,6 +177,7 @@ model Event {
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
   archivedAt            DateTime?
+  archivalWarningAt     DateTime?
 
   theme               Theme                @relation(fields: [themeId], references: [id])
   organizers          EventOrganizer[]

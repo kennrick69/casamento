@@ -28,6 +28,7 @@ const ACTION_LABELS: Record<AuthAction, string> = {
   HONEYPOT_TRIGGERED: "Honeypot",
   BACKUP_CREATED: "Backup criado",
   BACKUP_FAILED: "Backup falhou",
+  ACCOUNT_DELETED: "Conta excluída",
 };
 
 interface Props {

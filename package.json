@@ -49,6 +49,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@node-rs/argon2": "^2.0.2",
     "@prisma/client": "^6.19.3",
+    "@sentry/nextjs": "^10.52.0",
     "@zxcvbn-ts/core": "^3.0.4",
     "@zxcvbn-ts/language-common": "^3.0.4",
     "@zxcvbn-ts/language-pt-br": "^3.0.2",

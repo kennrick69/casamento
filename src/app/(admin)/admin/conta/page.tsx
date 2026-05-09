@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChangePasswordForm } from "./change-password-form";
 import { ProfileForm } from "./profile-form";
 import { NotificationsForm } from "./notifications-form";
+import { LgpdSection } from "./lgpd-section";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Minha conta" };
@@ -99,6 +100,9 @@ export default async function ContaPage({ searchParams }: Props) {
           <h2 className="text-base font-semibold mb-5">Notificações</h2>
           <NotificationsForm marketingOptIn={user.marketingOptIn} />
         </section>
+
+        {/* ── LGPD / Dados e privacidade ─────────────────────────────── */}
+        <LgpdSection />
       </main>
     </div>
   );
