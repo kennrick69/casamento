@@ -198,6 +198,39 @@ Sem `ENCRYPTION_KEY`, o botão "Salvar" retorna erro e as credentials não são 
 
 ---
 
+## QA Dashboard
+
+O QA Dashboard ([/admin/qa](https://joseeleticia.com/admin/qa)) é a ferramenta de testes manuais integrada à plataforma.
+
+### Como usar
+
+1. Acesse [https://joseeleticia.com/admin/qa](https://joseeleticia.com/admin/qa)
+2. Clique em **Nova execução** e dê um nome descritivo (ex: "QA 2026-05-10 pré-lançamento")
+3. Na tela de execução, preencha o **ID do evento** e o **Slug** no topo para que os links se resolvam automaticamente
+4. Para cada item do checklist:
+   - Clique em **▼ Detalhes** para ver os passos e o resultado esperado
+   - Clique em **🔗 Abrir** para acessar a página a testar em nova aba
+   - Marque **✅ OK**, **⚠️ Bug** ou **⏭️ Pulei**
+   - Se marcar Bug, descreva brevemente o problema na nota
+5. Os resultados são salvos automaticamente (debounce de 800ms)
+6. Ao terminar, clique em **Finalizar execução**
+7. Acesse **Gerar relatório** para obter o Markdown com todos os bugs encontrados
+
+### Estrutura do checklist
+
+O checklist fica em `src/lib/qa/checklist.ts` e contém ~50 itens organizados por seção de feature. Cada item tem:
+- ID único (snake_case)
+- Seção de agrupamento
+- URL da rota (com `[eventId]` e `[slug]` como placeholders)
+- Passos de execução
+- Resultado esperado
+
+### Adicionar nova feature ao checklist
+
+Ao implementar qualquer feature nova, adicione um ou mais itens em `src/lib/qa/checklist.ts`. Uma feature sem item no checklist é considerada incompleta.
+
+---
+
 ## Escalar para múltiplos casais
 
 A plataforma é multi-tenant por slug desde o início. Para onboarding de um novo casal:

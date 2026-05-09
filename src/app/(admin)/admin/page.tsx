@@ -27,6 +27,9 @@ export default async function AdminPage() {
           <Link href="/admin/saude" className="hover:text-foreground transition-colors">
             Saúde
           </Link>
+          <Link href="/admin/qa" className="hover:text-foreground transition-colors">
+            QA
+          </Link>
           <Link href="/admin/conta" className="hover:text-foreground transition-colors">
             Minha conta
           </Link>

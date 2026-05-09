@@ -27,6 +27,7 @@ vi.mock("@/lib/db", () => ({
     passwordReset: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), deleteMany: vi.fn() },
     rateLimitAttempt: { count: vi.fn(), create: vi.fn(), findFirst: vi.fn(), deleteMany: vi.fn() },
     authLog: { create: vi.fn(), findMany: vi.fn() },
+    qATestRun: { findMany: vi.fn(), findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     $transaction: vi.fn((ops: unknown[]) => Promise.all(ops)),
   },
 }));

@@ -41,6 +41,7 @@ model User {
   sessions       Session[]
   passwordResets PasswordReset[]
   authLogs       AuthLog[]
+  qaTestRuns     QATestRun[]
 }
 
 model PasswordReset {
@@ -745,4 +746,19 @@ model LiveEvent {
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@index([eventId, createdAt])
+}
+
+// --- M5.Z — QA Dashboard ---
+
+model QATestRun {
+  id          String    @id @default(cuid())
+  title       String
+  startedAt   DateTime  @default(now())
+  finishedAt  DateTime?
+  results     Json      @default("{}")
+  notes       String    @default("") @db.Text
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([createdById, startedAt])
 }

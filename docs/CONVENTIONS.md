@@ -74,3 +74,9 @@ Ao adicionar um bloco de testes em `teste-noturno.md`:
 2. Use `joseeleticia` como slug para rotas públicas
 3. Use `SEU_EVENTO_ID` para rotas com ID de evento
 4. Não remova itens antigos — apenas adicione e marque
+
+---
+
+## Regra 4 — Checklist de QA obrigatório
+
+Every new feature MUST have a corresponding item in `src/lib/qa/checklist.ts`. A feature without a QA checklist item is incomplete.
