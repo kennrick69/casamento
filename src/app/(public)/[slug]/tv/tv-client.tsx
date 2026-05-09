@@ -182,7 +182,7 @@ function PhotoSlide({ slide }: { slide: Slide }) {
 function MessageSlide({ slide, coupleNames }: { slide: Slide; coupleNames: string }) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-rose-950 via-black to-pink-950 px-10">
-      <p className="text-white/30 text-5xl mb-6 font-serif">"</p>
+      <p className="text-white/30 text-5xl mb-6 font-serif">&ldquo;</p>
       <p className="text-white text-2xl md:text-3xl font-light text-center leading-relaxed max-w-2xl">
         {slide.content}
       </p>

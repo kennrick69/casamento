@@ -70,7 +70,7 @@ export function CustomizerClient({ eventId, slug, initialPalette, initialCustomi
       <div className="w-80 shrink-0 border-r bg-background overflow-y-auto flex flex-col">
         <div className="px-4 py-4 border-b">
           <h2 className="text-sm font-semibold">Personalizar convite</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Mudanças só são aplicadas ao clicar em "Publicar"</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Mudanças só são aplicadas ao clicar em &quot;Publicar&quot;</p>
         </div>
 
         {/* Colors */}
