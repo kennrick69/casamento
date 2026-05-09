@@ -7,12 +7,12 @@ const pdfkit = createRequire(import.meta.url)("pdfkit") as typeof import("pdfkit
 
 export const maxDuration = 30;
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ eventId: string }> }) {
-  const { eventId } = await params;
-  try { await requireOrganizer(eventId); } catch { return NextResponse.json({ error: "Não autorizado" }, { status: 401 }); }
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  try { await requireOrganizer(id); } catch { return NextResponse.json({ error: "Não autorizado" }, { status: 401 }); }
 
   const event = await prisma.event.findUnique({
-    where: { id: eventId },
+    where: { id: id },
     select: {
       coupleNames: true,
       seatingTables: {

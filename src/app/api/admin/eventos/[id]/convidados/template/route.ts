@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireOrganizer } from "@/lib/authorization";
 
-export async function GET(_req: Request, { params }: { params: Promise<{ eventId: string }> }) {
-  const { eventId } = await params;
-  try { await requireOrganizer(eventId); } catch { return NextResponse.json({ error: "Não autorizado" }, { status: 401 }); }
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  try { await requireOrganizer(id); } catch { return NextResponse.json({ error: "Não autorizado" }, { status: 401 }); }
 
   const headers = ["nome", "email", "telefone", "grupo", "acompanhantes", "restricao_alimentar"];
   const example = ["Maria Silva", "maria@exemplo.com", "11999990000", "família", "1", "vegetariana"];

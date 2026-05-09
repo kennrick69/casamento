@@ -5,21 +5,21 @@ import { requireOrganizer } from "@/lib/authorization";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ eventId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
   if (!session?.user?.id) return new NextResponse("Não autorizado", { status: 401 });
 
-  const { eventId } = await params;
+  const { id } = await params;
 
   try {
-    await requireOrganizer(eventId);
+    await requireOrganizer(id);
   } catch {
     return new NextResponse("Acesso negado", { status: 403 });
   }
 
   const guests = await prisma.guest.findMany({
-    where: { eventId, deletedAt: null },
+    where: { eventId: id, deletedAt: null },
     orderBy: [{ rsvpStatus: "asc" }, { name: "asc" }],
   });
 
@@ -42,7 +42,7 @@ export async function GET(
   return new NextResponse(header + rows, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="convidados-${eventId}.csv"`,
+      "Content-Disposition": `attachment; filename="convidados-${id}.csv"`,
     },
   });
 }
