@@ -70,8 +70,8 @@ export function wrap(body: string): string {
         <tr>
           <td align="center" bgcolor="${c.headerFrom}"
             style="background-color:${c.headerFrom};background-image:linear-gradient(135deg,${c.headerFrom} 0%,${c.headerTo} 100%);padding:44px 48px">
-            <span style="display:block;font-size:34px;font-family:${serif};font-weight:normal;font-style:italic;color:${c.white};letter-spacing:0.05em;line-height:1;-webkit-text-stroke:0.8px #fb7185">Voem.</span>
-            <span style="display:block;margin-top:8px;font-size:11px;font-family:${sans};color:rgba(255,255,255,0.55);letter-spacing:0.14em;text-transform:uppercase">Convites de casamento</span>
+            <span style="display:block;font-size:34px;font-family:${serif};font-weight:normal;font-style:italic;color:${c.white} !important;letter-spacing:0.05em;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,0.6) !important">Voem.</span>
+            <span style="display:block;margin-top:8px;font-size:11px;font-family:${sans};color:rgba(255,255,255,0.55) !important;letter-spacing:0.14em;text-transform:uppercase">Convites de casamento</span>
           </td>
         </tr>
 
