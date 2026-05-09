@@ -13,6 +13,7 @@ export const authConfig = {
   callbacks: {
     session({ session, token }) {
       if (token.sub) session.user.id = token.sub;
+      session.user.emailVerified = (token.emailVerified as Date | null) ?? null;
       return session;
     },
   },

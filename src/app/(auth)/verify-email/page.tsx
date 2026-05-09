@@ -1,6 +1,5 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { ResendButton } from "./resend-button";
 import type { Metadata } from "next";
 
@@ -52,15 +51,6 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
           </p>
 
           <ResendButton />
-
-          <div className="pt-2 border-t border-border/40">
-            <Link
-              href="/admin"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Acessar o painel sem confirmar →
-            </Link>
-          </div>
         </div>
       </div>
     </div>

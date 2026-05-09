@@ -12,23 +12,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     session({ session, token }) {
       if (token.sub) session.user.id = token.sub;
+      session.user.emailVerified = (token.emailVerified as Date | null) ?? null;
       return session;
     },
     async jwt({ token, user }) {
-      // No sign-in inicial, o user object está presente — apenas passa o token
-      if (user) return token;
+      if (user) {
+        // Sign-in inicial: captura emailVerified direto do objeto de usuário
+        token.emailVerified = (user as { emailVerified?: Date | null }).emailVerified ?? null;
+        return token;
+      }
       if (!token.sub || !token.iat) return token;
 
-      // Verifica se a senha foi alterada após emissão deste token.
-      // Se sim, invalida o token (força re-auth em todos os dispositivos).
+      // Refresh: verifica senha alterada e atualiza emailVerified do banco
       const dbUser = await prisma.user.findUnique({
         where: { id: token.sub },
-        select: { passwordChangedAt: true },
+        select: { passwordChangedAt: true, emailVerified: true },
       });
       if (dbUser?.passwordChangedAt) {
         const changedAt = Math.floor(dbUser.passwordChangedAt.getTime() / 1000);
         if (changedAt > (token.iat as number)) return null;
       }
+      token.emailVerified = dbUser?.emailVerified ?? null;
 
       return token;
     },
@@ -52,12 +56,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
-          select: { id: true, email: true, name: true, passwordHash: true },
+          select: { id: true, email: true, name: true, passwordHash: true, emailVerified: true },
         });
         if (!user?.passwordHash) return null;
         const valid = await verifyPassword(credentials.password, user.passwordHash);
         if (!valid) return null;
-        return { id: user.id, email: user.email, name: user.name };
+        return { id: user.id, email: user.email, name: user.name, emailVerified: user.emailVerified };
       },
     }),
   ],

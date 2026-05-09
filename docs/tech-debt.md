@@ -26,19 +26,9 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 ---
 
-## 🔴 ALTA — Verificação de email obrigatória antes de criar evento
+## ✅ Verificação de email obrigatória — IMPLEMENTADO (2026-05-08)
 
-**Status:** implementação parcial — campo `emailVerified` é gravado no banco quando o link mágico é clicado, mas `/admin` não bloqueia acesso de usuário não-verificado.
-
-**Razão do adiamento:** domínio próprio não verificado no Resend em desenvolvimento. Emails só chegam para `casamento290527@gmail.com` (conta dona do Resend). Verificação obrigatória sem domínio funcional bloquearia o desenvolvedor.
-
-**Gatilho para ativar:** quando domínio próprio estiver verificado no Resend e `EMAIL_FROM` apontar para ele.
-
-**O que precisa ser feito:**
-1. No middleware (`src/middleware.ts`): checar `session.user.emailVerified` em rotas `/admin`
-2. Se não verificado: redirecionar para `/verify-email` com banner "Confirme seu e-mail para continuar"
-3. Criar página `/verify-email` com instrução + botão "Reenviar link"
-4. Em `/verify-email`, chamar `signIn("resend", { email, redirect: false })` para reenvio
+`emailVerified` propagado no JWT via `authorize` + `jwt` callback. Middleware bloqueia `/admin/*` para usuários não-verificados em produção (`NODE_ENV === "production"`). Bypass via cookie `email-just-verified` (60s) evita loop após clicar no link. Botão "Acessar sem confirmar" removido de `/verify-email`. Dev local não é afetado.
 
 ---
 

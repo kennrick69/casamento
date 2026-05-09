@@ -31,5 +31,14 @@ export async function GET(request: NextRequest) {
     email: verificationToken.identifier,
   });
 
-  return NextResponse.redirect(new URL("/admin/onboarding", base));
+  const response = NextResponse.redirect(new URL("/admin/onboarding", base));
+  // Cookie de 60s para o middleware saber que o email acabou de ser verificado,
+  // evitando redirect loop antes do JWT ser atualizado com emailVerified do banco.
+  response.cookies.set("email-just-verified", "1", {
+    maxAge: 60,
+    httpOnly: true,
+    path: "/",
+    sameSite: "lax",
+  });
+  return response;
 }
