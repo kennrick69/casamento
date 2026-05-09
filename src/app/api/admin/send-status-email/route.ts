@@ -191,10 +191,12 @@ function readDocMeta(relativePath: string): string {
   }
 }
 
-export async function POST(req: NextRequest) {
-  const secret = req.headers.get("x-cron-secret");
-  if (!secret || secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+export async function GET(req: NextRequest) {
+  const token = req.nextUrl.searchParams.get("token");
+  const expected = process.env.STATUS_EMAIL_TOKEN;
+
+  if (!expected || !token || token !== expected) {
+    return new NextResponse("401 Unauthorized", { status: 401 });
   }
 
   const today = new Date().toLocaleDateString("pt-BR", {
@@ -212,9 +214,18 @@ export async function POST(req: NextRequest) {
 
   try {
     const result = await email.send({ to: TO, subject, html });
-    return NextResponse.json({ ok: true, messageId: result.id, to: TO, subject });
+    return new NextResponse(
+      `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>OK</title>` +
+      `<style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f1f0ef}` +
+      `.card{background:#fff;border-radius:12px;padding:40px 48px;text-align:center;border:1px solid #e2e8f0;max-width:400px}` +
+      `h1{color:#0f172a;font-size:22px;margin:0 0 8px}p{color:#64748b;margin:0;font-size:15px}</style></head>` +
+      `<body><div class="card"><h1>✅ Email enviado!</h1>` +
+      `<p>Resumo enviado para <strong>${TO}</strong>.<br>Message-ID: <code>${result.id}</code><br><br>Pode fechar esta aba.</p>` +
+      `</div></body></html>`,
+      { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } }
+    );
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+    return new NextResponse(`Erro ao enviar email: ${msg}`, { status: 500 });
   }
 }
