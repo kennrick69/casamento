@@ -122,6 +122,22 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 ---
 
+## 🟡 MÉDIA — Configurar Backblaze B2 para backup off-site
+
+**Status:** código implementado (M4.6), env vars ausentes no Railway.
+
+**O que falta:** no Railway, definir:
+- `B2_KEY_ID` — Application Key ID
+- `B2_APPLICATION_KEY` — Application Key (secret)
+- `B2_BUCKET` — nome do bucket (ex.: `casamento-backups`)
+- `B2_ENDPOINT` — S3-compatible endpoint (ex.: `https://s3.us-east-005.backblazeb2.com`)
+
+**Quando:** antes do onboarding de casais externos. Sem B2, só o volume Railway (60 dias) protege os dados.
+
+**Verificar:** /admin/saude/backups mostra status verde para ambas as storages quando configurado.
+
+---
+
 ## ✅ Concluídas
 
 *(Mover itens aqui quando pagos, com data.)*
