@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { loginAction, signupAction } from '@/app/(auth)/login/actions';
+import { loginAction, signupAction, requestMagicLinkAction } from '@/app/(auth)/login/actions';
 import { TurnstileWidget } from './turnstile-widget';
 import { PasswordStrengthBar } from './password-strength-bar';
 
@@ -94,8 +94,14 @@ function LoginForm({ turnstileToken }: { turnstileToken: string | null }) {
       return;
     }
     setMagicPending(true);
-    await signIn('resend', { email, redirect: false });
+    const fd = new FormData();
+    fd.append('email', email);
+    const result = await requestMagicLinkAction(fd);
     setMagicPending(false);
+    if (result && 'error' in result) {
+      form.setError('email', { message: result.error });
+      return;
+    }
     setMagicSent(true);
   }
 

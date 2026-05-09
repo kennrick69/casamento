@@ -14,7 +14,12 @@ import { validatePassword } from "@/lib/auth/validate-password";
 import { checkRateLimit, clearRateLimit } from "@/lib/auth/rate-limit";
 import { logAuthEvent } from "@/lib/auth/auth-log";
 import { email as emailProvider } from "@/lib/email";
-import { welcomeVerifyHtml, welcomeVerifyText } from "@/lib/email/templates";
+import {
+  welcomeVerifyHtml,
+  welcomeVerifyText,
+  magicLinkLoginHtml,
+  magicLinkLoginText,
+} from "@/lib/email/templates";
 import { verifyTurnstile } from "@/lib/auth/turnstile";
 
 export type AuthState = { error: string; field?: string } | null;
@@ -224,4 +229,60 @@ export async function signupAction(formData: FormData): Promise<AuthState> {
 
   // Nenhum cookie setado aqui. Sessão só é criada após o usuário verificar o email e fazer login.
   redirect(`/verify-email?email=${encodeURIComponent(email)}`);
+}
+
+// ─── Magic link (login sem senha) ───────────────────────────────────────────────
+
+export type MagicLinkState = { ok: true } | { error: string } | null;
+
+export async function requestMagicLinkAction(formData: FormData): Promise<MagicLinkState> {
+  const { ip, userAgent } = await getRequestMeta();
+  const rawEmail = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!rawEmail || !rawEmail.includes("@")) {
+    return { error: "Informe um e-mail válido." };
+  }
+
+  const rl = await checkRateLimit(`magic-link:${ip}`, ip, 3, 60, userAgent);
+  if (!rl.allowed) {
+    return {
+      error: `Muitas tentativas. Tente novamente em ${Math.ceil(rl.retryAfterSeconds / 60)} min.`,
+    };
+  }
+
+  // Anti-enumeration: sempre responde "ok", mesmo se o e-mail não existir.
+  // Só envia email de fato se o usuário existir.
+  const user = await prisma.user.findUnique({
+    where: { email: rawEmail },
+    select: { id: true, firstName: true },
+  });
+
+  if (user) {
+    const token = crypto.randomUUID();
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await prisma.verificationToken.create({
+      data: { identifier: rawEmail, token, expires },
+    });
+    const link = `${getAppUrl()}/auth/magic?token=${token}`;
+    try {
+      await emailProvider.send({
+        to: rawEmail,
+        subject: "Acessar sua conta no Voem.",
+        html: magicLinkLoginHtml({ email: rawEmail, url: link }),
+        text: magicLinkLoginText({ email: rawEmail, url: link }),
+        idempotencyKey: `magic-${user.id}-${token.slice(0, 8)}`,
+      });
+    } catch (emailError) {
+      const reason = emailError instanceof Error ? emailError.message : String(emailError);
+      console.error("[magic-link] email send failed:", reason);
+      await logAuthEvent({
+        action: "EMAIL_SEND_FAILED",
+        ip,
+        userAgent,
+        email: rawEmail,
+        metadata: { type: "magic_link", reason },
+      });
+    }
+  }
+
+  return { ok: true };
 }
