@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import withBundleAnalyzerFactory from "@next/bundle-analyzer";
 
 const withNextIntl = createNextIntlPlugin("./src/lib/i18n/index.ts");
+const withBundleAnalyzer = withBundleAnalyzerFactory({ enabled: process.env.ANALYZE === "true" });
 
 // CSP directive sources
 const CSP_DIRECTIVES = [
@@ -74,4 +76,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+export default withBundleAnalyzer(withNextIntl(nextConfig));

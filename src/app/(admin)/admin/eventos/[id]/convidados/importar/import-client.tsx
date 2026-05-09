@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import * as XLSX from "xlsx";
 import { parseRows, importGuests } from "./actions";
 import type { ParsedRow, RowError, ImportResult } from "./actions";
 import { Button } from "@/components/ui/button";
@@ -28,6 +27,7 @@ export function ImportClient({ eventId }: ImportClientProps) {
   const [loading, setLoading] = useState(false);
 
   async function handleFile(file: File) {
+    const XLSX = await import("xlsx");
     const buf = await file.arrayBuffer();
     const wb = XLSX.read(buf, { type: "array" });
     const ws = wb.Sheets[wb.SheetNames[0]];

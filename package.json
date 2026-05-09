@@ -28,7 +28,8 @@
     "test:perf": "lhci autorun",
     "test:load": "k6 run tests/load/rsvp-flow.js",
     "check:server-actions": "node scripts/check-server-actions.mjs",
-    "test:all": "pnpm check:server-actions && pnpm test && pnpm test:e2e"
+    "test:all": "pnpm check:server-actions && pnpm test && pnpm test:e2e",
+    "analyze": "ANALYZE=true pnpm build:local"
   },
   "engines": {
     "node": ">=20"
@@ -86,6 +87,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
     "@lhci/cli": "^0.15.1",
+    "@next/bundle-analyzer": "^16.2.6",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
     "@types/archiver": "^7.0.0",
