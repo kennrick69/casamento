@@ -2,10 +2,11 @@ import { type NextRequest, NextResponse } from "next/server";
 import { encode } from "next-auth/jwt";
 import { prisma } from "@/lib/db";
 import { logAuthEvent } from "@/lib/auth/auth-log";
+import { getAppUrl } from "@/lib/app-url";
 
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL ?? new URL(request.url).origin;
+  const base = getAppUrl();
 
   if (!token) {
     return NextResponse.redirect(new URL("/verify-email?error=invalid", base));
