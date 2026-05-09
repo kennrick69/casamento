@@ -69,6 +69,7 @@ pnpm prisma migrate dev --name nome_da_migration
 | Backup | `0 3 * * *` (3h UTC) | `POST /api/cron/backup` | Backup diário de todos os eventos |
 | Reminder | `0 8 * * *` (8h UTC) | `POST /api/cron/reminder` | Emails de lembrete 7 e 1 dia antes |
 | Retention | `0 4 1 * *` (1º de cada mês) | `POST /api/cron/retention` | Aviso 30 dias + arquiva eventos >1 ano |
+| Digest | `0 7 * * *` (7h UTC) | `POST /api/cron/digest` | Resumo diário (todos os dias) + semanal (só segundas) |
 
 Todos exigem header `x-cron-secret: $CRON_SECRET`.
 

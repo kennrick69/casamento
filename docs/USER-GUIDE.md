@@ -124,6 +124,65 @@ Em `/admin/eventos/[id]/co-organizadores`:
 
 ---
 
+## 11. Editor visual de convite
+
+Em `/admin/eventos/[id]/personalizar`:
+- Ajuste as cores do tema (primária, secundária, fundo, destaques)
+- Escolha tipografia (clássica, moderna, romântica)
+- Ative/desative seções (história, padrinhos, livro de mensagens)
+- Mude o layout do hero (centralizado ou dividido)
+- Clique **Publicar** para salvar e visualizar no iframe ao lado
+
+---
+
+## 12. Plano de mesas
+
+Em `/admin/eventos/[id]/mesas`:
+- Crie mesas com nome e capacidade
+- Arraste convidados da sidebar para a mesa desejada
+- Cada convidado pode estar em apenas uma mesa
+- Clique **Exportar PDF** para imprimir o plano completo
+- Convidados veem sua mesa na tela de confirmação do RSVP
+
+---
+
+## 13. Ao Vivo (dia do evento)
+
+Em `/admin/eventos/[id]/ao-vivo`:
+- Poste atualizações em tempo real para os convidados (cerimônia, brinde, música, etc.)
+- Use os botões rápidos ou escreva mensagem personalizada
+- Os convidados veem em `/[slug]/ao-vivo` com indicador vermelho animado
+
+---
+
+## 14. Agradecimentos
+
+Em `/admin/eventos/[id]/agradecimentos`:
+- Lista todos os convidados confirmados com o presente registrado
+- Gera mensagem de agradecimento automática por convidado
+- Edite o presente e o texto, salve rascunho ou marque como enviado
+- Barra de progresso mostra quantos agradecimentos já foram enviados
+
+---
+
+## 15. Digest de email
+
+Em `/admin/eventos/[id]/notificacoes` → **Resumo por email**:
+- Escolha a frequência: Desativado / Diário / Semanal (segundas-feiras)
+- Cada digest inclui: novas confirmações, fotos pendentes, mensagens sinalizadas, dias restantes
+
+---
+
+## 16. Modo TV
+
+Acesse `/[slug]/tv` em um computador conectado a um projetor ou TV.
+- Slideshow fullscreen com fotos do mural, mensagens do chat e cronograma
+- Avança automaticamente a cada 8 segundos
+- Navegar com as setas do teclado ou clicando nas bordas da tela
+- Atualizações ao vivo do painel Admin aparecem como banner
+
+---
+
 ## Perguntas frequentes
 
 **Os convidados precisam criar conta?**

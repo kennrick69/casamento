@@ -1212,3 +1212,67 @@ Ver detalhes em `docs/audit-data.md`.
 - [x] ✅ docs/USER-GUIDE.md criado
 - [x] ✅ docs/ADMIN-GUIDE.md criado
 - [x] ✅ docs/teste-noturno.md consolidado com M4
+
+---
+
+## M5 — Refinamentos avançados
+
+### M5.1 — Editor visual de convite
+- [ ] Acessar /admin/eventos/[id]/personalizar
+- [ ] Mudar cor primária e verificar preview no iframe atualiza
+- [ ] Salvar paleta e recarregar — cores persistem
+- [ ] Resetar para padrão — vars voltam ao tema base
+- [ ] Mudar tipografia → verificar CSS var --theme-font-heading no iframe
+
+### M5.2 — Plano de mesas
+- [ ] Criar mesa em /admin/eventos/[id]/mesas
+- [ ] Arrastar convidado para mesa — aparece na mesa, sai da sidebar
+- [ ] Arrastar para outra mesa — move (não duplica)
+- [ ] Arrastar de volta para "Sem mesa" — desassocia
+- [ ] Confirmar RSVP de convidado com mesa atribuída → tela de sucesso mostra mesa
+- [ ] Export PDF → baixa arquivo com layout do plano
+
+### M5.3 — Cronograma com notificações
+- [ ] Acessar /[slug]/programacao — lista os JourneyItems
+- [ ] Clicar "Ativar notificações" — browser pede permissão
+- [ ] Permissão concedida → botão muda para "Notificações ativas"
+
+### M5.4 — Ao Vivo
+- [ ] Admin: postar evento rápido (cerimônia) em /admin/eventos/[id]/ao-vivo
+- [ ] Convidado: /[slug]/ao-vivo — indicador vermelho aparece, card com "Agora" badge
+- [ ] Admin: deletar evento — desaparece na lista admin
+- [ ] Modo TV: banner aparece ao receber evento ao vivo
+
+### M5.5 — Quem é quem
+- [ ] Convidado não confirmado → /[slug]/convidados mostra "disponível após confirmar"
+- [ ] Convidado confirmado com profilePublic:true → aparece na grade
+- [ ] Convidado confirmado com profilePublic:false → não aparece
+
+### M5.6 — Agradecimentos
+- [ ] /admin/eventos/[id]/agradecimentos lista convidados confirmados
+- [ ] Expandir convidado → textarea pré-preenchida com template automático
+- [ ] Editar presente → template atualiza na próxima abertura
+- [ ] Copiar → texto vai para clipboard
+- [ ] Marcar como enviado → move para aba "Enviados", progresso sobe
+
+### M5.7 — Digest de email
+- [ ] /admin/eventos/[id]/notificacoes → seção Resumo por email visível
+- [ ] Selecionar "Diário" → salvar → recarregar → "Diário" está selecionado
+- [ ] Disparar POST /api/cron/digest com x-cron-secret correto → retorna { ok: true, sent: N }
+
+### M5.8 — Compartilhamento social
+- [ ] Landing page tem seção "Compartilhar"
+- [ ] Botão WhatsApp → abre wa.me com texto correto (nova aba)
+- [ ] Copiar link → feedback "Link copiado!" por 2,5s
+- [ ] Mostrar QR code → modal com imagem do QR gerada corretamente
+- [ ] POST /api/public/[slug]/share gravado no AuthLog
+
+### M5.9 — Modo TV
+- [ ] /[slug]/tv abre em fullscreen (sem header/nav do layout público)
+- [ ] Slideshow avança automaticamente a cada 8 s
+- [ ] Tecla → avança; ← volta; Space avança
+- [ ] Toque na borda direita avança; esquerda volta
+- [ ] Slide de foto: imagem ocupa tela, legenda aparece se houver
+- [ ] Slide de mensagem: fundo degradê, texto centrado, autor
+- [ ] Slide de cronograma: lista de itens com horário
+- [ ] Banner de ao vivo aparece ao receber evento Pusher

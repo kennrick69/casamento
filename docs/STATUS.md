@@ -31,6 +31,11 @@
 - Emails automáticos (7 dias e 1 dia antes do evento)
 - Email em massa para convidados
 - Health check + sistema de backups (Railway 60 dias + Backblaze B2 90 dias opcional) ✨ M4.6
+- Editor visual de convite (paleta de cores, tipografia, layout) ✨ M5.1
+- Plano de mesas drag-and-drop com export PDF ✨ M5.2
+- Gerenciamento de eventos ao vivo (Pusher, painel admin) ✨ M5.4
+- Agradecimentos por convidado (template automático, rascunho, progresso) ✨ M5.6
+- Digest de email configurável por organizador (NONE/DAILY/WEEKLY) ✨ M5.7
 
 ### Convidado / Público
 - Landing page por evento com: hero, countdown, locais+mapa, traje, presentes, story ✨ M3.1
@@ -45,6 +50,12 @@
 - Check-in via QR code
 - Roteiro do dia
 - Toggle de idioma PT-BR / EN ✨ M4.5
+- Mesa do convidado exibida na tela de sucesso do RSVP ✨ M5.2
+- Cronograma com notificações de browser 5 min antes ✨ M5.3
+- Página Ao Vivo com atualizações em tempo real via Pusher ✨ M5.4
+- Perfil público de convidados (quem é quem) ✨ M5.5
+- Seção de compartilhamento: WhatsApp, copiar link, QR code modal ✨ M5.8
+- Modo TV fullscreen: slideshow rotativo com fotos, mensagens e cronograma ✨ M5.9
 
 ### SEO e Marketing
 - OG images dinâmicas por evento (1200×630, gradiente bordô) ✨ M4.1
@@ -100,6 +111,23 @@
 - **axe-core**: não rodado localmente — pendente auditoria de acessibilidade
 
 ---
+
+---
+
+## 📦 M5 — Entregues (refinamentos avançados)
+
+| # | Feature | Notas |
+|---|---------|-------|
+| M5.1 | Editor visual de convite | Paleta de cores, tipografia, seções visíveis, layout hero, preview iframe |
+| M5.2 | Plano de mesas drag-and-drop | SeatingTable/SeatingAssignment, export PDF, mesa no RSVP sucesso |
+| M5.3 | Cronograma com notificações | /[slug]/programacao, Notification API 5 min antes, graceful fallback |
+| M5.4 | Live updates (Ao Vivo) | POST /api/admin/eventos/[id]/live, Pusher, painel admin com quick events |
+| M5.5 | Quem é quem (perfil público) | profilePublic consent no RSVP, /[slug]/convidados só para confirmados |
+| M5.6 | Agradecimentos | Template automático, gift/note editável, copiar, rascunho, progresso |
+| M5.7 | Digest de email | Cron DAILY/WEEKLY, UI em Notificações, RSVPs + fotos + chat + countdown |
+| M5.8 | Compartilhamento social | WhatsApp, copiar link, QR code modal, analytics via AuthLog SHARE_LINK |
+| M5.9 | Modo TV fullscreen | /[slug]/tv, slideshow 8s, teclado/toque, live banner via Pusher |
+| M5.10 | Docs finais | STATUS.md, USER-GUIDE.md, ADMIN-GUIDE.md, teste-noturno.md, CHANGELOG.md |
 
 ---
 
