@@ -111,7 +111,7 @@ jobs:
         run: pnpm exec playwright test tests/e2e/smoke.test.ts --project=chromium
         env:
           PLAYWRIGHT_BASE_URL: ${{ secrets.RAILWAY_URL }}
-          TEST_SLUG: ${{ secrets.TEST_SLUG || 'casamento-exemplo' }}
+          TEST_SLUG: ${{ secrets.TEST_SLUG || 'joseeleticia' }}
           TEST_PUBLIC_TOKEN: ${{ secrets.TEST_PUBLIC_TOKEN || 'dev-public-token-k' }}
 
       - name: Run smoke tests — auth (Bloco A)
@@ -126,7 +126,7 @@ jobs:
         continue-on-error: true  # A11y é informativo; não bloqueia CI
         env:
           PLAYWRIGHT_BASE_URL: ${{ secrets.RAILWAY_URL }}
-          TEST_SLUG: ${{ secrets.TEST_SLUG || 'casamento-exemplo' }}
+          TEST_SLUG: ${{ secrets.TEST_SLUG || 'joseeleticia' }}
           TEST_PUBLIC_TOKEN: ${{ secrets.TEST_PUBLIC_TOKEN || 'dev-public-token-k' }}
 
       - name: Lighthouse CI — páginas de auth (mobile)
