@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireOrganizer } from "@/lib/authorization";
 import { prisma } from "@/lib/db";
 import { generateSaveTheDatePdf, type SaveTheDateTemplate } from "@/lib/pdf/save-the-date";
-import archiver from "archiver";
+import { createRequire } from "node:module";
 import { Readable } from "stream";
+
+// archiver is CJS with no ESM default export — use createRequire for Turbopack compatibility
+const archiverCreate = createRequire(import.meta.url)("archiver") as (
+  format: string,
+  options?: object
+) => import("archiver").Archiver;
 
 export const maxDuration = 60;
 
@@ -45,7 +51,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ eve
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
   const writer = writable.getWriter();
 
-  const archive = archiver("zip", { zlib: { level: 6 } });
+  const archive = archiverCreate("zip", { zlib: { level: 6 } });
 
   // Pipe archiver output to the writable stream
   const nodeReadable = Readable.from(
