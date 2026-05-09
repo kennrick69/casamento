@@ -4,7 +4,7 @@ import { logAuthEvent } from "@/lib/auth/auth-log";
 
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
-  const base = new URL(request.url).origin;
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL ?? new URL(request.url).origin;
 
   if (!token) {
     return NextResponse.redirect(new URL("/verify-email?error=invalid", base));
