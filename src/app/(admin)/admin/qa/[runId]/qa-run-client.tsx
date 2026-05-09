@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 import type { ChecklistItem } from "@/lib/qa/checklist";
 import { saveRunResults, finalizeRun } from "../actions";
 
 type ItemResult = { status: string; note: string };
+type SaveState = "idle" | "saving" | "saved" | "error";
+type EditedField = string | "notes" | null;
 
 interface RunData {
   id: string;
@@ -31,16 +34,25 @@ const STATUS_ICONS: Record<string, string> = {
   pending: "⬜",
 };
 
+const SAVED_INDICATOR_TIMEOUT_MS = 2000;
+const AUTOSAVE_DEBOUNCE_MS = 1000;
+
 export function QARunClient({ run, checklist, sections }: Props) {
   const [results, setResults] = useState<Record<string, ItemResult>>(run.results);
   const [notes, setNotes] = useState(run.notes);
   const [eventId, setEventId] = useState("");
   const [slug, setSlug] = useState("joseeleticia");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [saving, setSaving] = useState(false);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [lastEditedField, setLastEditedField] = useState<EditedField>(null);
   const [finalizing, setFinalizing] = useState(false);
   const [finalized, setFinalized] = useState(Boolean(run.finishedAt));
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedFadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const failuresRef = useRef(0);
+  const hydratedRef = useRef(false);
+
+  const localStorageKey = `qa-run-${run.id}`;
 
   const total = checklist.length;
   const statuses = Object.values(results);
@@ -50,17 +62,81 @@ export function QARunClient({ run, checklist, sections }: Props) {
   const tested = okCount + bugCount + skipCount;
 
   const scheduleAutosave = useCallback(
-    (nextResults: Record<string, ItemResult>, nextNotes: string) => {
+    (nextResults: Record<string, ItemResult>, nextNotes: string, field: EditedField) => {
       if (finalized) return;
+      if (field !== null) setLastEditedField(field);
       if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (savedFadeRef.current) clearTimeout(savedFadeRef.current);
       debounceRef.current = setTimeout(async () => {
-        setSaving(true);
-        await saveRunResults(run.id, nextResults, nextNotes);
-        setSaving(false);
-      }, 800);
+        setSaveState("saving");
+        try {
+          await saveRunResults(run.id, nextResults, nextNotes);
+          failuresRef.current = 0;
+          try {
+            window.localStorage.removeItem(localStorageKey);
+          } catch {
+            // localStorage may be unavailable (private mode, quota); ignore
+          }
+          setSaveState("saved");
+          savedFadeRef.current = setTimeout(
+            () => setSaveState("idle"),
+            SAVED_INDICATOR_TIMEOUT_MS,
+          );
+        } catch {
+          failuresRef.current += 1;
+          try {
+            window.localStorage.setItem(
+              localStorageKey,
+              JSON.stringify({
+                results: nextResults,
+                notes: nextNotes,
+                savedAt: new Date().toISOString(),
+              }),
+            );
+          } catch {
+            // localStorage may be unavailable; nothing else we can do
+          }
+          setSaveState("error");
+          if (failuresRef.current >= 3) {
+            toast.error(
+              "Falha ao salvar a execução 3 vezes seguidas. Suas alterações ficam guardadas no navegador e voltam ao recarregar.",
+            );
+            failuresRef.current = 0;
+          }
+        }
+      }, AUTOSAVE_DEBOUNCE_MS);
     },
-    [run.id, finalized],
+    [run.id, finalized, localStorageKey],
   );
+
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
+    try {
+      const raw = window.localStorage.getItem(localStorageKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as {
+        results?: Record<string, ItemResult>;
+        notes?: string;
+      };
+      if (parsed.results) setResults(parsed.results);
+      if (typeof parsed.notes === "string") setNotes(parsed.notes);
+      toast.info("Alterações não sincronizadas foram recuperadas do navegador.");
+      if (!finalized) {
+        scheduleAutosave(parsed.results ?? results, parsed.notes ?? notes, null);
+      }
+    } catch {
+      // ignore corrupt localStorage entries
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (savedFadeRef.current) clearTimeout(savedFadeRef.current);
+    };
+  }, []);
 
   function setItemStatus(id: string, status: string) {
     setResults((prev) => {
@@ -68,7 +144,7 @@ export function QARunClient({ run, checklist, sections }: Props) {
         ...prev,
         [id]: { status, note: prev[id]?.note ?? "" },
       };
-      scheduleAutosave(next, notes);
+      scheduleAutosave(next, notes, id);
       return next;
     });
   }
@@ -79,14 +155,14 @@ export function QARunClient({ run, checklist, sections }: Props) {
         ...prev,
         [id]: { status: prev[id]?.status ?? "pending", note },
       };
-      scheduleAutosave(next, notes);
+      scheduleAutosave(next, notes, id);
       return next;
     });
   }
 
   function updateNotes(value: string) {
     setNotes(value);
-    scheduleAutosave(results, value);
+    scheduleAutosave(results, value, "notes");
   }
 
   function buildUrl(url: string) {
@@ -116,7 +192,11 @@ export function QARunClient({ run, checklist, sections }: Props) {
           <h1 className="font-semibold">{run.title}</h1>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          {saving && <span>Salvando...</span>}
+          {saveState === "saving" && <span>Salvando...</span>}
+          {saveState === "saved" && <span className="text-green-700">Salvo ✓</span>}
+          {saveState === "error" && (
+            <span className="text-red-600">Erro ao salvar — guardado no navegador</span>
+          )}
           {finalized && <span className="text-green-700 font-medium">Finalizado</span>}
         </div>
       </header>
@@ -284,14 +364,32 @@ export function QARunClient({ run, checklist, sections }: Props) {
                           </div>
 
                           {(status !== "pending" || note) && (
-                            <textarea
-                              value={note}
-                              onChange={(e) => setItemNote(item.id, e.target.value)}
-                              disabled={finalized}
-                              placeholder="Observação (opcional)..."
-                              rows={2}
-                              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none disabled:opacity-50 mb-2"
-                            />
+                            <div className="mb-2">
+                              <textarea
+                                value={note}
+                                onChange={(e) => setItemNote(item.id, e.target.value)}
+                                disabled={finalized}
+                                placeholder="Observação (opcional)..."
+                                rows={2}
+                                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none disabled:opacity-50"
+                              />
+                              {lastEditedField === item.id && saveState !== "idle" && (
+                                <p
+                                  className={`text-[11px] mt-1 ${
+                                    saveState === "saving"
+                                      ? "text-muted-foreground"
+                                      : saveState === "saved"
+                                      ? "text-green-700"
+                                      : "text-red-600"
+                                  }`}
+                                >
+                                  {saveState === "saving" && "Salvando..."}
+                                  {saveState === "saved" && "Salvo ✓"}
+                                  {saveState === "error" &&
+                                    "Erro ao salvar — guardado no navegador, vou tentar de novo"}
+                                </p>
+                              )}
+                            </div>
                           )}
 
                           {isExpanded && (
@@ -346,6 +444,22 @@ export function QARunClient({ run, checklist, sections }: Props) {
             rows={4}
             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none disabled:opacity-50"
           />
+          {lastEditedField === "notes" && saveState !== "idle" && (
+            <p
+              className={`text-[11px] mt-1 ${
+                saveState === "saving"
+                  ? "text-muted-foreground"
+                  : saveState === "saved"
+                  ? "text-green-700"
+                  : "text-red-600"
+              }`}
+            >
+              {saveState === "saving" && "Salvando..."}
+              {saveState === "saved" && "Salvo ✓"}
+              {saveState === "error" &&
+                "Erro ao salvar — guardado no navegador, vou tentar de novo"}
+            </p>
+          )}
         </div>
       </main>
     </div>
