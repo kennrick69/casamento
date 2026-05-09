@@ -68,12 +68,20 @@ export default async function ConvidadosPage({
               {confirmed.length} confirmados · {totalWithCompanions} pessoas incluindo acompanhantes
             </p>
           </div>
-          <a
-            href={`/api/admin/eventos/${id}/convidados/export`}
-            className="text-sm text-primary hover:underline"
-          >
-            Exportar CSV
-          </a>
+          <div className="flex items-center gap-3">
+            <a
+              href={`/admin/eventos/${id}/convidados/importar`}
+              className="text-sm text-muted-foreground hover:text-foreground hover:underline"
+            >
+              Importar planilha
+            </a>
+            <a
+              href={`/api/admin/eventos/${id}/convidados/export`}
+              className="text-sm text-primary hover:underline"
+            >
+              Exportar CSV
+            </a>
+          </div>
         </div>
 
         <GuestList
