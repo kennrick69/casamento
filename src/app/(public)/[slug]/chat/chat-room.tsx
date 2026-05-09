@@ -121,6 +121,7 @@ export function ChatRoom({
   useEffect(() => {
     if (atBottom) {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUnreadCount(0);
     }
   }, [messages, atBottom]);

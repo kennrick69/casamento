@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 
 const EMOJIS = ["❤️", "😂", "🥹", "🎉"] as const;
@@ -111,12 +111,12 @@ function PhotoModal({
   }, [onClose, onNav]);
 
   // Swipe support
-  let startX = 0;
+  const startXRef = useRef(0);
   const handleTouchStart = (e: React.TouchEvent) => {
-    startX = e.touches[0].clientX;
+    startXRef.current = e.touches[0].clientX;
   };
   const handleTouchEnd = (e: React.TouchEvent) => {
-    const dx = e.changedTouches[0].clientX - startX;
+    const dx = e.changedTouches[0].clientX - startXRef.current;
     if (dx > 50) onNav(-1);
     else if (dx < -50) onNav(1);
   };

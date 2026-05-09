@@ -40,6 +40,7 @@ export function AddSongForm({ slug, myCount, limit }: { slug: string; myCount: n
 
   // Debounced Spotify search
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!query.trim() || query.length < 2) { setResults([]); return; }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {

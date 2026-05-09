@@ -123,6 +123,7 @@ export default function HealthDashboard() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchHealth();
     const interval = setInterval(fetchHealth, 30_000);
     return () => clearInterval(interval);
