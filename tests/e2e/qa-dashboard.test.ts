@@ -48,8 +48,8 @@ test.describe("QA Dashboard", () => {
     await page.getByRole("button", { name: "Nova execução" }).click();
     await page.waitForURL(/\/admin\/qa\/.+/);
 
-    await page.getByRole("button", { name: "Finalizar execução" }).click();
-    await expect(page.getByRole("button", { name: "Finalizar execução" })).toBeDisabled({ timeout: 5_000 });
+    await page.getByRole("button", { name: /Finalizar execução/ }).click();
+    await expect(page.getByRole("button", { name: /Finalizar execução/ })).toBeDisabled({ timeout: 5_000 });
   });
 
   test("view report page", async ({ page }) => {
@@ -57,7 +57,7 @@ test.describe("QA Dashboard", () => {
     await page.getByRole("button", { name: "Nova execução" }).click();
     await page.waitForURL(/\/admin\/qa\/.+/);
 
-    await page.getByRole("link", { name: "Gerar relatório" }).click();
+    await page.getByRole("link", { name: /Gerar relatório/ }).click();
     await expect(page).toHaveURL(/\/admin\/qa\/.+\/relatorio/, { timeout: 10_000 });
     await expect(page.getByRole("heading", { name: "Relatório" })).toBeVisible();
     await expect(page.getByText("Total de itens:")).toBeVisible();

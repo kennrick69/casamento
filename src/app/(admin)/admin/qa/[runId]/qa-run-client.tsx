@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, startTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -38,6 +39,7 @@ const SAVED_INDICATOR_TIMEOUT_MS = 2000;
 const AUTOSAVE_DEBOUNCE_MS = 1000;
 
 export function QARunClient({ run, checklist, sections }: Props) {
+  const router = useRouter();
   const [results, setResults] = useState<Record<string, ItemResult>>(run.results);
   const [notes, setNotes] = useState(run.notes);
   const [eventId, setEventId] = useState("");
@@ -47,6 +49,7 @@ export function QARunClient({ run, checklist, sections }: Props) {
   const [lastEditedField, setLastEditedField] = useState<EditedField>(null);
   const [finalizing, setFinalizing] = useState(false);
   const [finalized, setFinalized] = useState(Boolean(run.finishedAt));
+  const [leaving, setLeaving] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedFadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const failuresRef = useRef(0);
@@ -112,21 +115,27 @@ export function QARunClient({ run, checklist, sections }: Props) {
   useEffect(() => {
     if (hydratedRef.current) return;
     hydratedRef.current = true;
+    let parsed: { results?: Record<string, ItemResult>; notes?: string } | null = null;
     try {
       const raw = window.localStorage.getItem(localStorageKey);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as {
-        results?: Record<string, ItemResult>;
-        notes?: string;
-      };
-      if (parsed.results) setResults(parsed.results);
-      if (typeof parsed.notes === "string") setNotes(parsed.notes);
-      toast.info("Alterações não sincronizadas foram recuperadas do navegador.");
-      if (!finalized) {
-        scheduleAutosave(parsed.results ?? results, parsed.notes ?? notes, null);
-      }
+      if (raw) parsed = JSON.parse(raw);
     } catch {
       // ignore corrupt localStorage entries
+    }
+    if (!parsed) return;
+    const recoveredResults = parsed.results;
+    const recoveredNotes = typeof parsed.notes === "string" ? parsed.notes : undefined;
+    startTransition(() => {
+      if (recoveredResults) setResults(recoveredResults);
+      if (recoveredNotes !== undefined) setNotes(recoveredNotes);
+    });
+    toast.info("Alterações não sincronizadas foram recuperadas do navegador.");
+    if (!finalized) {
+      scheduleAutosave(
+        recoveredResults ?? results,
+        recoveredNotes ?? notes,
+        null,
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -174,11 +183,66 @@ export function QARunClient({ run, checklist, sections }: Props) {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   }
 
+  async function flushPendingSave() {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+    if (finalized) return;
+    setSaveState("saving");
+    try {
+      await saveRunResults(run.id, results, notes);
+      try {
+        window.localStorage.removeItem(localStorageKey);
+      } catch {
+        // ignore
+      }
+      setSaveState("saved");
+      if (savedFadeRef.current) clearTimeout(savedFadeRef.current);
+      savedFadeRef.current = setTimeout(
+        () => setSaveState("idle"),
+        SAVED_INDICATOR_TIMEOUT_MS,
+      );
+    } catch {
+      try {
+        window.localStorage.setItem(
+          localStorageKey,
+          JSON.stringify({
+            results,
+            notes,
+            savedAt: new Date().toISOString(),
+          }),
+        );
+      } catch {
+        // ignore
+      }
+      setSaveState("error");
+      throw new Error("save failed");
+    }
+  }
+
   async function handleFinalize() {
     setFinalizing(true);
+    try {
+      await flushPendingSave();
+    } catch {
+      // continue to finalize even if last save failed; localStorage holds data
+    }
     await finalizeRun(run.id);
     setFinalized(true);
     setFinalizing(false);
+  }
+
+  async function handleSaveAndExit() {
+    setLeaving(true);
+    try {
+      await flushPendingSave();
+    } catch {
+      toast.error("Não foi possível salvar antes de sair. Os dados ficam guardados no navegador.");
+      setLeaving(false);
+      return;
+    }
+    router.push("/admin/qa");
   }
 
   return (
@@ -201,36 +265,19 @@ export function QARunClient({ run, checklist, sections }: Props) {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
+      <main className="max-w-3xl mx-auto px-4 py-8 pb-32">
         <div className="bg-background rounded-xl border border-border px-5 py-4 mb-6">
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                Iniciado em{" "}
-                {format(new Date(run.startedAt), "d MMM yyyy 'às' HH:mm", { locale: ptBR })}
+          <div className="mb-4">
+            <p className="text-sm text-muted-foreground">
+              Iniciado em{" "}
+              {format(new Date(run.startedAt), "d MMM yyyy 'às' HH:mm", { locale: ptBR })}
+            </p>
+            {run.finishedAt && (
+              <p className="text-xs text-muted-foreground">
+                Finalizado em{" "}
+                {format(new Date(run.finishedAt), "d MMM yyyy 'às' HH:mm", { locale: ptBR })}
               </p>
-              {run.finishedAt && (
-                <p className="text-xs text-muted-foreground">
-                  Finalizado em{" "}
-                  {format(new Date(run.finishedAt), "d MMM yyyy 'às' HH:mm", { locale: ptBR })}
-                </p>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Link
-                href={`/admin/qa/${run.id}/relatorio`}
-                className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-muted transition-colors"
-              >
-                Gerar relatório
-              </Link>
-              <button
-                onClick={handleFinalize}
-                disabled={finalized || finalizing}
-                className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {finalizing ? "Finalizando..." : "Finalizar execução"}
-              </button>
-            </div>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-4 text-sm mb-3">
@@ -462,6 +509,33 @@ export function QARunClient({ run, checklist, sections }: Props) {
           )}
         </div>
       </main>
+
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex flex-wrap items-center gap-2">
+          <Link
+            href={`/admin/qa/${run.id}/relatorio`}
+            className="flex-1 min-w-[140px] text-center rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-muted transition-colors"
+          >
+            📋 Gerar relatório
+          </Link>
+          <button
+            type="button"
+            onClick={handleFinalize}
+            disabled={finalized || finalizing || leaving}
+            className="flex-1 min-w-[160px] rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {finalizing ? "Finalizando..." : "✅ Finalizar execução"}
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveAndExit}
+            disabled={leaving || finalizing}
+            className="flex-1 min-w-[140px] rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {leaving ? "Salvando..." : "💾 Salvar e voltar"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
