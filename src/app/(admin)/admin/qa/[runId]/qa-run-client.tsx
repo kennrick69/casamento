@@ -32,6 +32,7 @@ const STATUS_ICONS: Record<string, string> = {
   ok: "✅",
   bug: "⚠️",
   skip: "⏭️",
+  done: "☑️",
   pending: "⬜",
 };
 
@@ -50,6 +51,7 @@ export function QARunClient({ run, checklist, sections }: Props) {
   const [finalizing, setFinalizing] = useState(false);
   const [finalized, setFinalized] = useState(Boolean(run.finishedAt));
   const [leaving, setLeaving] = useState(false);
+  const [showDone, setShowDone] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedFadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const failuresRef = useRef(0);
@@ -62,7 +64,8 @@ export function QARunClient({ run, checklist, sections }: Props) {
   const okCount = statuses.filter((r) => r.status === "ok").length;
   const bugCount = statuses.filter((r) => r.status === "bug").length;
   const skipCount = statuses.filter((r) => r.status === "skip").length;
-  const tested = okCount + bugCount + skipCount;
+  const doneCount = statuses.filter((r) => r.status === "done").length;
+  const tested = okCount + bugCount + skipCount + doneCount;
 
   const scheduleAutosave = useCallback(
     (nextResults: Record<string, ItemResult>, nextNotes: string, field: EditedField) => {
@@ -287,7 +290,18 @@ export function QARunClient({ run, checklist, sections }: Props) {
             <span className="text-green-700 font-medium">✅ {okCount} OK</span>
             <span className="text-red-600 font-medium">⚠️ {bugCount} Bug{bugCount !== 1 ? "s" : ""}</span>
             <span className="text-muted-foreground">⏭️ {skipCount} Pulados</span>
+            <span className="text-emerald-800 font-medium">☑️ {doneCount} Concluídos</span>
           </div>
+
+          <label className="flex items-center gap-2 text-xs text-muted-foreground mb-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={showDone}
+              onChange={(e) => setShowDone(e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-input"
+            />
+            Mostrar itens concluídos {doneCount > 0 && <span>({doneCount})</span>}
+          </label>
 
           <div className="w-full bg-muted rounded-full h-2 mb-4">
             <div
@@ -330,7 +344,12 @@ export function QARunClient({ run, checklist, sections }: Props) {
         </div>
 
         {sections.map((section) => {
-          const items = checklist.filter((i) => i.section === section);
+          const sectionItems = checklist.filter((i) => i.section === section);
+          const items = sectionItems.filter((item) => {
+            const status = results[item.id]?.status ?? "pending";
+            return showDone || status !== "done";
+          });
+          if (items.length === 0) return null;
           return (
             <div key={section} className="mb-6">
               <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
@@ -343,6 +362,25 @@ export function QARunClient({ run, checklist, sections }: Props) {
                   const note = result?.note ?? "";
                   const isExpanded = expanded[item.id] ?? false;
                   const resolvedUrl = buildUrl(item.url);
+
+                  if (status === "done" && !isExpanded) {
+                    return (
+                      <div
+                        key={item.id}
+                        className="bg-background rounded-xl border border-border px-4 py-2 flex items-center gap-3 opacity-70"
+                      >
+                        <span className="text-base leading-none">☑️</span>
+                        <p className="font-medium text-sm flex-1 truncate">{item.title}</p>
+                        <button
+                          type="button"
+                          onClick={() => toggleExpanded(item.id)}
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                        >
+                          ▼ Reabrir
+                        </button>
+                      </div>
+                    );
+                  }
 
                   return (
                     <div
@@ -401,6 +439,17 @@ export function QARunClient({ run, checklist, sections }: Props) {
                               }`}
                             >
                               ⏭️ Pulei
+                            </button>
+                            <button
+                              onClick={() => setItemStatus(item.id, "done")}
+                              disabled={finalized}
+                              className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed ${
+                                status === "done"
+                                  ? "bg-emerald-100 text-emerald-900 border border-emerald-400"
+                                  : "bg-muted text-muted-foreground hover:bg-emerald-50 hover:text-emerald-800"
+                              }`}
+                            >
+                              ☑️ Concluído
                             </button>
                             <button
                               onClick={() => toggleExpanded(item.id)}

@@ -28,7 +28,8 @@ export default async function QAReportPage({ params }: { params: Promise<{ runId
   const okCount = statuses.filter((r) => r.status === "ok").length;
   const bugCount = statuses.filter((r) => r.status === "bug").length;
   const skipCount = statuses.filter((r) => r.status === "skip").length;
-  const notTested = total - okCount - bugCount - skipCount;
+  const doneCount = statuses.filter((r) => r.status === "done").length;
+  const notTested = total - okCount - bugCount - skipCount - doneCount;
 
   const duration =
     run.finishedAt
@@ -59,6 +60,7 @@ export default async function QAReportPage({ params }: { params: Promise<{ runId
   markdown += `- ✅ OK: ${okCount}\n`;
   markdown += `- ⚠️ Bugs: ${bugCount}\n`;
   markdown += `- ⏭️ Pulados: ${skipCount}\n`;
+  markdown += `- ☑️ Concluídos: ${doneCount}\n`;
   markdown += `- ⬜ Não testados: ${notTested}\n\n`;
 
   if (bugs.length > 0) {
