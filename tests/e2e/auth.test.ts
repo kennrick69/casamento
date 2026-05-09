@@ -35,14 +35,14 @@ test.describe("Auth — páginas públicas carregam", () => {
     await page.goto("/termos");
     await expect(page.getByRole("heading", { name: "Termos de Uso" })).toBeVisible();
     // Badge de versão (v1.0) foi removido em maio/2026 — cliente não vê versão.
-    await expect(page.getByText(/vigente desde/i)).toBeVisible();
+    await expect(page.getByText(/vigente desde/i).first()).toBeVisible();
   });
 
   test("/privacidade renderiza conteúdo legal", async ({ page }) => {
     await page.goto("/privacidade");
     await expect(page.getByRole("heading", { name: "Política de Privacidade" })).toBeVisible();
     // Badge de versão (v1.0) foi removido em maio/2026 — cliente não vê versão.
-    await expect(page.getByText(/vigente desde/i)).toBeVisible();
+    await expect(page.getByText(/vigente desde/i).first()).toBeVisible();
   });
 });
 
