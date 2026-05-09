@@ -49,8 +49,10 @@ export default async function RsvpSuccessPage({
               Próximos passos
             </p>
             <NextStep href={`/${slug}/roteiro`} label="Ver roteiro do dia" emoji="🗓" />
-            <NextStep href={`/${slug}/local`} label="Como chegar" emoji="📍" />
+            <NextStep href={`/${slug}/locais`} label="Como chegar" emoji="📍" />
             <NextStep href={`/${slug}/presentes`} label="Lista de presentes" emoji="🎁" />
+            <NextStep href={`/${slug}/galeria`} label="Galeria do casal" emoji="📸" />
+            <NextStep href={`/${slug}/playlist`} label="Sugerir música para a festa" emoji="🎵" />
           </div>
         </>
       ) : (
