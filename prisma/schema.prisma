@@ -184,6 +184,7 @@ model Event {
   journeyItems        JourneyItem[]
   gifts               Gift[]
   photos              Photo[]
+  galleryPhotos       GalleryPhoto[]
   chatMessages        ChatMessage[]
   playlistSuggestions PlaylistSuggestion[]
   coupleMessages      CoupleMessage[]
@@ -193,6 +194,8 @@ model Event {
   checkinCodes        CheckinCode[]
   checkins            Checkin[]
   reports             Report[]
+  weddingParty        WeddingPartyMember[]
+  storyItems          CoupleStoryItem[]
 }
 
 enum EventStatus {
@@ -259,6 +262,7 @@ model Guest {
   rsvpStatus          RsvpStatus @default(PENDING)
   approved            Boolean    @default(true)
   sessionToken        String     @unique
+  inviteToken         String?    @unique
   consentTerms        Boolean    @default(false)
   consentPhotoMural   Boolean    @default(false)
   consentTimestamp    DateTime?
@@ -599,4 +603,70 @@ model DataAccessLog {
   action    String
   metadata  Json?
   createdAt DateTime @default(now())
+}
+
+// --- Galeria do casal (fotos pré-evento) ---
+
+model GalleryPhoto {
+  id         String   @id @default(cuid())
+  eventId    String
+  storageKey String
+  caption    String?
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, order])
+}
+
+// --- Festa: padrinhos e madrinhas ---
+
+model WeddingPartyMember {
+  id        String      @id @default(cuid())
+  eventId   String
+  name      String
+  role      WeddingRole @default(GROOMSMAN)
+  bio       String?
+  photoKey  String?
+  side      WeddingSide @default(GROOM)
+  order     Int         @default(0)
+  createdAt DateTime    @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, side, order])
+}
+
+enum WeddingRole {
+  BEST_MAN
+  MAID_OF_HONOR
+  GROOMSMAN
+  BRIDESMAID
+  FLOWER_GIRL
+  RING_BEARER
+  OTHER
+}
+
+enum WeddingSide {
+  BRIDE
+  GROOM
+}
+
+// --- História do casal (timeline) ---
+
+model CoupleStoryItem {
+  id          String    @id @default(cuid())
+  eventId     String
+  date        DateTime?
+  dateLabel   String?
+  title       String
+  description String?   @db.Text
+  photoKey    String?
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, order])
 }
