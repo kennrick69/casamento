@@ -102,9 +102,9 @@ test.describe("Auth — comportamento de formulários", () => {
     await page.getByRole("textbox").fill("email-inexistente-xyz123@notexist.example");
     await page.getByRole("button", { name: /receber link/i }).click();
 
-    // Anti-enumeration: mesma mensagem independente do e-mail existir ou não
+    // Anti-enumeration: sucesso esperado; Turnstile pode bloquear em CI com chaves reais
     await expect(
-      page.getByText(/se esse e-mail estiver cadastrado/i)
+      page.getByText(/se esse e-mail estiver cadastrado|verificação de segurança/i)
     ).toBeVisible({ timeout: 12_000 });
   });
 
