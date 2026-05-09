@@ -6,6 +6,7 @@ import { Home, Camera, MessageCircle, Music, Gift, Map, MapPin } from "lucide-re
 import { toZonedTime } from "date-fns-tz";
 import { startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 type Tab = {
   href: string;
@@ -13,27 +14,27 @@ type Tab = {
   icon: React.ElementType;
 };
 
-const TABS_PRE_DDAY: Tab[] = [
-  { href: "", label: "Início", icon: Home },
-  { href: "/roteiro", label: "Roteiro", icon: Map },
-  { href: "/locais", label: "Locais", icon: MapPin },
-  { href: "/presentes", label: "Presentes", icon: Gift },
-];
-
-const TABS_DDAY_PLUS: Tab[] = [
-  { href: "", label: "Início", icon: Home },
-  { href: "/mural", label: "Fotos", icon: Camera },
-  { href: "/chat", label: "Chat", icon: MessageCircle },
-  { href: "/playlist", label: "Playlist", icon: Music },
-  { href: "/presentes", label: "Presentes", icon: Gift },
-];
-
 // Exported so it can be unit-tested independently.
-export function getActiveBottomNav(ceremonyDateIso: string, timezone: string): Tab[] {
+// Returns fixed pt-BR labels — the BottomNav component overrides with i18n at render time.
+export function getActiveBottomNav(ceremonyDateIso: string, timezone: string): { href: string; label: string; icon: React.ElementType }[] {
   const now = new Date();
   const todayInTz = startOfDay(toZonedTime(now, timezone));
   const ceremonyInTz = startOfDay(toZonedTime(new Date(ceremonyDateIso), timezone));
-  return todayInTz >= ceremonyInTz ? TABS_DDAY_PLUS : TABS_PRE_DDAY;
+  const isDDay = todayInTz >= ceremonyInTz;
+  return isDDay
+    ? [
+        { href: "", label: "Início", icon: Home },
+        { href: "/mural", label: "Fotos", icon: Camera },
+        { href: "/chat", label: "Chat", icon: MessageCircle },
+        { href: "/playlist", label: "Playlist", icon: Music },
+        { href: "/presentes", label: "Presentes", icon: Gift },
+      ]
+    : [
+        { href: "", label: "Início", icon: Home },
+        { href: "/roteiro", label: "Roteiro", icon: Map },
+        { href: "/locais", label: "Locais", icon: MapPin },
+        { href: "/presentes", label: "Presentes", icon: Gift },
+      ];
 }
 
 export function BottomNav({
@@ -47,7 +48,27 @@ export function BottomNav({
 }) {
   const pathname = usePathname();
   const base = `/${slug}`;
-  const tabs = getActiveBottomNav(ceremonyDate, timezone);
+  const t = useTranslations("nav");
+  const isDDay = (() => {
+    const now = new Date();
+    const todayInTz = startOfDay(toZonedTime(now, timezone));
+    const ceremonyInTz = startOfDay(toZonedTime(new Date(ceremonyDate), timezone));
+    return todayInTz >= ceremonyInTz;
+  })();
+  const tabs: Tab[] = isDDay
+    ? [
+        { href: "", label: t("home"), icon: Home },
+        { href: "/mural", label: t("mural"), icon: Camera },
+        { href: "/chat", label: t("chat"), icon: MessageCircle },
+        { href: "/playlist", label: t("playlist"), icon: Music },
+        { href: "/presentes", label: t("presentes"), icon: Gift },
+      ]
+    : [
+        { href: "", label: t("home"), icon: Home },
+        { href: "/roteiro", label: t("roteiro"), icon: Map },
+        { href: "/locais", label: t("local"), icon: MapPin },
+        { href: "/presentes", label: t("presentes"), icon: Gift },
+      ];
 
   return (
     <nav className="fixed bottom-0 inset-x-0 z-40 border-t bg-[var(--theme-background)] border-[var(--theme-border)]" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>

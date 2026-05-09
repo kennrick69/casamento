@@ -1,9 +1,13 @@
 import { notFound } from "next/navigation";
 import { validateEventAccess } from "@/lib/auth/guest";
 import { RsvpForm } from "@/components/guest/rsvp-form";
+import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Confirmar presença" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("rsvp");
+  return { title: t("title") };
+}
 
 export default async function RsvpPage({
   params,
@@ -15,7 +19,10 @@ export default async function RsvpPage({
   const { slug } = await params;
   const { k } = await searchParams;
 
-  const result = await validateEventAccess(slug, k ?? null);
+  const [result, t] = await Promise.all([
+    validateEventAccess(slug, k ?? null),
+    getTranslations("rsvp"),
+  ]);
   if (!result.ok) notFound();
 
   const { event, guest } = result;
@@ -29,7 +36,7 @@ export default async function RsvpPage({
         >
           {guest?.rsvpStatus === "CONFIRMED"
             ? "Atualizar confirmação"
-            : "Confirmar presença"}
+            : t("title")}
         </h1>
         <p className="text-sm text-[var(--theme-secondary)]">
           {event.coupleNames} aguardam você ✨
