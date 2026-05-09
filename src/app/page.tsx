@@ -2,9 +2,19 @@ import type { Metadata } from "next";
 import { ProtoScene } from "@/components/landing/ProtoScene";
 
 export const metadata: Metadata = {
-  title: "Voem. — Convites digitais de casamento",
+  title: "Voem. — Convites interativos de casamento",
   description:
-    "A plataforma gratuita para criar o convite digital do casamento dos seus sonhos.",
+    "Crie o convite digital do seu casamento. RSVP, mural de fotos, playlist colaborativa e muito mais — tudo em um link.",
+  openGraph: {
+    title: "Voem. — Convites interativos de casamento",
+    description: "Crie o convite digital do seu casamento. RSVP, mural de fotos, playlist e muito mais.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Voem. — Convites interativos de casamento",
+    description: "Crie o convite digital do seu casamento. RSVP, mural de fotos, playlist e muito mais.",
+  },
 };
 
 export default function HomePage() {

@@ -11,6 +11,8 @@ import { prisma } from "@/lib/db";
 import type { EventLocation, WeddingPartyMember } from "@prisma/client";
 import type { Metadata } from "next";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
 export async function generateMetadata({
   params,
 }: {
@@ -19,17 +21,35 @@ export async function generateMetadata({
   const { slug } = await params;
   const event = await prisma.event.findUnique({
     where: { slug },
-    select: { coupleNames: true, ceremonyDate: true },
+    select: { coupleNames: true, ceremonyDate: true, description: true },
   });
   if (!event) return { title: slug };
   const dateStr = event.ceremonyDate.toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" });
+  const title = `Casamento de ${event.coupleNames}`;
+  const description = event.description
+    ? event.description
+    : `${dateStr} · Você está convidado para o casamento de ${event.coupleNames}`;
+  const url = `${APP_URL}/${slug}`;
+  const ogImage = `${APP_URL}/${slug}/opengraph-image`;
+
   return {
     title: event.coupleNames,
-    description: `Casamento de ${event.coupleNames} — ${dateStr}`,
+    description,
+    alternates: { canonical: url },
     openGraph: {
-      title: `Casamento de ${event.coupleNames}`,
-      description: `${dateStr} · Convite interativo`,
+      title,
+      description,
+      url,
+      siteName: "Voem.",
       type: "website",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+      locale: "pt_BR",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
     },
   };
 }
@@ -74,7 +94,28 @@ export default async function EventPage({
 
   const rsvpHref = `/${slug}/rsvp${k ? `?k=${k}` : ""}`;
 
+  const ceremonyLocation = locations.find((l) => l.type === "CEREMONY");
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: `Casamento de ${event.coupleNames}`,
+    startDate: event.ceremonyDate.toISOString(),
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    ...(ceremonyLocation && {
+      location: {
+        "@type": "Place",
+        name: ceremonyLocation.title,
+        address: { "@type": "PostalAddress", streetAddress: ceremonyLocation.address ?? "" },
+      },
+    }),
+    organizer: { "@type": "Organization", name: "Voem.", url: APP_URL },
+    url: `${APP_URL}/${slug}`,
+  };
+
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     <div className="flex flex-col min-h-screen">
       <LandingHero
         coupleNames={event.coupleNames}
@@ -228,6 +269,7 @@ export default async function EventPage({
         </section>
       </div>
     </div>
+    </>
   );
 }
 

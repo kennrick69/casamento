@@ -34,17 +34,28 @@ const dmSerif = DM_Serif_Display({
   display: "swap",
 });
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
-  title: { default: "Casamento", template: "%s | Casamento" },
-  description: "Convite interativo de casamento",
+  title: { default: "Voem. — Convites interativos de casamento", template: "%s | Voem." },
+  description: "Crie um convite interativo para o seu casamento. RSVP, mural de fotos, playlist colaborativa, lista de presentes e muito mais.",
+  metadataBase: new URL(APP_URL),
   manifest: "/manifest.json",
-  appleWebApp: { capable: true, statusBarStyle: "default", title: "Casamento" },
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Voem." },
+  openGraph: {
+    siteName: "Voem.",
+    locale: "pt_BR",
+    type: "website",
+  },
+  twitter: { card: "summary_large_image" },
   icons: {
     icon: [
+      { url: "/icons/favicon-32.png", sizes: "32x32", type: "image/png" },
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+    shortcut: "/favicon.ico",
   },
 };
 
@@ -72,6 +83,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         "h-full antialiased",
       ].join(" ")}
     >
+      <head>
+        <link rel="preconnect" href="https://challenges.cloudflare.com" />
+        <link rel="dns-prefetch" href="https://api.spotify.com" />
+        <link rel="dns-prefetch" href="https://socksv5.pusher.com" />
+      </head>
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider messages={messages} locale={locale}>
           {children}
