@@ -3,9 +3,10 @@
 import { useEffect, useState, useTransition } from "react";
 import { resendVerificationEmail } from "./actions";
 
-export function ResendButton() {
+export function ResendButton({ email }: { email?: string }) {
   const [secondsLeft, setSecondsLeft] = useState(60);
   const [status, setStatus] = useState<"idle" | "sent" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState<string>();
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -16,12 +17,13 @@ export function ResendButton() {
 
   function handleResend() {
     startTransition(async () => {
-      const result = await resendVerificationEmail();
+      const result = await resendVerificationEmail(email);
       if (result.ok) {
         setStatus("sent");
         setSecondsLeft(60);
       } else {
         setStatus("error");
+        setErrorMsg(result.error);
       }
     });
   }
@@ -45,7 +47,7 @@ export function ResendButton() {
         <p className="text-xs text-green-600">E-mail reenviado! Verifique sua caixa de entrada.</p>
       )}
       {status === "error" && (
-        <p className="text-xs text-red-500">Falha ao enviar. Tente novamente.</p>
+        <p className="text-xs text-red-500">{errorMsg ?? "Falha ao enviar. Tente novamente."}</p>
       )}
     </div>
   );

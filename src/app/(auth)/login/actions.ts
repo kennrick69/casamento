@@ -3,6 +3,7 @@
 import { getAppUrl } from "@/lib/app-url";
 import { headers } from "next/headers";
 import { AuthError } from "next-auth";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { signIn } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -14,8 +15,6 @@ import { logAuthEvent } from "@/lib/auth/auth-log";
 import { email as emailProvider } from "@/lib/email";
 import { welcomeVerifyHtml, welcomeVerifyText } from "@/lib/email/templates";
 import { verifyTurnstile } from "@/lib/auth/turnstile";
-
-const BASE_URL = getAppUrl();
 
 export type AuthState = { error: string; field?: string } | null;
 
@@ -177,6 +176,7 @@ export async function signupAction(formData: FormData): Promise<AuthState> {
 
   // Generate verification token and send welcome email (best-effort, non-blocking)
   try {
+    const BASE_URL = getAppUrl();
     const token = crypto.randomUUID();
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await prisma.verificationToken.create({ data: { identifier: email, token, expires } });
@@ -207,13 +207,6 @@ export async function signupAction(formData: FormData): Promise<AuthState> {
     });
   }
 
-  try {
-    await signIn("credentials", { email, password, redirectTo: "/verify-email" });
-  } catch (error) {
-    if (error instanceof AuthError) {
-      return { error: "Conta criada. Faça login para entrar.", field: undefined };
-    }
-    throw error; // NEXT_REDIRECT
-  }
-  return null;
+  // Nenhum cookie setado aqui. Sessão só é criada após o usuário verificar o email e fazer login.
+  redirect(`/verify-email?email=${encodeURIComponent(email)}`);
 }

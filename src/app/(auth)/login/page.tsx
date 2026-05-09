@@ -3,7 +3,13 @@ import { AuthTabs } from "@/components/auth/auth-tabs";
 
 export const metadata: Metadata = { title: "Entrar" };
 
-export default function LoginPage() {
+interface Props {
+  searchParams: Promise<{ verified?: string }>;
+}
+
+export default async function LoginPage({ searchParams }: Props) {
+  const { verified } = await searchParams;
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-rose-50 via-white to-slate-50">
       <div className="w-full max-w-sm">
@@ -17,6 +23,12 @@ export default function LoginPage() {
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">Painel dos noivos</p>
         </div>
+
+        {verified === "1" && (
+          <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 text-center">
+            E-mail verificado com sucesso! Faça login para continuar.
+          </div>
+        )}
 
         {/* Card */}
         <div className="relative rounded-2xl border border-border/50 bg-white p-6 shadow-sm">

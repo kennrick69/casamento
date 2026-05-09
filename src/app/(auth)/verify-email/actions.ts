@@ -7,27 +7,43 @@ import { prisma } from "@/lib/db";
 import { email as emailProvider } from "@/lib/email";
 import { welcomeVerifyHtml, welcomeVerifyText } from "@/lib/email/templates";
 import { logAuthEvent } from "@/lib/auth/auth-log";
+import { checkRateLimit } from "@/lib/auth/rate-limit";
 
-const BASE_URL = getAppUrl();
-
-export async function resendVerificationEmail(): Promise<{ ok: boolean; error?: string }> {
-  const session = await auth();
-  if (!session?.user?.email) return { ok: false, error: "Não autenticado." };
-
-  const { email: userEmail, name } = session.user;
+export async function resendVerificationEmail(
+  emailParam?: string,
+): Promise<{ ok: boolean; error?: string }> {
   const h = await headers();
   const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "127.0.0.1";
   const userAgent = h.get("user-agent") ?? undefined;
 
-  // Delete existing tokens for this identifier to avoid accumulation
+  // Aceita email de sessão (usuário já logado) ou de parâmetro (novo cadastro sem sessão)
+  const session = await auth();
+  const userEmail = emailParam ?? session?.user?.email;
+  if (!userEmail) return { ok: false, error: "Informe o e-mail." };
+
+  // Rate limit por IP para evitar abuso
+  const rl = await checkRateLimit(`resend-verify:${ip}`, ip, 3, 15, userAgent);
+  if (!rl.allowed) {
+    return { ok: false, error: `Aguarde ${Math.ceil(rl.retryAfterSeconds / 60)} min para reenviar.` };
+  }
+
+  // Garante que o email está cadastrado e ainda não verificado
+  const user = await prisma.user.findUnique({
+    where: { email: userEmail },
+    select: { id: true, firstName: true, name: true, emailVerified: true },
+  });
+  if (!user) return { ok: false, error: "E-mail não encontrado." };
+  if (user.emailVerified) return { ok: false, error: "E-mail já verificado. Faça login." };
+
   await prisma.verificationToken.deleteMany({ where: { identifier: userEmail } });
 
+  const BASE_URL = getAppUrl();
   const token = crypto.randomUUID();
   const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
   await prisma.verificationToken.create({ data: { identifier: userEmail, token, expires } });
 
   const verifyUrl = `${BASE_URL}/api/auth/verify?token=${token}`;
-  const firstName = name?.split(" ")[0] ?? name ?? "você";
+  const firstName = user.firstName ?? user.name?.split(" ")[0] ?? "você";
 
   try {
     await emailProvider.send({

@@ -1,21 +1,19 @@
 import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import { ResendButton } from "./resend-button";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Confirme seu e-mail" };
 
 interface Props {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; email?: string }>;
 }
 
 export default async function VerifyEmailPage({ searchParams }: Props) {
+  const { error, email: emailParam } = await searchParams;
+
+  // Aceita email tanto de sessão (usuário que voltou) quanto de query param (novo cadastro)
   const session = await auth();
-  if (!session?.user) redirect("/login");
-
-  const { error } = await searchParams;
-
-  const userEmail = session.user.email ?? "";
+  const userEmail = emailParam ?? session?.user?.email ?? "";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-slate-50 flex items-center justify-center px-4">
@@ -29,10 +27,16 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
 
           <div className="space-y-1">
             <h1 className="text-xl font-semibold">Confirme seu e-mail</h1>
-            <p className="text-sm text-muted-foreground">
-              Enviamos um link para{" "}
-              <span className="font-medium text-foreground">{userEmail}</span>
-            </p>
+            {userEmail ? (
+              <p className="text-sm text-muted-foreground">
+                Enviamos um link para{" "}
+                <span className="font-medium text-foreground">{userEmail}</span>
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Clique no link que enviamos para o seu e-mail.
+              </p>
+            )}
           </div>
 
           {error === "expired" && (
@@ -50,7 +54,7 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
             Não encontrou? Verifique a pasta de spam. O link expira em 24 horas.
           </p>
 
-          <ResendButton />
+          <ResendButton email={userEmail} />
         </div>
       </div>
     </div>
