@@ -283,12 +283,12 @@ export function QARunClient({ run, checklist, sections }: Props) {
                             </button>
                           </div>
 
-                          {(status === "bug" || note) && (
+                          {(status !== "pending" || note) && (
                             <textarea
                               value={note}
                               onChange={(e) => setItemNote(item.id, e.target.value)}
                               disabled={finalized}
-                              placeholder="Descreva o bug ou adicione uma nota..."
+                              placeholder="Observação (opcional)..."
                               rows={2}
                               className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none disabled:opacity-50 mb-2"
                             />

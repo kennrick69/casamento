@@ -38,7 +38,7 @@ test.describe("QA Dashboard", () => {
     await bugButton.click();
     await expect(bugButton).toHaveClass(/bg-red-100/, { timeout: 3_000 });
 
-    const noteArea = page.getByPlaceholder(/Descreva o bug/).first();
+    const noteArea = page.getByPlaceholder(/Observa/i).first();
     await noteArea.fill("Botão não responde no mobile Safari");
     await expect(noteArea).toHaveValue("Botão não responde no mobile Safari");
   });

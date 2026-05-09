@@ -79,7 +79,31 @@ export default async function QAReportPage({ params }: { params: Promise<{ runId
     for (const [section, items] of skippedGrouped) {
       markdown += `### ${section}\n`;
       for (const item of items) {
+        const note = results[item.id]?.note ?? "";
         markdown += `- **${item.title}** — https://joseeleticia.com${item.url}\n`;
+        if (note) markdown += `  ${note}\n`;
+      }
+      markdown += "\n";
+    }
+  }
+
+  const okWithNote = CHECKLIST.filter(
+    (item) => results[item.id]?.status === "ok" && (results[item.id]?.note ?? "").trim().length > 0,
+  );
+  if (okWithNote.length > 0) {
+    const okGrouped = new Map<string, typeof okWithNote>();
+    for (const item of okWithNote) {
+      const arr = okGrouped.get(item.section) ?? [];
+      arr.push(item);
+      okGrouped.set(item.section, arr);
+    }
+    markdown += `## Observações em itens OK\n\n`;
+    for (const [section, items] of okGrouped) {
+      markdown += `### ${section}\n`;
+      for (const item of items) {
+        const note = results[item.id]?.note ?? "";
+        markdown += `- **${item.title}** — https://joseeleticia.com${item.url}\n`;
+        if (note) markdown += `  ${note}\n`;
       }
       markdown += "\n";
     }
