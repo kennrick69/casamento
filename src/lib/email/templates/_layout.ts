@@ -68,10 +68,10 @@ export function wrap(body: string): string {
 
         <!-- header: gradient rose → slate (solid fallback for Outlook) -->
         <tr>
-          <td align="center" bgcolor="${c.headerFrom}"
-            style="background-color:${c.headerFrom};background-image:linear-gradient(135deg,${c.headerFrom} 0%,${c.headerTo} 100%);padding:44px 48px">
-            <span style="display:block;font-size:34px;font-family:${serif};font-weight:normal;font-style:italic;color:${c.white} !important;letter-spacing:0.05em;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,0.4)">Voem.</span>
-            <span style="display:block;margin-top:8px;font-size:11px;font-family:${sans};color:rgba(255,255,255,0.55);letter-spacing:0.14em;text-transform:uppercase">Convites de casamento</span>
+          <td align="center" bgcolor="#fce7e9"
+            style="background-color:#fce7e9;background-image:linear-gradient(135deg,#fce7e9 0%,#f9d4d8 100%);padding:44px 48px">
+            <span style="display:block;font-size:34px;font-family:${serif};font-weight:normal;font-style:italic;color:#881337 !important;letter-spacing:0.05em;line-height:1">Voem.</span>
+            <span style="display:block;margin-top:8px;font-size:11px;font-family:${sans};color:rgba(136,19,55,0.6) !important;letter-spacing:0.14em;text-transform:uppercase">Convites de casamento</span>
           </td>
         </tr>
 
