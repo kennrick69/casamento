@@ -1144,3 +1144,71 @@ Ver detalhes em `docs/audit-data.md`.
 - [x] ✅ `docs/audit-data.md` — auditoria de integridade de dados + script.
 - [x] ✅ `docs/STATUS.md` — estado completo do projeto (implementado, tech-debt, métricas).
 - [x] ✅ `tests/e2e/full-flow.test.ts` — teste full-flow E2E commitado.
+
+---
+
+## Megabatch 4 — Produto pronto pra mercado (2026-05-09)
+
+### M4.1 — SEO e meta tags
+- [x] ✅ OG images dinâmicas por evento (opengraph-image.tsx)
+- [x] ✅ Twitter Cards summary_large_image
+- [x] ✅ JSON-LD Event schema.org com ceremonyDate e location
+- [x] ✅ sitemap.xml dinâmico via /sitemap.ts (eventos publicados)
+- [x] ✅ robots.txt via /robots.ts (bloqueia /admin, /api, etc.)
+- [x] ✅ Canonical URLs e metadataBase
+
+### M4.2 — Importador de planilha
+- [x] ✅ Upload CSV + XLSX com preview (10 linhas)
+- [x] ✅ Mapeamento de colunas no cliente
+- [x] ✅ Detecção de duplicatas: pular ou atualizar
+- [x] ✅ Validação linha-a-linha com relatório de erros
+- [x] ✅ Template CSV para download
+- [x] ✅ xlsx carregado dinamicamente (não impacta bundle inicial)
+
+### M4.3 — Save-the-date PDF
+- [x] ✅ 3 templates (clássico, rústico, minimal)
+- [x] ✅ QR code único por convidado → /rsvp?k=token
+- [x] ✅ ZIP com 1 PDF por convidado via /api/admin/eventos/[id]/save-the-date
+- [x] ✅ Limite de 500 convidados por vez; geração em chunks de 10
+
+### M4.4 — Performance
+- [x] ✅ Service worker v2: cache-first estático, SWR para páginas, network-only para API
+- [x] ✅ Bundle analyzer: pnpm build:analyze
+- [x] ✅ xlsx lazy-loaded (evita 1.3MB no bundle inicial)
+- [x] ✅ Preconnect para Cloudflare, dns-prefetch para Spotify/Pusher
+
+### M4.5 — i18n
+- [x] ✅ next-intl configurado com getRequestConfig
+- [x] ✅ Detecção: cookie NEXT_LOCALE → Accept-Language → pt-BR
+- [x] ✅ Toggle PT/EN no header da área pública
+- [x] ✅ messages/pt-BR.json e messages/en.json
+- [x] ✅ BottomNav traduzida; getActiveBottomNav() preservado para testes
+
+### M4.6 — Backup off-site B2
+- [x] ✅ src/lib/backup/b2.ts com upload, list, delete
+- [x] ✅ Cron de backup integrado: Railway + B2 em paralelo
+- [x] ✅ Retenção: 60 dias Railway, 90 dias B2
+- [x] ✅ /admin/saude/backups mostra status dos 2 storages
+
+### M4.7 — Sentry
+- [x] ✅ src/instrumentation.ts + src/instrumentation-client.ts
+- [x] ✅ Graceful no-op sem SENTRY_DSN
+- [x] ✅ PII removido no beforeSend (cookies, authorization, user.email)
+- [x] ✅ CSP atualizado para permitir *.sentry.io
+
+### M4.8 — LGPD compliance
+- [x] ✅ /api/admin/lgpd/export — ZIP com user.json + guests.csv por evento
+- [x] ✅ deleteAccount — 2-step com digitação de confirmação
+- [x] ✅ /api/cron/retention — aviso 30 dias + arquiva eventos >1 ano
+- [x] ✅ Migration: Event.archivalWarningAt, AuthAction.ACCOUNT_DELETED
+
+### M4.9 — Página de status
+- [x] ✅ /status pública, sem auth
+- [x] ✅ DB latência, storage, uptime 30 dias, incidentes recentes
+- [x] ✅ revalidate: 60s
+
+### M4.10 — Documentação
+- [x] ✅ docs/STATUS.md atualizado com M4
+- [x] ✅ docs/USER-GUIDE.md criado
+- [x] ✅ docs/ADMIN-GUIDE.md criado
+- [x] ✅ docs/teste-noturno.md consolidado com M4

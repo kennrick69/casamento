@@ -8,7 +8,7 @@
 - Auto-login após verificar email (magic-link behavior)
 - Rate limiting em endpoints sensíveis
 - Cloudflare Turnstile no cadastro e reset de senha
-- LGPD: export de dados, solicitação de exclusão, logs de acesso
+- LGPD: export de dados ZIP, exclusão de conta com 2-step confirmation, logs de acesso
 
 ### Casal / Admin
 - Onboarding wizard (5 steps: perfil, evento, tema, locais, convidados)
@@ -19,7 +19,8 @@
 - Galeria pré-evento com upload drag & drop ✨ M3.3
 - História do casal (timeline visual) com CRUD ✨ M3.4
 - Padrinhos e madrinhas (cadastro por lado: noivo/noiva) ✨ M3.1
-- Lista de convidados: import CSV, export CSV, banir, busca, filtros
+- Lista de convidados: import CSV/XLSX com preview e deduplicação ✨ M4.2, export CSV, banir, busca, filtros
+- Save-the-date em PDF (3 templates, QR code, ZIP) ✨ M4.3
 - Botão WhatsApp por convidado (template pré-preenchido) ✨ M3.8
 - Playlist: aprovação/rejeição de sugestões
 - Mural: aprovação/rejeição de fotos
@@ -29,7 +30,7 @@
 - Co-organizadores com roles (OWNER/EDITOR)
 - Emails automáticos (7 dias e 1 dia antes do evento)
 - Email em massa para convidados
-- Health check + sistema de backups
+- Health check + sistema de backups (Railway 60 dias + Backblaze B2 90 dias opcional) ✨ M4.6
 
 ### Convidado / Público
 - Landing page por evento com: hero, countdown, locais+mapa, traje, presentes, story ✨ M3.1
@@ -43,13 +44,26 @@
 - Gincana com missões e ranking
 - Check-in via QR code
 - Roteiro do dia
+- Toggle de idioma PT-BR / EN ✨ M4.5
+
+### SEO e Marketing
+- OG images dinâmicas por evento (1200×630, gradiente bordô) ✨ M4.1
+- Twitter Cards summary_large_image ✨ M4.1
+- JSON-LD Event schema.org ✨ M4.1
+- Sitemap dinâmico (/sitemap.xml) baseado em eventos publicados ✨ M4.1
+- robots.txt configurado ✨ M4.1
+- Canonical URLs e lang="pt-BR" ✨ M4.1
 
 ### Infraestrutura
-- PWA completo (manifest + service worker + ícones) ✨ M3.9
+- PWA completo (manifest + service worker v2 cache estratégico) ✨ M3.9 + M4.4
 - 5 temas visuais (rústico, clássico, minimal, boho, praiano)
 - Multi-tenant (slug por evento)
+- i18n PT-BR / EN via next-intl, detecção por cookie e Accept-Language ✨ M4.5
 - Railway volume storage (migração R2 planejada)
-- CI com unit tests (115 testes), typecheck, smoke tests E2E
+- Sentry error monitoring (graceful no-op sem DSN) ✨ M4.7
+- Retenção LGPD: aviso 30 dias + arquivo automático após 1 ano ✨ M4.8
+- Página de status pública em /status ✨ M4.9
+- CI com unit tests (115 testes), typecheck, lint, build, smoke tests E2E
 
 ---
 
@@ -77,12 +91,32 @@
 ## 📊 Métricas de qualidade
 
 - **TypeScript**: 0 erros
-- **ESLint**: 0 erros (3 warnings pré-existentes)
+- **ESLint**: 0 erros (2 warnings pré-existentes: img no qr-code, aria-expanded no playlist)
 - **Testes unitários**: 115/115 passando
 - **Testes E2E (smoke)**: CI verde
 - **Testes E2E (auth)**: CI verde (Turnstile aceito com regex)
+- **Bundle**: xlsx lazy-loaded (não entra no bundle inicial), archiver via createRequire (CJS/ESM safe)
 - **Lighthouse**: não rodado localmente (requer servidor ativo) — meta: >85 mobile em todas páginas críticas
 - **axe-core**: não rodado localmente — pendente auditoria de acessibilidade
+
+---
+
+---
+
+## 📦 M4 — Entregues (produto pronto pra mercado)
+
+| # | Feature | Notas |
+|---|---------|-------|
+| M4.1 | SEO completo (OG, JSON-LD, sitemap, robots, canonical) | opengraph-image.tsx por evento |
+| M4.2 | Importador CSV/XLSX com preview e deduplicação | xlsx lazy-loaded |
+| M4.3 | Save-the-date em PDF (3 templates, QR, ZIP) | pdfkit + archiver |
+| M4.4 | Performance: SW v2, lazy xlsx, preconnect, bundle analyzer | |
+| M4.5 | i18n PT-BR / EN com toggle e detecção automática | next-intl, cookie + Accept-Language |
+| M4.6 | Backup off-site Backblaze B2 (90 dias, opcional) | graceful no-op sem credenciais |
+| M4.7 | Sentry error monitoring (server + client) | graceful no-op sem DSN |
+| M4.8 | LGPD: export ZIP, exclusão de conta, retenção 1 ano | cron /api/cron/retention |
+| M4.9 | Página de status pública em /status | revalida a cada 60s |
+| M4.10 | Docs: STATUS.md + tech-debt.md + USER-GUIDE + ADMIN-GUIDE | este commit |
 
 ---
 
