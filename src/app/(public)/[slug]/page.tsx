@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, XCircle, ChevronRight, MapPin, Shirt, Gift, Camera, Music, Heart, Calendar } from "lucide-react";
+import { ShareSection } from "@/components/guest/share-section";
 import { validateEventAccess } from "@/lib/auth/guest";
 import { formatEventDate } from "@/lib/timezone";
 import { LandingHero } from "@/components/guest/landing-hero";
@@ -235,6 +236,13 @@ export default async function EventPage({
             </Link>
           </section>
         )}
+
+        {/* Compartilhar */}
+        <ShareSection
+          slug={slug}
+          coupleNames={event.coupleNames}
+          eventUrl={`${APP_URL}/${slug}`}
+        />
 
         {/* Galeria + Mural + Playlist */}
         <section className="px-4 py-6 flex flex-col gap-3">

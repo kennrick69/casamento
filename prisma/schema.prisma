@@ -103,6 +103,7 @@ enum AuthAction {
   BACKUP_CREATED
   BACKUP_FAILED
   ACCOUNT_DELETED
+  SHARE_LINK
 }
 
 // --- Auth.js v5 tables ---

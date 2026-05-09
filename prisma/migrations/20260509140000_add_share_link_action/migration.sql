@@ -1,0 +1,1 @@
+ALTER TYPE "AuthAction" ADD VALUE 'SHARE_LINK';
