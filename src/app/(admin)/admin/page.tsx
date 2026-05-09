@@ -3,6 +3,7 @@ import { getOrganizerEvents } from "@/lib/authorization";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { SignOutButton } from "@/components/admin/sign-out-button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Metadata } from "next";
@@ -33,9 +34,7 @@ export default async function AdminPage() {
           <Link href="/admin/conta" className="hover:text-foreground transition-colors">
             Minha conta
           </Link>
-          <Link href="/api/auth/signout" className="hover:text-foreground transition-colors">
-            Sair
-          </Link>
+          <SignOutButton />
         </div>
       </header>
 

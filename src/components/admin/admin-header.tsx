@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { NotificationBell } from "./notification-bell";
+import { SignOutButton } from "./sign-out-button";
 
 export function AdminHeader({
   title,
@@ -30,9 +31,7 @@ export function AdminHeader({
             <NotificationBell eventId={eventId} />
           </Suspense>
         )}
-        <Link href="/api/auth/signout" className="hover:text-foreground transition-colors">
-          Sair
-        </Link>
+        <SignOutButton />
       </div>
     </header>
   );
