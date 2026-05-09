@@ -37,7 +37,7 @@ export default async function EventLayout({
         Ir para o conteúdo
       </a>
       <AccessibilityBar />
-      <main id="main-content" className="flex-1 pb-20">{children}</main>
+      <main id="main-content" className="flex-1 pb-20" style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>{children}</main>
       <BottomNav
         slug={slug}
         ceremonyDate={event.ceremonyDate.toISOString()}

@@ -50,7 +50,7 @@ export function BottomNav({
   const tabs = getActiveBottomNav(ceremonyDate, timezone);
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 border-t bg-[var(--theme-background)] border-[var(--theme-border)]">
+    <nav className="fixed bottom-0 inset-x-0 z-40 border-t bg-[var(--theme-background)] border-[var(--theme-border)]" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       <ul className="flex h-16 items-center">
         {tabs.map(({ href, label, icon: Icon }) => {
           const fullHref = `${base}${href}`;

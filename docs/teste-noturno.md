@@ -1071,3 +1071,76 @@ do Bloco A documentados.
 - [ ] Campo "Vai acompanhado?" no RSVP aceita 1-5 pessoas
 - [ ] Contagem de acompanhantes reflete em "N pessoas incluindo acompanhantes" no admin
 - [ ] Não há cadastro separado para o +1 (simplificação intencional)
+
+---
+
+## [2026-05-09] Megabatch QA — Correções automáticas (QA.1–QA.7)
+
+### QA.1 — Bugs conhecidos corrigidos
+
+- [x] ✅ Botão de bypass "Acessar painel sem confirmar" em `/verify-email` — **removido**. Middleware já garante guard; botão era desnecessário e reduzia segurança. Teste C.8 do E2E cobre.
+- [x] ✅ AdminHeader sem `eventId` em mural, notificacoes, playlist — **corrigido**. Sino de notificações aparece em todas as sub-páginas de evento.
+
+### QA.2 — E2E full-flow
+
+- [x] ✅ `tests/e2e/full-flow.test.ts` criado e commitado.
+  - **Suite A (convidado):** A.1–A.12: landing, RSVP, galeria, história, mural, chat, playlist, locais, presentes, gincana, roteiro
+  - **Suite B (admin):** B.1–B.10: dashboard, eventos, convidados, moderação, analytics, galeria, história, export CSV, notificações — skip automático se sem credenciais
+  - **Suite C (guards):** C.1–C.8: admin sem sessão → login, PWA manifest, ícones 192/512/apple, health, verify-email, botão bypass
+  - **Suite D (públicas):** D — login, forgot-password, termos, privacidade
+
+**Para rodar localmente:**
+```bash
+pnpm seed:dev  # criar dados de dev
+pnpm e2e       # ou pnpm playwright test tests/e2e/full-flow.test.ts
+```
+
+**Para admin (Suite B):**
+```bash
+TEST_ADMIN_EMAIL=... TEST_ADMIN_PASSWORD=... TEST_SLUG=... TEST_PUBLIC_TOKEN=... TEST_EVENT_ID=... pnpm e2e
+```
+
+### QA.3 — Lint / TypeScript
+
+- [x] ✅ TypeScript: 0 erros após QA.
+- [x] ✅ ESLint: prop `slug` sem uso em `DeclinedBanner` — removida.
+- [x] ✅ ESLint: helper `assertNoConsoleErrors` sem uso em `full-flow.test.ts` — removido.
+- [ ] ⚠️ Warning `next/no-img-element` em `qr-code.tsx` — **falso positivo** (data URL não suportada por Next.js Image). Não bloqueia CI.
+- [ ] ⚠️ `aria-expanded` em `add-song-form.tsx` sem `aria-controls` — melhoria futura (a11y nível AAA).
+
+### QA.4 — Auditoria de console errors (estática)
+
+Ver detalhes em `docs/audit-console.md`.
+
+- [x] ✅ Zero `console.log` em código de app/components de produção.
+- [x] ✅ 22 `console.error/warn` — todos em catch blocks legítimos.
+- [x] ✅ Único `<img>` sem Next.js Image é o QR code (data URL — correto).
+- [x] ✅ Todos os `.map()` têm `key=` no elemento raiz.
+- [x] ✅ Nenhum risco de hydration mismatch identificado.
+
+### QA.5 — Auditoria mobile (estática, 375×667)
+
+Ver detalhes em `docs/audit-mobile.md`.
+
+- [x] ✅ **CORRIGIDO:** Bottom nav sem `safe-area-inset-bottom` no iPhone X+.
+  - `viewportFit: "cover"` adicionado ao Viewport export.
+  - `padding-bottom: env(safe-area-inset-bottom)` no `<nav>`.
+  - Padding do `<main>` atualizado para `calc(5rem + env(safe-area-inset-bottom))`.
+- [ ] ⚠️ Tabelas de privacidade sem `overflow-x-auto` — baixo impacto (página legal).
+- [ ] ⚠️ Botões `size="sm"` em admin abaixo de 44px — admin é desktop-first, aceitável.
+- [x] ✅ RSVP, galeria, mural, playlist, chat — todos mobile-first com max-w e px-4.
+
+### QA.6 — Integridade de dados
+
+Ver detalhes em `docs/audit-data.md`.
+
+- [x] ✅ Script `scripts/db-integrity.ts` criado (8 checks).
+- [ ] Pendente: executar contra Railway DB (`DATABASE_URL=... pnpm tsx scripts/db-integrity.ts`).
+
+### QA.7 — Consolidação
+
+- [x] ✅ `docs/audit-console.md` — auditoria de console errors.
+- [x] ✅ `docs/audit-mobile.md` — auditoria mobile com fixes aplicados.
+- [x] ✅ `docs/audit-data.md` — auditoria de integridade de dados + script.
+- [x] ✅ `docs/STATUS.md` — estado completo do projeto (implementado, tech-debt, métricas).
+- [x] ✅ `tests/e2e/full-flow.test.ts` — teste full-flow E2E commitado.
