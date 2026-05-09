@@ -149,3 +149,12 @@ html[data-contrast="high"] {
   --theme-accent: #ffff00 !important;
   filter: contrast(1.2);
 }
+
+/* ── TV slideshow progress bar ─────────────────────────────────────────── */
+@keyframes progress-bar {
+  from { width: 0% }
+  to   { width: 100% }
+}
+.animate-progress-bar {
+  animation: progress-bar linear forwards;
+}
