@@ -178,9 +178,12 @@ model Event {
   updatedAt             DateTime       @updatedAt
   archivedAt            DateTime?
   archivalWarningAt     DateTime?
+  customization         Json?
 
   theme               Theme                @relation(fields: [themeId], references: [id])
   organizers          EventOrganizer[]
+  seatingTables       SeatingTable[]
+  liveEvents          LiveEvent[]
   guests              Guest[]
   locations           EventLocation[]
   journeyItems        JourneyItem[]
@@ -228,9 +231,10 @@ enum LocationType {
 }
 
 model EventOrganizer {
-  eventId String
-  userId  String
-  role    OrganizerRole
+  eventId         String
+  userId          String
+  role            OrganizerRole
+  digestFrequency DigestFrequency @default(NONE)
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -241,6 +245,12 @@ model EventOrganizer {
 enum OrganizerRole {
   OWNER
   EDITOR
+}
+
+enum DigestFrequency {
+  NONE
+  DAILY
+  WEEKLY
 }
 
 model Theme {
@@ -272,6 +282,17 @@ model Guest {
   deletedAt           DateTime?
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
+
+  // M5.5 — Quem é quem
+  profileBio          String?
+  profileRelationship String?
+  profileImageKey     String?
+  profilePublic       Boolean    @default(false)
+
+  // M5.6 — Agradecimentos
+  giftReceived        String?
+  thankYouNote        String?
+  thankYouSent        Boolean    @default(false)
 
   event               Event                @relation(fields: [eventId], references: [id], onDelete: Cascade)
   photos              Photo[]
@@ -671,4 +692,46 @@ model CoupleStoryItem {
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@index([eventId, order])
+}
+
+// --- M5.2 — Sistema de mesas ---
+
+model SeatingTable {
+  id          String              @id @default(cuid())
+  eventId     String
+  name        String
+  capacity    Int                 @default(8)
+  order       Int                 @default(0)
+  createdAt   DateTime            @default(now())
+
+  event       Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  assignments SeatingAssignment[]
+
+  @@index([eventId, order])
+}
+
+model SeatingAssignment {
+  id        String   @id @default(cuid())
+  tableId   String
+  guestId   String   @unique
+
+  table     SeatingTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
+
+  @@index([tableId])
+}
+
+// --- M5.4 — Live events ---
+
+model LiveEvent {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String?
+  type      String   @default("update")
+  title     String
+  body      String?  @db.Text
+  createdAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, createdAt])
 }

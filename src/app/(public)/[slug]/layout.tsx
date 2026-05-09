@@ -23,7 +23,21 @@ export default async function EventLayout({
   if (!event) notFound();
 
   const tokens = event.theme.tokens as unknown as ThemeTokens;
-  const cssVars = getThemeCssVars(tokens);
+  const palette = event.paletteColors as Partial<ThemeTokens["colors"]> | null;
+  const cssVars = {
+    ...getThemeCssVars(tokens),
+    ...(palette
+      ? {
+          ...(palette.primary && { "--theme-primary": palette.primary }),
+          ...(palette.secondary && { "--theme-secondary": palette.secondary }),
+          ...(palette.accent && { "--theme-accent": palette.accent }),
+          ...(palette.background && { "--theme-background": palette.background }),
+          ...(palette.foreground && { "--theme-foreground": palette.foreground }),
+          ...(palette.muted && { "--theme-muted": palette.muted }),
+          ...(palette.border && { "--theme-border": palette.border }),
+        }
+      : {}),
+  };
 
   return (
     <div

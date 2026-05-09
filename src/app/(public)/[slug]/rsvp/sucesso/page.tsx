@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CheckCircle } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Presença confirmada!" };
@@ -10,10 +11,20 @@ export default async function RsvpSuccessPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; k?: string }>;
 }) {
   const { slug } = await params;
-  const { status } = await searchParams;
+  const { status, k } = await searchParams;
+
+  // Look up seating assignment for this guest
+  let tableInfo: { name: string } | null = null;
+  if (k) {
+    const assignment = await prisma.seatingAssignment.findFirst({
+      where: { table: { event: { slug } }, guestId: { in: await prisma.guest.findMany({ where: { sessionToken: k }, select: { id: true } }).then((r) => r.map((g) => g.id)) } },
+      include: { table: { select: { name: true } } },
+    }).catch(() => null);
+    if (assignment) tableInfo = { name: assignment.table.name };
+  }
   const confirmed = status !== "DECLINED";
 
   return (
@@ -32,6 +43,14 @@ export default async function RsvpSuccessPage({
               Mal podemos esperar para celebrar com você.
             </p>
           </div>
+
+          {/* Seating info */}
+          {tableInfo && (
+            <div className="w-full max-w-xs rounded-[var(--theme-radius)] border border-[var(--theme-primary)] bg-[var(--theme-muted)] px-4 py-3 text-center">
+              <p className="text-xs text-[var(--theme-secondary)] uppercase tracking-wider mb-1">Sua mesa</p>
+              <p className="text-lg font-semibold" style={{ color: "var(--theme-primary)" }}>{tableInfo.name}</p>
+            </div>
+          )}
 
           {/* Prévia de pontos — espaço visual para Fase 4 */}
           <div className="w-full max-w-xs rounded-[var(--theme-radius)] border border-[var(--theme-border)] bg-[var(--theme-muted)] px-4 py-3 text-center">

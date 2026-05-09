@@ -46,7 +46,8 @@ export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormPr
     startTransition(async () => {
       const result = await submitRsvp(formData);
       if (result.ok) {
-        router.push(`/${slug}/rsvp/sucesso?status=${result.status}`);
+        const kParam = k ? `&k=${encodeURIComponent(k)}` : "";
+        router.push(`/${slug}/rsvp/sucesso?status=${result.status}${kParam}`);
       } else if (result.type === "RECOVERY_SENT") {
         setRecoverySent(result.emailAddr);
       } else {
