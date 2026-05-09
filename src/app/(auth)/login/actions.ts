@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { signIn } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { TERMS_VERSION, PRIVACY_VERSION } from "@/lib/legal/versions";
 import { hashPassword } from "@/lib/auth/password";
 import { validateEmail } from "@/lib/auth/validate-email";
 import { validatePassword } from "@/lib/auth/validate-password";
@@ -93,6 +94,8 @@ const signupSchema = z.object({
   lastName: z.string().min(2).max(50),
   email: z.email(),
   password: z.string().min(8),
+  termsAccepted: z.literal("true", { message: "Aceite os Termos de Uso." }),
+  privacyAccepted: z.literal("true", { message: "Aceite a Política de Privacidade." }),
   website: z.string().max(0), // honeypot
 });
 
@@ -104,6 +107,8 @@ export async function signupAction(formData: FormData): Promise<AuthState> {
     lastName: formData.get("lastName"),
     email: formData.get("email"),
     password: formData.get("password"),
+    termsAccepted: formData.get("termsAccepted"),
+    privacyAccepted: formData.get("privacyAccepted"),
     website: (formData.get("website") as string) ?? "",
   };
 
@@ -111,8 +116,13 @@ export async function signupAction(formData: FormData): Promise<AuthState> {
   if (!parsed.success) {
     const hasHoneypot = parsed.error.issues.some((i) => i.path[0] === "website");
     if (hasHoneypot) return null;
-    const firstField = parsed.error.issues[0]?.path[0] as string | undefined;
-    return { error: "Preencha todos os campos corretamente.", field: firstField };
+    const firstIssue = parsed.error.issues[0];
+    const field = firstIssue?.path[0] as string | undefined;
+    const msg =
+      field === "termsAccepted" ? "Aceite os Termos de Uso para continuar."
+      : field === "privacyAccepted" ? "Aceite a Política de Privacidade para continuar."
+      : "Preencha todos os campos corretamente.";
+    return { error: msg, field };
   }
 
   const { firstName, lastName, email, password } = parsed.data;
@@ -159,6 +169,7 @@ export async function signupAction(formData: FormData): Promise<AuthState> {
     return { error: "E-mail já cadastrado. Tente entrar ou recuperar a senha.", field: "email" };
   }
 
+  const now = new Date();
   const passwordHash = await hashPassword(password);
   const user = await prisma.user.create({
     data: {
@@ -169,6 +180,10 @@ export async function signupAction(formData: FormData): Promise<AuthState> {
       passwordHash,
       profileCompleted: false,
       onboardingCompleted: false,
+      termsVersion: TERMS_VERSION,
+      privacyVersion: PRIVACY_VERSION,
+      termsAcceptedAt: now,
+      privacyAcceptedAt: now,
     },
   });
 
