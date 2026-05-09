@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { requireOrganizer } from "@/lib/authorization";
 import { email } from "@/lib/email";
 import { massEmailHtml, massEmailText } from "@/lib/email/templates";
+import { auth } from "@/lib/auth";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 const Schema = z.object({
@@ -66,4 +68,30 @@ export async function sendMassEmail(formData: FormData): Promise<SendResult> {
   }
 
   return { ok: true, sent };
+}
+
+const DigestSchema = z.object({
+  eventId: z.string(),
+  frequency: z.enum(["NONE", "DAILY", "WEEKLY"]),
+});
+
+export async function saveDigestFrequency(formData: FormData): Promise<{ ok: boolean; error?: string }> {
+  const parsed = DigestSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return { ok: false, error: "Dados inválidos." };
+
+  const { eventId, frequency } = parsed.data;
+  const session = await auth();
+  if (!session?.user?.id) return { ok: false, error: "Sem permissão." };
+
+  try { await requireOrganizer(eventId); } catch {
+    return { ok: false, error: "Sem permissão." };
+  }
+
+  await prisma.eventOrganizer.update({
+    where: { eventId_userId: { eventId, userId: session.user.id } },
+    data: { digestFrequency: frequency },
+  });
+
+  revalidatePath(`/admin/eventos/${eventId}/notificacoes`);
+  return { ok: true };
 }

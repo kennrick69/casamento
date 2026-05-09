@@ -25,6 +25,7 @@ export function EventNav({ eventId }: { eventId: string }) {
     { href: `${base}/save-the-date`, label: "Save the Date" },
     { href: `${base}/personalizar`, label: "Personalizar" },
     { href: `${base}/mesas`, label: "Mesas" },
+    { href: `${base}/ao-vivo`, label: "Ao vivo" },
     { href: `${base}/agradecimentos`, label: "Agradecimentos" },
     { href: `${base}/notificacoes`, label: "Notificações" },
     { href: `${base}/co-organizadores`, label: "Co-org." },

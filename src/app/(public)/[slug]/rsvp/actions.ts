@@ -29,6 +29,7 @@ const RsvpSchema = z.object({
   rsvpStatus: z.enum(["CONFIRMED", "DECLINED"]),
   consentTerms: z.literal("on", { message: "Você precisa aceitar os termos" }),
   consentPhotoMural: z.string().optional(),
+  profilePublic: z.string().optional(),
 });
 
 export type RsvpActionResult =
@@ -62,6 +63,7 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
     message,
     rsvpStatus,
     consentPhotoMural,
+    profilePublic,
   } = parsed.data;
 
   const event = await prisma.event.findUnique({
@@ -122,6 +124,7 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
           rsvpStatus,
           consentTerms: true,
           consentPhotoMural: consentPhotoMural === "on",
+          profilePublic: profilePublic === "on",
           consentTimestamp: new Date(),
           sessionToken,
           deletedAt: null,
@@ -139,6 +142,7 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
           rsvpStatus,
           consentTerms: true,
           consentPhotoMural: consentPhotoMural === "on",
+          profilePublic: profilePublic === "on",
           consentTimestamp: new Date(),
           sessionToken,
         },

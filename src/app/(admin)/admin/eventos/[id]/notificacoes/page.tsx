@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/db";
+import { auth } from "@/lib/auth";
 import { requireOrganizer } from "@/lib/authorization";
 import { notFound } from "next/navigation";
 import { EventNav } from "@/components/admin/event-nav";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { MassEmailForm } from "./mass-email-form";
+import { DigestForm } from "./digest-form";
 import { formatEventDate } from "@/lib/timezone";
 
 interface Props {
@@ -13,20 +15,35 @@ interface Props {
 export default async function NotificacoesPage({ params }: Props) {
   const { id: eventId } = await params;
 
-  try { await requireOrganizer(eventId); } catch { notFound(); }
+  let userId: string;
+  try {
+    const result = await requireOrganizer(eventId);
+    userId = result.userId;
+  } catch {
+    notFound();
+  }
 
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
-    select: {
-      id: true,
-      ceremonyDate: true,
-      timezone: true,
-      guests: {
-        where: { deletedAt: null, banned: false },
-        select: { id: true, rsvpStatus: true, email: true },
+  const session = await auth();
+  if (!session?.user?.id) notFound();
+
+  const [event, organizer] = await Promise.all([
+    prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        id: true,
+        ceremonyDate: true,
+        timezone: true,
+        guests: {
+          where: { deletedAt: null, banned: false },
+          select: { id: true, rsvpStatus: true, email: true },
+        },
       },
-    },
-  });
+    }),
+    prisma.eventOrganizer.findUnique({
+      where: { eventId_userId: { eventId, userId: session.user.id } },
+      select: { digestFrequency: true },
+    }),
+  ]);
   if (!event) notFound();
 
   const confirmedGuests = event.guests.filter((g) => g.rsvpStatus === "CONFIRMED" && g.email);
@@ -46,7 +63,7 @@ export default async function NotificacoesPage({ params }: Props) {
 
         <h1 className="text-2xl font-bold mb-6">Notificações</h1>
 
-        {/* Reminder info */}
+        {/* Automatic reminders */}
         <section className="mb-8 border rounded-lg p-4 bg-muted/40">
           <h2 className="text-base font-semibold mb-2">Lembretes automáticos</h2>
           <p className="text-sm text-muted-foreground mb-2">
@@ -55,6 +72,18 @@ export default async function NotificacoesPage({ params }: Props) {
           <p className="text-xs text-muted-foreground">
             O envio usa chave de idempotência — cada convidado recebe no máximo uma vez por prazo.
           </p>
+        </section>
+
+        {/* Digest frequency */}
+        <section className="mb-8 border rounded-lg p-4">
+          <h2 className="text-base font-semibold mb-1">Resumo por email (digest)</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Receba um resumo com novas confirmações, fotos pendentes e mensagens sinalizadas.
+          </p>
+          <DigestForm
+            eventId={eventId}
+            current={organizer?.digestFrequency ?? "NONE"}
+          />
         </section>
 
         {/* Mass email */}

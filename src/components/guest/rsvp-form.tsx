@@ -187,10 +187,16 @@ export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormPr
           }
         />
         {status === "CONFIRMED" && (
-          <ConsentField
-            name="consentPhotoMural"
-            label="Autorizo o uso das minhas fotos no mural do evento"
-          />
+          <>
+            <ConsentField
+              name="consentPhotoMural"
+              label="Autorizo o uso das minhas fotos no mural do evento"
+            />
+            <ConsentField
+              name="profilePublic"
+              label="Quero aparecer na página 'Quem vai estar lá' (perfil público opcional)"
+            />
+          </>
         )}
       </div>
 
