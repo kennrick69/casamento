@@ -4,11 +4,20 @@ import { AuthTabs } from "@/components/auth/auth-tabs";
 export const metadata: Metadata = { title: "Entrar" };
 
 interface Props {
-  searchParams: Promise<{ verified?: string }>;
+  searchParams: Promise<{ verified?: string; error?: string }>;
 }
 
 export default async function LoginPage({ searchParams }: Props) {
-  const { verified } = await searchParams;
+  const { verified, error } = await searchParams;
+
+  // Auth.js redireciona pra /login?error=Verification quando o magic link
+  // expirou ou já foi usado. Damos uma mensagem clara em vez do erro nu.
+  const errorMessage =
+    error === "Verification"
+      ? "O link de acesso expirou ou já foi usado. Solicite um novo abaixo."
+      : error
+      ? "Não foi possível concluir o login. Tente novamente."
+      : null;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-rose-50 via-white to-slate-50">
@@ -27,6 +36,12 @@ export default async function LoginPage({ searchParams }: Props) {
         {verified === "1" && (
           <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 text-center">
             E-mail verificado com sucesso! Faça login para continuar.
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 text-center">
+            {errorMessage}
           </div>
         )}
 

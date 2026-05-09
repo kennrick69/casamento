@@ -4,6 +4,8 @@ import Resend from "next-auth/providers/resend";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth/password";
+import { email as emailService } from "@/lib/email";
+import { magicLinkLoginHtml, magicLinkLoginText } from "@/lib/email/templates";
 import { authConfig } from "./config";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -41,6 +43,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Resend({
       apiKey: process.env.RESEND_API_KEY,
       from: process.env.EMAIL_FROM ?? "noreply@example.com",
+      // Override do template default (inglês) — usa nosso layout PT-BR + serviço de
+      // email centralizado pra garantir mesmo formato e idempotency-key.
+      async sendVerificationRequest({ identifier, url }) {
+        await emailService.send({
+          to: identifier,
+          subject: "Acessar sua conta no Voem.",
+          html: magicLinkLoginHtml({ email: identifier, url }),
+          text: magicLinkLoginText({ email: identifier, url }),
+        });
+      },
     }),
     Credentials({
       credentials: {

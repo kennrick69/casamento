@@ -302,6 +302,44 @@ export function recoveryText(o: RecoveryOpts): string {
   ].join("\n");
 }
 
+// ── Magic link (admin login sem senha) ─────────────────────────────────────────
+
+export interface MagicLinkLoginOpts {
+  email: string;
+  url: string;
+}
+
+export function magicLinkLoginHtml(o: MagicLinkLoginOpts): string {
+  return wrap(`
+    ${h1("Acessar sua conta")}
+    ${eyebrow("Voem. · Acesso sem senha")}
+
+    ${p(`Você pediu para entrar no Voem. com o e-mail <strong style="color:${c.heading}">${o.email}</strong>. Clique no botão abaixo para acessar:`)}
+
+    <div style="text-align:center;margin:32px 0">
+      ${btn(o.url, "Acessar minha conta")}
+    </div>
+
+    ${smallNote("Este link expira em 24 horas e é de uso único. Se não pediu acesso, ignore este e-mail com segurança — sua senha continua a mesma.")}
+  `);
+}
+
+export function magicLinkLoginText(o: MagicLinkLoginOpts): string {
+  return [
+    "Voem. — Acesso sem senha",
+    "",
+    `Você pediu para entrar com o e-mail ${o.email}.`,
+    "",
+    "Clique no link abaixo para acessar sua conta:",
+    "",
+    o.url,
+    "",
+    "Este link expira em 24 horas e é de uso único.",
+    "",
+    "Se não pediu acesso, ignore este e-mail.",
+  ].join("\n");
+}
+
 // ── Lembrete de evento ─────────────────────────────────────────────────────────
 
 export interface ReminderOpts {
