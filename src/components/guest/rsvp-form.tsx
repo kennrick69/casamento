@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Mail } from "lucide-react";
+import { LegalModal, TermsContent, PrivacyContent } from "@/components/legal/legal-modal";
 
 interface RsvpFormProps {
   slug: string;
@@ -33,6 +34,8 @@ export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormPr
   );
   const [error, setError] = useState<string | null>(null);
   const [recoverySent, setRecoverySent] = useState<string | null>(null);
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
 
   const isEarly = rsvpEarlyDeadline ? new Date() <= new Date(rsvpEarlyDeadline) : false;
 
@@ -175,13 +178,21 @@ export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormPr
           label={
             <>
               Li e aceito os{" "}
-              <a href="/termos" target="_blank" className="underline underline-offset-2">
+              <button
+                type="button"
+                onClick={() => setTermsOpen(true)}
+                className="underline underline-offset-2 hover:text-foreground transition-colors"
+              >
                 termos de uso
-              </a>{" "}
+              </button>{" "}
               e a{" "}
-              <a href="/privacidade" target="_blank" className="underline underline-offset-2">
+              <button
+                type="button"
+                onClick={() => setPrivacyOpen(true)}
+                className="underline underline-offset-2 hover:text-foreground transition-colors"
+              >
                 política de privacidade
-              </a>{" "}
+              </button>{" "}
               *
             </>
           }
@@ -219,6 +230,17 @@ export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormPr
       </Button>
 
       <input type="hidden" name="k" value={k ?? ""} />
+
+      <LegalModal open={termsOpen} onClose={() => setTermsOpen(false)} title="Termos de Uso">
+        <TermsContent />
+      </LegalModal>
+      <LegalModal
+        open={privacyOpen}
+        onClose={() => setPrivacyOpen(false)}
+        title="Política de Privacidade"
+      >
+        <PrivacyContent />
+      </LegalModal>
     </form>
   );
 }
