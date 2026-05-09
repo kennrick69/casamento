@@ -40,7 +40,7 @@ export default async function NotificacoesPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-background">
-      <AdminHeader title="Notificações" />
+      <AdminHeader title="Notificações" eventId={eventId} />
       <main className="max-w-2xl mx-auto px-4 py-8">
         <EventNav eventId={eventId} />
 

@@ -100,7 +100,7 @@ export default async function EventPage({
             <ConfirmedBanner name={guest.name} slug={slug} gamification={features.gamification} />
           )}
           {guest?.rsvpStatus === "DECLINED" && (
-            <DeclinedBanner slug={slug} rsvpHref={rsvpHref} />
+            <DeclinedBanner rsvpHref={rsvpHref} />
           )}
           {(!guest || guest.rsvpStatus === "PENDING") && (
             <RsvpCtaBanner slug={slug} rsvpHref={rsvpHref} />
@@ -363,7 +363,7 @@ function ConfirmedBanner({ name, slug, gamification }: { name: string; slug: str
   );
 }
 
-function DeclinedBanner({ slug, rsvpHref }: { slug: string; rsvpHref: string }) {
+function DeclinedBanner({ rsvpHref }: { rsvpHref: string }) {
   return (
     <section className="rounded-[var(--theme-radius)] border border-[var(--theme-border)] bg-[var(--theme-muted)] p-4 flex flex-col gap-3">
       <div className="flex items-center gap-2 text-[var(--theme-secondary)]">

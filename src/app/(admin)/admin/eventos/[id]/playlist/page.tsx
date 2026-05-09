@@ -40,7 +40,7 @@ export default async function AdminPlaylistPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-background">
-      <AdminHeader title="Playlist" />
+      <AdminHeader title="Playlist" eventId={eventId} />
       <main className="max-w-3xl mx-auto px-4 py-8">
         <EventNav eventId={eventId} />
         <div className="flex items-center justify-between mb-6">
