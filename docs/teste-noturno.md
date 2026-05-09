@@ -2,7 +2,7 @@
 
 **Modelo:** "build all day, test at night."
 Durante o dia o código avança com CI verde. À noite, você testa
-manualmente no Railway (https://casamento-production-2c06.up.railway.app)
+manualmente em produção (https://joseeleticia.com)
 e marca cada item.
 
 **Como marcar:**
@@ -22,7 +22,8 @@ e marca cada item.
 
 **O que mudou:** 9 textos visíveis ao usuário trocados de jargão técnico/inglês para português natural — "marcar presença" no lugar de "check-in", "Gincana" no lugar de "Gamificação", "Já cheguei!" no botão de chegada.
 
-**Onde testar:** `/[slug]/checkin`, `/[slug]/gincana`, `/admin/eventos/[id]/configuracoes`, `/admin/eventos/[id]/gincana`, `/admin/dev-tools`
+**Onde testar:** [/[slug]/checkin](https://joseeleticia.com/joseeleticia/checkin) · [/[slug]/gincana](https://joseeleticia.com/joseeleticia/gincana) · [/admin/eventos/[id]/configuracoes](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/configuracoes) · [/admin/eventos/[id]/gincana](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/gincana) · [/admin/dev-tools](https://joseeleticia.com/admin/dev-tools)  
+*(Rotas `/admin/eventos/SEU_EVENTO_ID/...`: substitua `SEU_EVENTO_ID` pelo ID real do seu evento — aparece na URL ao acessar https://joseeleticia.com/admin/eventos)*
 
 **O que validar:**
 - [ ] `/[slug]/checkin` — título da página é "Marcar presença" (não "Check-in")
@@ -44,7 +45,7 @@ e marca cada item.
 
 **O que mudou:** react-hook-form + zodResolver em todos os 4 passos do wizard — erros inline em pt-BR, botão "← Voltar", indicador "Passo X de 4", campos de doação/PIX condicionais ao feature flag, guard que redireciona step=4 em eventos publicados.
 
-**Onde testar:** `/admin/eventos/novo` → wizard completo; `/admin/eventos/[id]/configuracoes`
+**Onde testar:** [/admin/eventos/novo](https://joseeleticia.com/admin/eventos/novo) → wizard completo; [/admin/eventos/[id]/configuracoes](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/configuracoes)
 
 #### Passo 1 — Dados básicos
 
@@ -88,7 +89,7 @@ e marca cada item.
 
 **O que mudou:** template rico com data, local cerimônia + recepção, link "Ver meu convite", link mural, link "Atualize sua resposta". Headers anti-spam. Banner visível no log de dev.
 
-**Onde testar:** `/[slug]/rsvp` → confirmar presença com e-mail válido
+**Onde testar:** [/[slug]/rsvp](https://joseeleticia.com/joseeleticia/rsvp) → confirmar presença com e-mail válido
 
 **O que validar:**
 - [ ] Email recebido com assunto "Presença confirmada — [nome do evento]"
@@ -111,7 +112,7 @@ e marca cada item.
 
 **O que mudou:** 8 strings em inglês em rotas de API trocadas por português (`"Unauthorized"` → `"Não autorizado"`, `"Forbidden"` → `"Acesso negado"`, `"Bad request"` → `"Requisição inválida"`, `"Not found"` → `"Não encontrado"`). Fallback de erro no upload de foto melhorado.
 
-**Onde testar:** fluxos de erro — upload de foto com falha, DevTools → Network
+**Onde testar:** [/[slug]/mural](https://joseeleticia.com/joseeleticia/mural) → upload de foto com falha intencional; DevTools → Network
 
 **O que validar:**
 - [ ] Upload de foto com conexão ruim / arquivo corrompido → mensagem "Falha ao enviar. Tente novamente." (não "Erro ao enviar.")
@@ -126,7 +127,7 @@ e marca cada item.
 
 **O que mudou:** 4 botões que desabilitavam silenciosamente agora mostram gerúndio durante a ação; vote-button ganha `opacity-50 cursor-wait`.
 
-**Onde testar:** ações que disparam server actions com latência visível
+**Onde testar:** [/[slug]/presentes](https://joseeleticia.com/joseeleticia/presentes) · [/[slug]/chat](https://joseeleticia.com/joseeleticia/chat) — ações que disparam server actions com latência visível
 
 **O que validar:**
 - [ ] Admin convidados → banir → botão exibe "Banindo…" durante processamento
@@ -146,7 +147,7 @@ e marca cada item.
 
 **O que mudou:** 6 seções do admin convertidas de `<form action={serverAction}>` para client components com `useTransition` + sonner — feedback visual imediato após cada ação.
 
-**Onde testar:** `/admin/conta`, `/admin/eventos/[id]/presentes`, `/admin/eventos/[id]/mural`, `/admin/eventos/[id]/moderacao`, `/admin/eventos/[id]/convidados`
+**Onde testar:** [/admin/conta](https://joseeleticia.com/admin/conta) · [/admin/eventos/[id]/presentes](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/presentes) · [/admin/eventos/[id]/mural](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/mural) · [/admin/eventos/[id]/moderacao](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/moderacao) · [/admin/eventos/[id]/convidados](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/convidados)
 
 **O que validar:**
 - [ ] Conta → salvar dados pessoais → toast "Dados salvos!" (bottom-right)
@@ -178,7 +179,7 @@ e marca cada item.
 
 **O que mudou:** layout base `_layout.ts` com tokens rose-to-slate, primitivos HTML. 9 templates migrados: welcomeVerify, passwordReset, passwordChanged, rsvpConfirmation, rsvpConfirm (legado), rsvpDecline, recovery, reminder, massEmail.
 
-**Onde testar:** qualquer ação que dispara email (RSVP, reset de senha, cadastro)
+**Onde testar:** [/[slug]/rsvp](https://joseeleticia.com/joseeleticia/rsvp) (RSVP) · [/forgot-password](https://joseeleticia.com/forgot-password) (reset de senha) · [/login](https://joseeleticia.com/login) (cadastro)
 
 **O que validar:**
 - [ ] Email de confirmação de presença renderiza corretamente no Gmail (cabeçalho gradiente rose → slate)
@@ -194,7 +195,7 @@ e marca cada item.
 
 **O que mudou:** onBlur nos campos de texto/data dispara save silencioso. onChange em radio/checkbox idem. Indicador "Salvando…" → "✓ Salvo" por 2s ao lado do botão Próximo.
 
-**Onde testar:** `/admin/eventos/[id]/configuracoes?step=1` a `?step=4`
+**Onde testar:** [/admin/eventos/[id]/configuracoes](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/configuracoes)?step=1 a ?step=4
 
 **O que validar:**
 - [ ] Passo 1 — digitar nome do casal → sair do campo → indicador "Salvando…" aparece → "✓ Salvo"
@@ -214,7 +215,7 @@ e marca cada item.
 
 **O que mudou:** GuestList cliente com busca, filtros por status, seleção múltipla, ações em massa, importação CSV.
 
-**Onde testar:** `/admin/eventos/[id]/convidados`
+**Onde testar:** [/admin/eventos/[id]/convidados](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/convidados)
 
 **O que validar:**
 - [ ] Campo de busca filtra por nome E por e-mail em tempo real
@@ -239,7 +240,7 @@ e marca cada item.
 
 **O que mudou:** countdown, atividade recente, alerta de denúncias, quick links com ícones.
 
-**Onde testar:** `/admin/eventos/[id]`
+**Onde testar:** [/admin/eventos/[id]](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID)
 
 **O que validar:**
 - [ ] Countdown mostra dias corretos até a cerimônia (gradiente rose-to-slate)
@@ -256,7 +257,7 @@ e marca cada item.
 
 **O que mudou:** touch targets ≥44px em event-nav e botões ▲▼; py-1 → py-1.5 nos badges de passo; texto "Segurança" com mb-3.
 
-**Onde testar:** mobile (viewport 390px) nos formulários do wizard e nas páginas de roteiro/locais
+**Onde testar:** [/admin/eventos/novo](https://joseeleticia.com/admin/eventos/novo) (wizard) · [/[slug]/roteiro](https://joseeleticia.com/joseeleticia/roteiro) · [/[slug]/locais](https://joseeleticia.com/joseeleticia/locais) — viewport 390px
 
 **O que validar:**
 - [ ] Links de navegação do EventNav têm altura ≥44px (fáceis de tocar no mobile)
@@ -280,7 +281,7 @@ e marca cada item.
 
 **O que mudou:** rate limit estendido para RSVP (5/h IP), chat (30/h guestId), playlist (10/h guestId), upload (20/h guestId), recuperar (5/h IP).
 
-**Onde testar:** ações repetidas rapidamente (usar loop manual ou script simples)
+**Onde testar:** [/[slug]/rsvp](https://joseeleticia.com/joseeleticia/rsvp) · [/[slug]/chat](https://joseeleticia.com/joseeleticia/chat) · [/[slug]/mural](https://joseeleticia.com/joseeleticia/mural) — ações repetidas rapidamente
 
 **O que validar:**
 - [ ] RSVP repetido >5× do mesmo IP em 1h → mensagem "Muitas tentativas. Aguarde X minuto(s)."
@@ -330,7 +331,7 @@ e marca cada item.
 
 **O que mudou:** nova página com métricas agregadas de todos os eventos.
 
-**Onde testar:** `/admin/visao-geral`
+**Onde testar:** [/admin/visao-geral](https://joseeleticia.com/admin/visao-geral)
 
 **O que validar:**
 - [ ] Link "Visão geral" visível no header de /admin
@@ -348,7 +349,7 @@ e marca cada item.
 
 **O que foi:** ProtoScene.tsx — hero estático com botão "Criar meu convite" que redireciona para /admin.
 
-**Onde testar:** `/` (raiz do site)
+**Onde testar:** [https://joseeleticia.com](https://joseeleticia.com) (raiz do site)
 
 **O que validar:**
 - [ ] Hero carrega sem erro de JavaScript (abrir console do browser)
@@ -367,7 +368,7 @@ e marca cada item.
 
 **O que foi:** `/login` com duas abas (Entrar / Criar conta), react-hook-form, zxcvbn, honeypot, rate limit.
 
-**Onde testar:** `/login`
+**Onde testar:** [/login](https://joseeleticia.com/login)
 
 ### Aba "Entrar" (Login)
 
@@ -408,7 +409,7 @@ e marca cada item.
 
 ### Fluxo completo de verificação
 
-**Onde testar:** criar conta nova em `/login` → seguir o fluxo
+**Onde testar:** criar conta nova em [/login](https://joseeleticia.com/login) → seguir o fluxo
 
 **O que validar:**
 - [ ] Após signup, redireciona para `/verify-email`
@@ -425,7 +426,7 @@ e marca cada item.
 
 ### /api/auth/verify (link do email)
 
-**Onde testar:** copiar link de `/admin/dev-tools` e abrir no browser
+**Onde testar:** copiar link de [/admin/dev-tools](https://joseeleticia.com/admin/dev-tools) e abrir no browser
 
 **O que validar:**
 - [ ] Link válido → redireciona para `/admin/onboarding`
@@ -437,7 +438,7 @@ e marca cada item.
 
 ### /admin/onboarding (3 telas)
 
-**Onde testar:** `/admin/onboarding` ou seguindo o fluxo de verificação
+**Onde testar:** [/admin/onboarding](https://joseeleticia.com/admin/onboarding) ou seguindo o fluxo de verificação
 
 **O que validar:**
 - [ ] Tela 1: ícone 💍, título "Bem-vindo ao Voem.", texto descritivo, botão "Continuar"
@@ -459,11 +460,11 @@ e marca cada item.
 
 **O que foi:** página de debug com tokens, resets de senha e auth logs. DEV_TOOLS_ENABLED=false → 404.
 
-**Onde testar:** `/admin/dev-tools`
+**Onde testar:** [/admin/dev-tools](https://joseeleticia.com/admin/dev-tools)
 
 **O que validar:**
 - [ ] Página carrega com banner amarelo "🔧 Ferramentas de desenvolvimento"
-- [ ] Banner mostra a URL base correta (casamento-production-2c06.up.railway.app, não localhost)
+- [ ] Banner mostra a URL base correta (`joseeleticia.com`, não `localhost`)
 - [ ] Seção "Tokens de verificação de email" mostra token criado no signup
 - [ ] Link "Verificar →" clicável e funcional (só para tokens não expirados)
 - [ ] Botão "Remover" deleta o token e atualiza a lista sem reload completo
@@ -478,7 +479,7 @@ e marca cada item.
 
 ### Resend error logging
 
-**Onde testar:** Railway Logs + `/admin/dev-tools` → filtro EMAIL_SEND_FAILED
+**Onde testar:** Railway Logs + [/admin/dev-tools](https://joseeleticia.com/admin/dev-tools) → filtro EMAIL_SEND_FAILED
 
 **O que validar (cenário: RESEND_API_KEY configurado mas domínio não verificado):**
 - [ ] Criar conta com e-mail diferente de casamento290527@gmail.com
@@ -495,7 +496,7 @@ e marca cada item.
 
 **Status:** ✅ Chaves reais configuradas no Railway em 2026-05-08 (NEXT_PUBLIC_TURNSTILE_SITE_KEY + TURNSTILE_SECRET_KEY). Turnstile está ativo em produção.
 
-**Onde testar:** `/login` em `https://casamento-production-2c06.up.railway.app`
+**Onde testar:** [/login](https://joseeleticia.com/login)
 
 **O que validar (chaves reais em produção):**
 - [ ] Widget Turnstile aparece no formulário de login (checkbox ou invisível dependendo da configuração)
@@ -517,7 +518,7 @@ e marca cada item.
 
 **O que foi:** fluxo completo de redefinição de senha. `/forgot-password` com anti-enumeration, `/reset-password?token=...` com zxcvbn (score ≥ 2), invalidação de sessões anteriores via `passwordChangedAt`, notificação de segurança por email.
 
-**Onde testar:** `/forgot-password` → email → `/reset-password?token=...` → `/admin`
+**Onde testar:** [/forgot-password](https://joseeleticia.com/forgot-password) → email → [/reset-password](https://joseeleticia.com/reset-password)?token=... → [/admin](https://joseeleticia.com/admin)
 
 ### /forgot-password
 
@@ -543,7 +544,7 @@ e marca cada item.
 
 ### /reset-password?token=...
 
-**Onde testar:** copiar link do console (dev) ou do email, ou pegar token direto de /admin/dev-tools → construir `https://<url>/reset-password?token=<hash-plain>`
+**Onde testar:** copiar link do email ou pegar token direto de [/admin/dev-tools](https://joseeleticia.com/admin/dev-tools) → construir `https://joseeleticia.com/reset-password?token=<token-plain>`
 
 Atenção: o link no email tem o token PLAIN (não o hash). O que está no banco é o hash SHA-256.
 
@@ -585,7 +586,7 @@ Atenção: o link no email tem o token PLAIN (não o hash). O que está no banco
 
 **O que foi:** página de conta com 3 seções — dados pessoais, alterar senha (com strength bar + invalidação de sessões), preferências de notificação. Link "Minha conta" no header do painel.
 
-**Onde testar:** `/admin` → "Minha conta" no header, ou direto `/admin/conta`
+**Onde testar:** [/admin](https://joseeleticia.com/admin) → "Minha conta" no header, ou direto [/admin/conta](https://joseeleticia.com/admin/conta)
 
 ### Dados pessoais
 
@@ -644,7 +645,7 @@ iframes do Turnstile. `object-src 'none'`, `base-uri 'self'`, `form-action 'self
 - [ ] Upload de foto no mural funciona (blob: URL necessário para preview)
 
 **Validação externa (após deploy):**
-- [ ] Acessar https://securityheaders.com → analisar `https://casamento-production-2c06.up.railway.app`
+- [ ] [securityheaders.com/?q=https://joseeleticia.com](https://securityheaders.com/?q=https://joseeleticia.com) → analisar resultado → nota mínima esperada: **A**
 - [ ] Resultado esperado: nota **A ou A+** (HSTS + X-Frame + nosniff + Referrer + CSP presentes)
 - [ ] Nota: `'unsafe-inline'` em script-src/style-src impedirá A+ até implementar nonces — aceitável para baseline
 
@@ -740,7 +741,7 @@ do Bloco A documentados.
 
 ### securityheaders.com (manual pós-deploy)
 
-- [ ] Acessar https://securityheaders.com → analisar `https://casamento-production-2c06.up.railway.app`
+- [ ] [securityheaders.com/?q=https://joseeleticia.com](https://securityheaders.com/?q=https://joseeleticia.com) → analisar resultado → nota mínima esperada: **A**
 - [ ] Nota mínima esperada: **A** (todos os 5 headers principais presentes)
 - [ ] Nota A+ bloqueada pelo `unsafe-inline` até implementar nonces (aceitável como baseline)
 
@@ -754,7 +755,7 @@ do Bloco A documentados.
 
 **O que mudou:** `/api/health` público, `/api/health/deep` autenticado, dashboard `/admin/saude` com refresh automático a cada 30s.
 
-**Onde testar:** `/api/health`, `/admin/saude`
+**Onde testar:** [/api/health](https://joseeleticia.com/api/health) · [/admin/saude](https://joseeleticia.com/admin/saude)
 
 **O que validar:**
 - [ ] `GET /api/health` retorna JSON `{ status, db, pusher, storage, memory, timestamp }` HTTP 200
@@ -776,7 +777,7 @@ do Bloco A documentados.
 
 **O que mudou:** cron de backup deleta arquivos com mais de 60 dias, registra `BACKUP_CREATED`/`BACKUP_FAILED` no AuthLog, nova página `/admin/saude/backups`.
 
-**Onde testar:** `/admin/saude/backups`; acionar backup manualmente via `/api/cron/backup` com header `Authorization: Bearer <CRON_SECRET>`
+**Onde testar:** [/admin/saude/backups](https://joseeleticia.com/admin/saude/backups); acionar backup manualmente via `POST /api/cron/backup` com header `Authorization: Bearer <CRON_SECRET>`
 
 **O que validar:**
 - [ ] `/admin/saude/backups` carrega sem erro
@@ -794,7 +795,7 @@ do Bloco A documentados.
 
 **O que mudou:** compressão client-side (canvas JPEG 85%, max 1920px), preview antes do envio, textarea de legenda (280 chars), reações anônimas por sessionId (❤️ 😂 🥹 🎉), PhotoModal com navegação teclado + swipe.
 
-**Onde testar:** `/[slug]/mural` com um evento publicado e guestId válido
+**Onde testar:** [/[slug]/mural](https://joseeleticia.com/joseeleticia/mural) com um evento publicado e guestId válido
 
 **O que validar:**
 - [ ] Botão "+ Foto" abre preview fullscreen com campo de legenda
@@ -823,7 +824,7 @@ do Bloco A documentados.
 
 **O que mudou:** indicador de digitação via Pusher, timestamps humanizados (date-fns ptBR), duplo clique abre seletor de reação, banner "X novas mensagens", paste de imagem envia para mural, badge "Casal" para organizadores.
 
-**Onde testar:** `/[slug]/chat` com dois dispositivos/abas com guests diferentes
+**Onde testar:** [/[slug]/chat](https://joseeleticia.com/joseeleticia/chat) com dois dispositivos/abas com guests diferentes
 
 **O que validar:**
 - [ ] Mensagem enviada aparece para o remetente imediatamente
@@ -849,7 +850,7 @@ do Bloco A documentados.
 
 **O que mudou:** integração Spotify Client Credentials com cache de token, busca debounced (400ms), seleção de faixa com art do álbum, prévia de 30s, modo manual fallback, limite de 3 sugestões por convidado, sistema de status (PENDING/APPROVED/PLAYED).
 
-**Onde testar:** `/[slug]/playlist` com `SPOTIFY_CLIENT_ID` e `SPOTIFY_CLIENT_SECRET` configurados
+**Onde testar:** [/[slug]/playlist](https://joseeleticia.com/joseeleticia/playlist) com `SPOTIFY_CLIENT_ID` e `SPOTIFY_CLIENT_SECRET` configurados
 
 **O que validar:**
 - [ ] Botão "+ Sugerir música (X restante(s))" aparece com contagem correta
@@ -874,7 +875,7 @@ do Bloco A documentados.
 
 **O que mudou:** barra de progresso animada com mensagens motivacionais por faixa de pontos, formulário de missão customizada no admin, geração de QR code client-side para códigos de check-in, ranking completo sem limite com medalhas para top-3.
 
-**Onde testar:** `/[slug]/gincana` (público), `/admin/eventos/[id]/gincana` (admin)
+**Onde testar:** [/[slug]/gincana](https://joseeleticia.com/joseeleticia/gincana) (público) · [/admin/eventos/[id]/gincana](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/gincana) (admin)
 
 **O que validar — público:**
 - [ ] Barra de progresso exibe `meusPontos / maxPontos` corretamente
@@ -905,7 +906,7 @@ do Bloco A documentados.
 
 **O que mudou:** CSP expandido com domínios Spotify (`i.scdn.co`, `mosaic.scdn.co`, `images-ak.spotifycdn.com`) em `img-src` e `connect-src`. `next.config.ts` com `remotePatterns` para Spotify e `formats: ["image/avif", "image/webp"]`. `generateMetadata` na landing de evento com título, descrição e OpenGraph.
 
-**Onde testar:** `/[slug]` (landing do evento), `/[slug]/playlist` com Spotify configurado
+**Onde testar:** [/joseeleticia](https://joseeleticia.com/joseeleticia) (landing do evento) · [/[slug]/playlist](https://joseeleticia.com/joseeleticia/playlist) com Spotify configurado
 
 **O que validar:**
 - [ ] Console do browser: zero erros de CSP em `/[slug]/playlist` ao buscar músicas Spotify
@@ -924,7 +925,7 @@ do Bloco A documentados.
 
 **O que mudou:** link "Ir para o conteúdo" visível no foco no layout público, `<label>` sr-only + `id` no input do chat, busca Spotify e textarea de legenda de foto, `aria-label` nos botões de navegação do modal de foto.
 
-**Onde testar:** `/[slug]/chat`, `/[slug]/playlist`, `/[slug]/mural`
+**Onde testar:** [/[slug]/chat](https://joseeleticia.com/joseeleticia/chat) · [/[slug]/playlist](https://joseeleticia.com/joseeleticia/playlist) · [/[slug]/mural](https://joseeleticia.com/joseeleticia/mural)
 
 **O que validar:**
 - [ ] Pressionar Tab ao abrir qualquer página pública → primeiro foco vai para link "Ir para o conteúdo"
@@ -1217,8 +1218,12 @@ Ver detalhes em `docs/audit-data.md`.
 
 ## M5 — Refinamentos avançados
 
+> **Dica:** Nas URLs abaixo, substitua `SEU_EVENTO_ID` pelo ID do seu evento
+> (aparece na URL ao acessar https://joseeleticia.com/admin/eventos),
+> e `SEU_SLUG` pelo slug do seu evento (ex: `joseeleticia`).
+
 ### M5.1 — Editor visual de convite
-- [ ] Acessar /admin/eventos/[id]/personalizar
+- [ ] Acessar [/admin/eventos/[id]/personalizar](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/personalizar)
 - [ ] Mudar cor primária e verificar preview no iframe atualiza
 - [ ] Salvar paleta e recarregar — cores persistem
 - [ ] Resetar para padrão — vars voltam ao tema base
@@ -1233,7 +1238,7 @@ Ver detalhes em `docs/audit-data.md`.
 - [ ] Export PDF → baixa arquivo com layout do plano
 
 ### M5.3 — Cronograma com notificações
-- [ ] Acessar /[slug]/programacao — lista os JourneyItems
+- [ ] Acessar [/[slug]/programacao](https://joseeleticia.com/joseeleticia/programacao) — lista os JourneyItems
 - [ ] Clicar "Ativar notificações" — browser pede permissão
 - [ ] Permissão concedida → botão muda para "Notificações ativas"
 

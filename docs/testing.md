@@ -47,7 +47,7 @@ pnpm test:e2e
 pnpm test:e2e:ui
 
 # Contra Railway
-PLAYWRIGHT_BASE_URL=https://seu-projeto.up.railway.app pnpm test:e2e
+PLAYWRIGHT_BASE_URL=https://joseeleticia.com pnpm test:e2e
 ```
 Roda em 4 browsers: chromium, webkit, mobile-chrome (Pixel 5), mobile-safari (iPhone 14).
 
@@ -80,7 +80,7 @@ Thresholds: Performance ≥ 85, Acessibilidade ≥ 90, Best Practices ≥ 90, SE
 pnpm test:load
 
 # Contra Railway (não faça isso sem avisar a Vercel/Railway)
-k6 run tests/load/rsvp-flow.js --env BASE_URL=https://seu-projeto.up.railway.app
+k6 run tests/load/rsvp-flow.js --env BASE_URL=https://joseeleticia.com
 ```
 Simula 200 VUs em rampa de 2 minutos. SLA: p95 < 2s, erro < 1%.
 
@@ -104,7 +104,7 @@ Arquivo: `.github/workflows/ci.yml`
 
 | Secret | Valor |
 |--------|-------|
-| `RAILWAY_URL` | URL pública do Railway (ex.: `https://casamento-xxx.up.railway.app`) |
+| `RAILWAY_URL` | URL pública de produção (ex.: `https://joseeleticia.com`) |
 | `TEST_SLUG` | Slug do evento de teste (ex.: `casamento-exemplo`) |
 | `TEST_PUBLIC_TOKEN` | `publicTokenK` do evento de teste |
 

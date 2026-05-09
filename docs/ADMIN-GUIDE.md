@@ -29,7 +29,7 @@ Se qualquer etapa falhar, o push é bloqueado.
 |----------|-----------|
 | `DATABASE_URL` | PostgreSQL Railway |
 | `AUTH_SECRET` | Secret do NextAuth (gerado com `openssl rand -hex 32`) |
-| `NEXT_PUBLIC_APP_URL` | URL pública (ex: `https://casamento.up.railway.app`) |
+| `NEXT_PUBLIC_APP_URL` | URL pública de produção (ex: `https://joseeleticia.com`) |
 | `CRON_SECRET` | Secret para autorizar chamadas aos crons |
 | `RESEND_API_KEY` | API key do Resend para emails |
 | `PUSHER_APP_ID`, `PUSHER_KEY`, `PUSHER_SECRET`, `NEXT_PUBLIC_PUSHER_KEY`, `NEXT_PUBLIC_PUSHER_CLUSTER` | Pusher |
@@ -163,7 +163,7 @@ A plataforma suporta 3 modos de doação, configuráveis por evento em `/admin/e
 ### Configurar webhook no painel MP
 
 1. Na aplicação MP, vá em **Webhooks → Adicionar URL de webhook**
-2. URL: `https://[domínio]/api/webhooks/mercadopago`
+2. URL: `https://joseeleticia.com/api/webhooks/mercadopago`
 3. Eventos: selecionar **Pagamentos**
 4. Cole o **Webhook Secret** gerado na tela de configuração
 

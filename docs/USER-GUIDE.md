@@ -2,7 +2,11 @@
 
 ## 1. Criar sua conta
 
-1. Acesse `/` e clique em **Criar conta**
+> **Nota:** Links com `/SEU_EVENTO_ID/` — substitua pelo ID real do seu evento (aparece na URL em https://joseeleticia.com/admin/eventos).
+> Links com `/joseeleticia/` são para o slug do evento de teste do casal.
+
+
+1. Acesse [https://joseeleticia.com](https://joseeleticia.com) e clique em **Criar conta**
 2. Preencha nome, email e senha (mínimo 8 caracteres)
 3. Confirme o email recebido (verifique spam)
 4. Complete o onboarding: perfil → evento → tema → locais → convidados
@@ -12,7 +16,7 @@
 ## 2. Configurar o evento
 
 ### Dados básicos
-Em `/admin/eventos/[id]/configuracoes`:
+Em [/admin/eventos/[id]/configuracoes](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/configuracoes):
 - **Nomes do casal**: aparece no topo de todas as páginas dos convidados
 - **Data da cerimônia**: controla o countdown e muda a barra de navegação no dia D
 - **Slug**: parte da URL pública (ex: `/ricardoeana`)
@@ -20,13 +24,13 @@ Em `/admin/eventos/[id]/configuracoes`:
 - **Idiomas**: PT-BR ativo por padrão; EN opcional
 
 ### Locais
-Em `/admin/eventos/[id]/locais`:
+Em [/admin/eventos/[id]/locais](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/locais):
 - Adicione cerimônia, recepção, após-festa
 - Endereço gera link para Google Maps automaticamente
 - **isPublic**: desmarcado = visível só para você (futuro: por grupo de convidado)
 
 ### Roteiro
-Em `/admin/eventos/[id]/roteiro`:
+Em [/admin/eventos/[id]/roteiro](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/roteiro):
 - Adicione itens com hora, título e descrição
 - Eles aparecem na aba "Roteiro" para os convidados no dia D
 
@@ -35,10 +39,10 @@ Em `/admin/eventos/[id]/roteiro`:
 ## 3. Gerenciar convidados
 
 ### Adicionar manualmente
-Em `/admin/eventos/[id]/convidados` → **Novo convidado**
+Em [/admin/eventos/[id]/convidados](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/convidados) → **Novo convidado**
 
 ### Importar planilha
-Em `/admin/eventos/[id]/convidados/importar`:
+Em [/admin/eventos/[id]/convidados/importar](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/convidados/importar):
 1. Baixe o **template CSV** para ver o formato esperado
 2. Faça upload do arquivo (.csv ou .xlsx)
 3. Mapeie as colunas: Nome, Email, Telefone, +1, Restrição alimentar
@@ -47,7 +51,7 @@ Em `/admin/eventos/[id]/convidados/importar`:
 6. Clique **Importar** — relatório mostra X importados, Y erros
 
 ### Enviar save-the-date
-Em `/admin/eventos/[id]/save-the-date`:
+Em [/admin/eventos/[id]/save-the-date](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/save-the-date):
 1. Escolha template (clássico, rústico, minimal)
 2. Selecione convidados (ou todos)
 3. Clique **Gerar PDFs** — baixa um ZIP com 1 PDF por convidado
@@ -61,7 +65,7 @@ Abre uma mensagem pré-preenchida com o link personalizado.
 
 ## 4. Acompanhar RSVPs
 
-Em `/admin/eventos/[id]` (dashboard):
+Em [/admin/eventos/[id]](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID) (dashboard):
 - **Total confirmados / recusados / pendentes**
 - **+1s confirmados**
 - **Restrições alimentares**: contador por tipo
@@ -71,7 +75,7 @@ Em `/admin/eventos/[id]` (dashboard):
 
 ## 5. Presentes
 
-Em `/admin/eventos/[id]/presentes`:
+Em [/admin/eventos/[id]/presentes](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/presentes):
 - Adicione itens (nome, descrição, link, valor sugerido)
 - Convidados podem reservar presentes diretamente pelo app
 - 3 modos de doação: confiança, PIX com comprovante, gateway (stub)
@@ -80,7 +84,7 @@ Em `/admin/eventos/[id]/presentes`:
 
 ## 6. Playlist
 
-Em `/admin/eventos/[id]/playlist`:
+Em [/admin/eventos/[id]/playlist](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/playlist):
 - Convidados sugerem músicas via busca no Spotify
 - Você aprova ou rejeita cada sugestão
 - Playlist aprovada fica visível para todos
@@ -96,7 +100,7 @@ Em `/admin/eventos/[id]/playlist`:
 
 ## 8. Gincana
 
-Em `/admin/eventos/[id]/gincana`:
+Em [/admin/eventos/[id]/gincana](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/gincana):
 - Crie missões (tirar foto, ir ao local X, falar com o avô)
 - Convidados ganham pontos ao completar
 - Ranking visível no app dos convidados
@@ -106,7 +110,7 @@ Em `/admin/eventos/[id]/gincana`:
 
 ## 9. Backup e dados
 
-Em `/admin/saude/backups`:
+Em [/admin/saude/backups](https://joseeleticia.com/admin/saude/backups):
 - Backups automáticos diários (Railway 60 dias + B2 90 dias se configurado)
 - Log de execuções com status de cada run
 
@@ -117,7 +121,7 @@ Para exportar seus próprios dados (LGPD):
 
 ## 10. Co-organizadores
 
-Em `/admin/eventos/[id]/co-organizadores`:
+Em [/admin/eventos/[id]/co-organizadores](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/co-organizadores):
 - Convide alguém como EDITOR ou OWNER
 - EDITOR: edita tudo, sem acesso a configurações críticas
 - OWNER: acesso total, pode convidar outros
@@ -126,7 +130,7 @@ Em `/admin/eventos/[id]/co-organizadores`:
 
 ## 11. Editor visual de convite
 
-Em `/admin/eventos/[id]/personalizar`:
+Em [/admin/eventos/[id]/personalizar](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/personalizar):
 - Ajuste as cores do tema (primária, secundária, fundo, destaques)
 - Escolha tipografia (clássica, moderna, romântica)
 - Ative/desative seções (história, padrinhos, livro de mensagens)
@@ -137,7 +141,7 @@ Em `/admin/eventos/[id]/personalizar`:
 
 ## 12. Plano de mesas
 
-Em `/admin/eventos/[id]/mesas`:
+Em [/admin/eventos/[id]/mesas](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/mesas):
 - Crie mesas com nome e capacidade
 - Arraste convidados da sidebar para a mesa desejada
 - Cada convidado pode estar em apenas uma mesa
@@ -148,7 +152,7 @@ Em `/admin/eventos/[id]/mesas`:
 
 ## 13. Ao Vivo (dia do evento)
 
-Em `/admin/eventos/[id]/ao-vivo`:
+Em [/admin/eventos/[id]/ao-vivo](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/ao-vivo):
 - Poste atualizações em tempo real para os convidados (cerimônia, brinde, música, etc.)
 - Use os botões rápidos ou escreva mensagem personalizada
 - Os convidados veem em `/[slug]/ao-vivo` com indicador vermelho animado
@@ -157,7 +161,7 @@ Em `/admin/eventos/[id]/ao-vivo`:
 
 ## 14. Agradecimentos
 
-Em `/admin/eventos/[id]/agradecimentos`:
+Em [/admin/eventos/[id]/agradecimentos](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/agradecimentos):
 - Lista todos os convidados confirmados com o presente registrado
 - Gera mensagem de agradecimento automática por convidado
 - Edite o presente e o texto, salve rascunho ou marque como enviado
@@ -167,7 +171,7 @@ Em `/admin/eventos/[id]/agradecimentos`:
 
 ## 15. Digest de email
 
-Em `/admin/eventos/[id]/notificacoes` → **Resumo por email**:
+Em [/admin/eventos/[id]/notificacoes](https://joseeleticia.com/admin/eventos/SEU_EVENTO_ID/notificacoes) → **Resumo por email**:
 - Escolha a frequência: Desativado / Diário / Semanal (segundas-feiras)
 - Cada digest inclui: novas confirmações, fotos pendentes, mensagens sinalizadas, dias restantes
 
@@ -175,7 +179,7 @@ Em `/admin/eventos/[id]/notificacoes` → **Resumo por email**:
 
 ## 16. Modo TV
 
-Acesse `/[slug]/tv` em um computador conectado a um projetor ou TV.
+Acesse [/[slug]/tv](https://joseeleticia.com/joseeleticia/tv) em um computador conectado a um projetor ou TV.
 - Slideshow fullscreen com fotos do mural, mensagens do chat e cronograma
 - Avança automaticamente a cada 8 segundos
 - Navegar com as setas do teclado ou clicando nas bordas da tela
