@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { email } from "@/lib/email";
+import { uploadBackupToB2, pruneOldB2Backups, isB2Configured } from "@/lib/backup/b2";
 import fs from "fs/promises";
 import path from "path";
 
@@ -74,16 +75,26 @@ export async function POST(req: NextRequest) {
       };
 
       const json = JSON.stringify(backup, null, 2);
+      const dateStr = new Date().toISOString().split("T")[0];
       let pruned = 0;
+      let b2Ok = false;
+      let b2Reason: string | undefined;
 
+      // Local Railway volume backup
       const volumePath = process.env.RAILWAY_VOLUME_PATH;
       if (volumePath) {
         const backupDir = path.join(volumePath, "backups", event.slug);
         await fs.mkdir(backupDir, { recursive: true });
-        const filename = `backup-${new Date().toISOString().split("T")[0]}.json`;
+        const filename = `backup-${dateStr}.json`;
         await fs.writeFile(path.join(backupDir, filename), json);
         pruned = await pruneOldBackups(backupDir);
       }
+
+      // Off-site B2 backup
+      const b2Result = await uploadBackupToB2(event.slug, dateStr, json);
+      b2Ok = b2Result.ok;
+      b2Reason = b2Result.reason;
+      if (b2Ok) await pruneOldB2Backups(event.slug);
 
       // Notifica owners por email
       const owners = event.organizers
@@ -108,6 +119,7 @@ export async function POST(req: NextRequest) {
             slug: event.slug,
             guestCount: event.guests.length,
             pruned,
+            b2: isB2Configured() ? (b2Ok ? "ok" : b2Reason) : "not-configured",
           },
         },
       });

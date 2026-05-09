@@ -7,6 +7,7 @@ import fs from "fs/promises";
 import path from "path";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { isB2Configured } from "@/lib/backup/b2";
 
 export const metadata: Metadata = { title: "Backups" };
 
@@ -58,6 +59,7 @@ export default async function BackupsPage() {
   ]);
 
   const volumePresent = !!process.env.RAILWAY_VOLUME_PATH;
+  const b2Configured = isB2Configured();
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -70,10 +72,21 @@ export default async function BackupsPage() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-8">
-        {!volumePresent && (
-          <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
-            ⚠ Variável <code className="font-mono">RAILWAY_VOLUME_PATH</code> não configurada — backups em disco desabilitados.
+        {/* Storage status banner */}
+        <div className="mb-6 grid grid-cols-2 gap-3">
+          <div className={`rounded-lg border px-4 py-3 text-sm ${volumePresent ? "border-green-200 bg-green-50 text-green-800" : "border-yellow-200 bg-yellow-50 text-yellow-800"}`}>
+            <p className="font-semibold">Railway Volume</p>
+            <p className="text-xs mt-0.5">{volumePresent ? "✓ Configurado (60 dias)" : "⚠ RAILWAY_VOLUME_PATH ausente"}</p>
           </div>
+          <div className={`rounded-lg border px-4 py-3 text-sm ${b2Configured ? "border-green-200 bg-green-50 text-green-800" : "border-muted bg-muted/30 text-muted-foreground"}`}>
+            <p className="font-semibold">Backblaze B2</p>
+            <p className="text-xs mt-0.5">{b2Configured ? "✓ Configurado (90 dias)" : "— Não configurado"}</p>
+          </div>
+        </div>
+        {!b2Configured && (
+          <p className="text-xs text-muted-foreground mb-6">
+            Para ativar backup off-site, configure: <code className="font-mono">B2_KEY_ID</code>, <code className="font-mono">B2_APPLICATION_KEY</code>, <code className="font-mono">B2_BUCKET</code>, <code className="font-mono">B2_ENDPOINT</code> no Railway.
+          </p>
         )}
 
         {files.length > 0 && (
