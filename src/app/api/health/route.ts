@@ -88,7 +88,7 @@ export async function GET() {
   };
 
   return NextResponse.json(body, {
-    status: overallStatus === "error" ? 503 : 200,
+    status: 200,
     headers: { "Cache-Control": "no-store" },
   });
 }
