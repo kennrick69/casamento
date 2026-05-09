@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { encode } from "next-auth/jwt";
 import { prisma } from "@/lib/db";
 import { logAuthEvent } from "@/lib/auth/auth-log";
 
@@ -18,12 +19,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/verify-email?error=expired", base));
   }
 
-  await prisma.user.update({
-    where: { email: verificationToken.identifier },
-    data: { emailVerified: new Date() },
-  });
+  const now = new Date();
 
-  await prisma.verificationToken.delete({ where: { token } });
+  const [user] = await Promise.all([
+    prisma.user.update({
+      where: { email: verificationToken.identifier },
+      data: { emailVerified: now },
+      select: { id: true, email: true, name: true },
+    }),
+    prisma.verificationToken.delete({ where: { token } }),
+  ]);
 
   await logAuthEvent({
     action: "EMAIL_VERIFIED",
@@ -32,13 +37,40 @@ export async function GET(request: NextRequest) {
   });
 
   const response = NextResponse.redirect(new URL("/admin/onboarding", base));
-  // Cookie de 60s para o middleware saber que o email acabou de ser verificado,
-  // evitando redirect loop antes do JWT ser atualizado com emailVerified do banco.
-  response.cookies.set("email-just-verified", "1", {
-    maxAge: 60,
-    httpOnly: true,
-    path: "/",
-    sameSite: "lax",
-  });
+
+  // Auto-sign-in: cria sessão JWT válida para que o clique no link
+  // seja suficiente para autenticar — funciona mesmo em browser sem sessão
+  // (caso de uso: link aberto pelo Gmail mobile em browser isolado).
+  try {
+    const isSecure = base.startsWith("https");
+    const cookieName = isSecure
+      ? "__Secure-authjs.session-token"
+      : "authjs.session-token";
+    const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET ?? "";
+    const maxAge = 30 * 24 * 60 * 60; // 30 dias
+
+    const sessionToken = await encode({
+      token: {
+        sub: user.id,
+        email: user.email,
+        name: user.name,
+        emailVerified: now,
+      },
+      secret,
+      salt: cookieName,
+      maxAge,
+    });
+
+    response.cookies.set(cookieName, sessionToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge,
+      secure: isSecure,
+      path: "/",
+    });
+  } catch {
+    // Fallback: sem auto-login, usuário precisará logar manualmente
+  }
+
   return response;
 }

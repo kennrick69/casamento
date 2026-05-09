@@ -15,15 +15,12 @@ export default auth((req) => {
   }
 
   // Guard 2: /admin exige email verificado (só em produção)
-  // Cookie "email-just-verified" evita loop imediatamente após clicar no link
   const isProd = process.env.NODE_ENV === "production";
-  const justVerified = req.cookies.get("email-just-verified")?.value === "1";
   if (
     isProd &&
     pathname.startsWith("/admin") &&
     req.auth &&
-    !req.auth.user?.emailVerified &&
-    !justVerified
+    !req.auth.user?.emailVerified
   ) {
     const verifyUrl = req.nextUrl.clone();
     verifyUrl.pathname = "/verify-email";
