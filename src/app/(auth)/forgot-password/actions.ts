@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 "use server";
 
 import { headers } from "next/headers";
@@ -10,7 +11,7 @@ import { hashToken } from "@/lib/auth/token";
 import { email as emailProvider } from "@/lib/email";
 import { passwordResetHtml, passwordResetText } from "@/lib/email/templates";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const BASE_URL = getAppUrl();
 
 const schema = z.object({
   email: z.email(),

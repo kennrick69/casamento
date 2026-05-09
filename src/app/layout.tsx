@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import type { Metadata, Viewport } from "next";
 import {
   Inter,
@@ -34,7 +35,7 @@ const dmSerif = DM_Serif_Display({
   display: "swap",
 });
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const APP_URL = getAppUrl();
 
 export const metadata: Metadata = {
   title: { default: "Voem. — Convites interativos de casamento", template: "%s | Voem." },

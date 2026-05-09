@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import { prisma } from "@/lib/db";
 import { requireOrganizer } from "@/lib/authorization";
 import { notFound } from "next/navigation";
@@ -11,7 +12,7 @@ export default async function MuralAdminPage({ params }: Props) {
   const { id: eventId } = await params;
   try { await requireOrganizer(eventId); } catch { notFound(); }
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const baseUrl = getAppUrl();
 
   const [photos, reactionStats] = await Promise.all([
     prisma.photo.findMany({

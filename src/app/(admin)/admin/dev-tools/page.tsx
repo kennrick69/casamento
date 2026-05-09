@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -9,7 +10,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = { title: "Dev Tools" };
 
 const DEV_TOOLS_ENABLED = process.env.DEV_TOOLS_ENABLED !== "false";
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const BASE_URL = getAppUrl();
 
 const ACTION_LABELS: Record<AuthAction, string> = {
   SIGNUP_STARTED: "Signup iniciado",

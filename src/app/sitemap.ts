@@ -1,7 +1,8 @@
+import { getAppUrl } from "@/lib/app-url";
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const APP_URL = getAppUrl();
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const events = await prisma.event.findMany({

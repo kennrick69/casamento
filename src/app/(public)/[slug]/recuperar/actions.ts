@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 "use server";
 
 import { z } from "zod";
@@ -46,7 +47,7 @@ export async function requestRecoveryLink(formData: FormData): Promise<RecoverRe
   if (guest && !guest.banned && !guest.deletedAt) {
     const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
     const token = signRecoveryToken(guest.sessionToken, expiresAt);
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const baseUrl = getAppUrl();
     const link = `${baseUrl}/${slug}/recuperar?t=${token}`;
 
     await email.send({

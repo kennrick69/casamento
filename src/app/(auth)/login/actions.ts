@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 "use server";
 
 import { headers } from "next/headers";
@@ -14,7 +15,7 @@ import { email as emailProvider } from "@/lib/email";
 import { welcomeVerifyHtml, welcomeVerifyText } from "@/lib/email/templates";
 import { verifyTurnstile } from "@/lib/auth/turnstile";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const BASE_URL = getAppUrl();
 
 export type AuthState = { error: string; field?: string } | null;
 

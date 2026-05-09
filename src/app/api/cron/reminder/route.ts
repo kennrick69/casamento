@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { email } from "@/lib/email";
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
   }
 
   const today = new Date();
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const baseUrl = getAppUrl();
 
   const events = await prisma.event.findMany({
     where: { status: "PUBLISHED", archivedAt: null },

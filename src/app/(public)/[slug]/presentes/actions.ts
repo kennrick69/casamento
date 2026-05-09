@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 "use server";
 
 import { prisma } from "@/lib/db";
@@ -104,7 +105,7 @@ export async function startMpCheckout(
     },
   });
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const appUrl = getAppUrl();
 
   try {
     const pref = await createMpPreference(event.id, {

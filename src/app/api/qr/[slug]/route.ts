@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import { NextRequest, NextResponse } from "next/server";
 import QRCode from "qrcode";
 import { prisma } from "@/lib/db";
@@ -18,7 +19,7 @@ export async function GET(
     return new NextResponse("Não encontrado", { status: 404 });
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const baseUrl = getAppUrl();
   const url = event.publicTokenK
     ? `${baseUrl}/${slug}?k=${event.publicTokenK}`
     : `${baseUrl}/${slug}`;

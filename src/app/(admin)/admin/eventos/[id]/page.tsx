@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -71,7 +72,7 @@ export default async function EventDashboardPage({
 
   const totalWithCompanions = confirmedGuests + (confirmedWithPlusOnes._sum.plusOnes ?? 0);
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const baseUrl = getAppUrl();
   const eventUrl = `${baseUrl}/${event.slug}`;
   const qrPng = `/api/qr/${event.slug}`;
 

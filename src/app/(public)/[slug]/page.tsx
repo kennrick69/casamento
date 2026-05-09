@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, XCircle, ChevronRight, MapPin, Shirt, Gift, Camera, Music, Heart, Calendar } from "lucide-react";
@@ -12,7 +13,7 @@ import { prisma } from "@/lib/db";
 import type { EventLocation, WeddingPartyMember } from "@prisma/client";
 import type { Metadata } from "next";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const APP_URL = getAppUrl();
 
 export async function generateMetadata({
   params,

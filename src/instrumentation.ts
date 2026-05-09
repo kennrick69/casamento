@@ -1,4 +1,12 @@
 export async function register() {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  if (!appUrl || appUrl.includes("localhost") || appUrl.includes("127.0.0.1")) {
+    throw new Error(
+      `[startup] NEXT_PUBLIC_APP_URL inválida ou ausente: "${appUrl}". ` +
+        "Configure a variável no Railway antes de fazer deploy."
+    );
+  }
+
   if (!process.env.SENTRY_DSN) return;
 
   const { init } = await import("@sentry/nextjs");

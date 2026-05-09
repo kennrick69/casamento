@@ -1,7 +1,8 @@
+import { getAppUrl } from "@/lib/app-url";
 // Email layout primitives — inline CSS compatível com Gmail, Outlook, Apple Mail.
 // Paleta rose-to-slate. Mobile-first, max-width 600px.
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const APP_URL = getAppUrl();
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 

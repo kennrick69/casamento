@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 "use server";
 
 import { z } from "zod";
@@ -27,7 +28,7 @@ export async function inviteCoOrganizer(formData: FormData) {
 
   const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
   const token = signClaimToken(eventId, inviteeEmail, expiresAt);
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const baseUrl = getAppUrl();
   const link = `${baseUrl}/admin/co-organizador/claim?t=${token}`;
 
   await email.send({

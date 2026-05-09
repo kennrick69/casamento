@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -57,7 +58,7 @@ export default async function PagamentosPage({ params }: Props) {
           currentWebhookSecret={event.mpWebhookSecret ?? ""}
           hasMpConfigured={!!event.mpAccessToken}
           canEncrypt={canEnc}
-          appUrl={process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}
+          appUrl={getAppUrl()}
         />
       </main>
     </div>

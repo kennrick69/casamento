@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 "use server";
 
 import { z } from "zod";
@@ -155,7 +156,7 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
 
   await setGuestCookie(sessionToken);
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const appUrl = getAppUrl();
   const eventUrl = `${appUrl}/${slug}`;
   const dateLabel = formatEventDate(
     event.ceremonyDate,
@@ -231,7 +232,7 @@ async function sendRecoveryEmail(
 ) {
   const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
   const token = signRecoveryToken(sessionToken, expiresAt);
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const baseUrl = getAppUrl();
   const link = `${baseUrl}/${slug}/recuperar?t=${token}`;
 
   await email.send({

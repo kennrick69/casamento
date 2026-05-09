@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 "use server";
 
 import { headers } from "next/headers";
@@ -7,7 +8,7 @@ import { email as emailProvider } from "@/lib/email";
 import { welcomeVerifyHtml, welcomeVerifyText } from "@/lib/email/templates";
 import { logAuthEvent } from "@/lib/auth/auth-log";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const BASE_URL = getAppUrl();
 
 export async function resendVerificationEmail(): Promise<{ ok: boolean; error?: string }> {
   const session = await auth();

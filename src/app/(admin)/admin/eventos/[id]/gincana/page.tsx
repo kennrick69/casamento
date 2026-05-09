@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import { prisma } from "@/lib/db";
 import { requireOrganizer } from "@/lib/authorization";
 import { notFound } from "next/navigation";
@@ -15,7 +16,7 @@ export default async function GincanaAdminPage({ params }: Props) {
 
   await seedDefaultMissions(eventId);
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const baseUrl = getAppUrl();
 
   const [event, missions, checkinCodes, ranking] = await Promise.all([
     prisma.event.findUnique({ where: { id: eventId }, select: { slug: true } }),

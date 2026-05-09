@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 import { NextRequest, NextResponse } from "next/server";
 import { requireOrganizer } from "@/lib/authorization";
 import { prisma } from "@/lib/db";
@@ -13,7 +14,7 @@ const archiverCreate = createRequire(import.meta.url)("archiver") as (
 
 export const maxDuration = 60;
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const APP_URL = getAppUrl();
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

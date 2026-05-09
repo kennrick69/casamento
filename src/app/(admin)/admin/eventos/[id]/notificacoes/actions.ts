@@ -1,3 +1,4 @@
+import { getAppUrl } from "@/lib/app-url";
 "use server";
 
 import { prisma } from "@/lib/db";
@@ -49,7 +50,7 @@ export async function sendMassEmail(formData: FormData): Promise<SendResult> {
     select: { id: true, name: true, email: true },
   });
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const baseUrl = getAppUrl();
   const eventUrl = `${baseUrl}/${event.slug}`;
   let sent = 0;
 
