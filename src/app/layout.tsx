@@ -38,11 +38,18 @@ export const metadata: Metadata = {
   title: { default: "Casamento", template: "%s | Casamento" },
   description: "Convite interativo de casamento",
   manifest: "/manifest.json",
-  appleWebApp: { capable: true, statusBarStyle: "default" },
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Casamento" },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1A1A1A",
+  themeColor: "#9F1239",
   width: "device-width",
   initialScale: 1,
 };
