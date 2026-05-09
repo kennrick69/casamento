@@ -22,6 +22,7 @@ export function EventNav({ eventId }: { eventId: string }) {
     { href: `${base}/galeria`, label: "Galeria" },
     { href: `${base}/historia`, label: "História" },
     { href: `${base}/gincana`, label: "Gincana" },
+    { href: `${base}/save-the-date`, label: "Save the Date" },
     { href: `${base}/notificacoes`, label: "Notificações" },
     { href: `${base}/co-organizadores`, label: "Co-org." },
     { href: `${base}/configuracoes`, label: "Config." },
