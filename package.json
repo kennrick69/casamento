@@ -34,9 +34,6 @@
   "engines": {
     "node": ">=20"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "pnpm": {
     "ignoredBuiltDependencies": [
       "sharp",
