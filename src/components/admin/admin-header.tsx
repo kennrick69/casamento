@@ -1,13 +1,17 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { NotificationBell } from "./notification-bell";
 
 export function AdminHeader({
   title,
   subtitle,
   backHref = "/admin",
+  eventId,
 }: {
   title: string;
   subtitle?: string;
   backHref?: string;
+  eventId?: string;
 }) {
   return (
     <header className="border-b bg-background px-6 py-4 flex items-center justify-between">
@@ -21,6 +25,11 @@ export function AdminHeader({
         {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
       </div>
       <div className="flex items-center gap-3 text-sm text-muted-foreground">
+        {eventId && (
+          <Suspense fallback={null}>
+            <NotificationBell eventId={eventId} />
+          </Suspense>
+        )}
         <Link href="/api/auth/signout" className="hover:text-foreground transition-colors">
           Sair
         </Link>

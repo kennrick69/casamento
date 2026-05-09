@@ -15,12 +15,16 @@ export function EventNav({ eventId }: { eventId: string }) {
   const items: NavItem[] = [
     { href: base, label: "Dashboard" },
     { href: `${base}/convidados`, label: "Convidados" },
+    { href: `${base}/moderacao`, label: "Moderação" },
+    { href: `${base}/analytics`, label: "Analytics" },
     { href: `${base}/roteiro`, label: "Roteiro" },
     { href: `${base}/locais`, label: "Locais" },
+    { href: `${base}/galeria`, label: "Galeria" },
+    { href: `${base}/historia`, label: "História" },
     { href: `${base}/gincana`, label: "Gincana" },
     { href: `${base}/notificacoes`, label: "Notificações" },
-    { href: `${base}/co-organizadores`, label: "Co-organizadores" },
-    { href: `${base}/configuracoes`, label: "Configurações" },
+    { href: `${base}/co-organizadores`, label: "Co-org." },
+    { href: `${base}/configuracoes`, label: "Config." },
   ];
 
   return (
