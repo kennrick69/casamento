@@ -3,6 +3,9 @@
 
 import { vi } from "vitest";
 
+// Required by getAppUrl() — must be set before any module that calls it is imported
+process.env.NEXT_PUBLIC_APP_URL = "https://test.example.com";
+
 // Prevent real DB connections in unit tests
 vi.mock("@/lib/db", () => ({
   prisma: {

@@ -2,8 +2,6 @@ import { getAppUrl } from "@/lib/app-url";
 // Email layout primitives — inline CSS compatível com Gmail, Outlook, Apple Mail.
 // Paleta rose-to-slate. Mobile-first, max-width 600px.
 
-const APP_URL = getAppUrl();
-
 // ── Tokens ────────────────────────────────────────────────────────────────────
 
 const c = {
@@ -37,6 +35,7 @@ const serif = "Georgia,'Times New Roman',serif";
 // ── Layout wrapper ─────────────────────────────────────────────────────────────
 
 export function wrap(body: string): string {
+  const APP_URL = getAppUrl();
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
