@@ -42,8 +42,11 @@ export function wrap(body: string): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
   <title>Voem.</title>
   <style>
+    :root { color-scheme: light only; supported-color-schemes: light only; }
     @media only screen and (max-width:640px){
       .ew{padding:0 !important}
       .ec{border-radius:0 !important}
@@ -52,16 +55,16 @@ export function wrap(body: string): string {
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:${c.pageBg};-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%">
+<body style="margin:0;padding:0;background-color:${c.pageBg} !important;color:${c.text} !important;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%">
 
   <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="background-color:${c.pageBg};padding:40px 16px"><![endif]-->
   <table width="100%" cellpadding="0" cellspacing="0" role="presentation" class="ew"
-    style="background-color:${c.pageBg};padding:40px 16px">
+    style="background-color:${c.pageBg} !important;padding:40px 16px">
     <tr><td align="center">
 
       <!-- card -->
       <table width="100%" cellpadding="0" cellspacing="0" role="presentation" class="ec"
-        style="max-width:600px;background-color:${c.white};border-radius:12px;overflow:hidden;border:1px solid ${c.border}">
+        style="max-width:600px;background-color:${c.white} !important;border-radius:12px;overflow:hidden;border:1px solid ${c.border}">
 
         <!-- header: gradient rose → slate (solid fallback for Outlook) -->
         <tr>
@@ -82,7 +85,7 @@ export function wrap(body: string): string {
         <!-- footer -->
         <tr>
           <td class="ef"
-            style="background-color:${c.surfaceMuted};border-top:1px solid ${c.border};padding:24px 48px;text-align:center">
+            style="background-color:${c.surfaceMuted} !important;border-top:1px solid ${c.border};padding:24px 48px;text-align:center">
             <p style="margin:0 0 6px;font-size:12px;color:${c.faint};font-family:${sans}">
               <a href="${APP_URL}" style="color:${c.faint};text-decoration:none">Voem.</a> · Convites de casamento
             </p>
@@ -105,24 +108,24 @@ export function wrap(body: string): string {
 // ── Primitivos de conteúdo ─────────────────────────────────────────────────────
 
 export function h1(text: string): string {
-  return `<h1 style="margin:0 0 6px;font-size:28px;line-height:1.25;color:${c.heading};font-family:${serif};font-weight:normal">${text}</h1>`;
+  return `<h1 style="margin:0 0 6px;font-size:28px;line-height:1.25;color:${c.heading} !important;font-family:${serif};font-weight:normal">${text}</h1>`;
 }
 
 export function eyebrow(text: string): string {
-  return `<p style="margin:0 0 24px;font-size:11px;color:${c.muted};font-family:${sans};text-transform:uppercase;letter-spacing:0.12em">${text}</p>`;
+  return `<p style="margin:0 0 24px;font-size:11px;color:${c.muted} !important;font-family:${sans};text-transform:uppercase;letter-spacing:0.12em">${text}</p>`;
 }
 
 export function p(text: string): string {
-  return `<p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:${c.text};font-family:${sans}">${text}</p>`;
+  return `<p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:${c.text} !important;font-family:${sans}">${text}</p>`;
 }
 
 export function smallNote(text: string): string {
-  return `<p style="margin:0;font-size:12px;line-height:1.65;color:${c.muted};font-family:${sans}">${text}</p>`;
+  return `<p style="margin:0;font-size:12px;line-height:1.65;color:${c.muted} !important;font-family:${sans}">${text}</p>`;
 }
 
 // CTA primário — altura mínima 44px (padding 16px top/bottom + 14px font-size ≈ 46px)
 export function btn(href: string, label: string): string {
-  return `<a href="${href}" style="display:inline-block;background-color:${c.accent};color:${c.white};text-decoration:none;padding:16px 36px;border-radius:8px;font-size:15px;font-family:${sans};font-weight:600;letter-spacing:0.02em;line-height:1.2">${label}</a>`;
+  return `<a href="${href}" style="display:inline-block;background-color:${c.accent} !important;color:${c.white} !important;text-decoration:none;padding:16px 36px;border-radius:8px;font-size:15px;font-family:${sans};font-weight:600;letter-spacing:0.02em;line-height:1.2;border:2px solid ${c.accent} !important;mso-padding-alt:0">${label}</a>`;
 }
 
 // Link secundário discreto
@@ -132,7 +135,7 @@ export function btnLink(href: string, label: string): string {
 
 // Linha ícone + texto (datas, locais, etc.)
 export function detail(icon: string, text: string): string {
-  return `<p style="margin:0 0 10px;font-size:14px;line-height:1.5;color:${c.text};font-family:${sans}"><span style="margin-right:8px">${icon}</span>${text}</p>`;
+  return `<p style="margin:0 0 10px;font-size:14px;line-height:1.5;color:${c.text} !important;font-family:${sans}"><span style="margin-right:8px">${icon}</span>${text}</p>`;
 }
 
 // Caixa colorida de destaque
