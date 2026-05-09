@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { FileDown, Loader2 } from "lucide-react";
+import { FileDown, Loader2, Users } from "lucide-react";
 import { toast } from "sonner";
 
 type Template = "classico" | "rustico" | "minimal";
@@ -56,6 +57,34 @@ export function SaveTheDateClient({ eventId, coupleNames, ceremonyDate, guestCou
     }
   }
 
+  if (guestCount === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="rounded-xl border bg-muted/30 p-4 space-y-1">
+          <p className="font-semibold">{coupleNames}</p>
+          <p className="text-sm text-muted-foreground">{dateStr}</p>
+        </div>
+        <div className="rounded-xl border-2 border-dashed border-amber-300 bg-amber-50 p-6 text-center space-y-3">
+          <Users size={32} className="mx-auto text-amber-700" />
+          <div>
+            <p className="font-semibold text-amber-900">Nenhum convidado cadastrado</p>
+            <p className="text-sm text-amber-800 mt-1">
+              O save-the-date é gerado a partir da lista de convidados — cada PDF traz nome
+              personalizado e QR code próprio. Cadastre os convidados primeiro.
+            </p>
+          </div>
+          <Link
+            href={`/admin/eventos/${eventId}/convidados`}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Users size={16} />
+            Ir para convidados
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Event summary */}
@@ -104,7 +133,7 @@ export function SaveTheDateClient({ eventId, coupleNames, ceremonyDate, guestCou
       {/* Generate button */}
       <Button
         onClick={handleGenerate}
-        disabled={loading || guestCount === 0}
+        disabled={loading}
         size="lg"
         className="w-full"
       >
@@ -120,9 +149,6 @@ export function SaveTheDateClient({ eventId, coupleNames, ceremonyDate, guestCou
           </>
         )}
       </Button>
-      {guestCount === 0 && (
-        <p className="text-sm text-muted-foreground text-center">Nenhum convidado pendente ou confirmado.</p>
-      )}
     </div>
   );
 }
