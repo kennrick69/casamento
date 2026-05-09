@@ -38,7 +38,9 @@ test.describe("Rotas públicas — smoke", () => {
     const response = await request.get("/api/health");
     expect(response.status()).toBe(200);
     const body = await response.json();
-    expect(body.ok).toBe(true);
+    expect(["ok", "degraded"]).toContain(body.status);
+    expect(body.db).toBeDefined();
+    expect(body.timestamp).toBeDefined();
   });
 
   test("QR code PNG é gerado", async ({ request }) => {
