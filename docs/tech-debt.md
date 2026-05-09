@@ -122,6 +122,21 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 ---
 
+## 🟡 MÉDIA — Criar conta Sentry e configurar DSN
+
+**Status:** código implementado (M4.7), sem DSN configurado.
+
+**O que falta:** no Railway, definir:
+- `SENTRY_DSN` — DSN do projeto (server-side)
+- `NEXT_PUBLIC_SENTRY_DSN` — mesmo valor (client-side)
+- `SENTRY_ORG` / `SENTRY_PROJECT` — opcionais, para upload de source maps
+
+**Criar em:** sentry.io → New Project → Next.js → Client Keys (DSN). Plano grátis: 5k events/mês.
+
+**Quando:** antes do onboarding de casais externos.
+
+---
+
 ## 🟡 MÉDIA — Configurar Backblaze B2 para backup off-site
 
 **Status:** código implementado (M4.6), env vars ausentes no Railway.
