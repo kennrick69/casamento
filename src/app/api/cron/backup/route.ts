@@ -77,8 +77,6 @@ export async function POST(req: NextRequest) {
       const json = JSON.stringify(backup, null, 2);
       const dateStr = new Date().toISOString().split("T")[0];
       let pruned = 0;
-      let b2Ok = false;
-      let b2Reason: string | undefined;
 
       // Local Railway volume backup
       const volumePath = process.env.RAILWAY_VOLUME_PATH;
@@ -92,8 +90,8 @@ export async function POST(req: NextRequest) {
 
       // Off-site B2 backup
       const b2Result = await uploadBackupToB2(event.slug, dateStr, json);
-      b2Ok = b2Result.ok;
-      b2Reason = b2Result.reason;
+      const b2Ok = b2Result.ok;
+      const b2Reason = b2Result.reason;
       if (b2Ok) await pruneOldB2Backups(event.slug);
 
       // Notifica owners por email
