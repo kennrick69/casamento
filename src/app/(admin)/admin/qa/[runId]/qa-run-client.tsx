@@ -420,22 +420,37 @@ export function QARunClient({ run, checklist, sections }: Props) {
                                 rows={2}
                                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none disabled:opacity-50"
                               />
-                              {lastEditedField === item.id && saveState !== "idle" && (
-                                <p
-                                  className={`text-[11px] mt-1 ${
-                                    saveState === "saving"
+                              <div className="flex items-center justify-between gap-2 mt-1">
+                                <span
+                                  className={`text-[11px] ${
+                                    lastEditedField === item.id && saveState === "saving"
                                       ? "text-muted-foreground"
-                                      : saveState === "saved"
+                                      : lastEditedField === item.id && saveState === "saved"
                                       ? "text-green-700"
-                                      : "text-red-600"
+                                      : lastEditedField === item.id && saveState === "error"
+                                      ? "text-red-600"
+                                      : "opacity-0"
                                   }`}
                                 >
-                                  {saveState === "saving" && "Salvando..."}
-                                  {saveState === "saved" && "Salvo ✓"}
-                                  {saveState === "error" &&
+                                  {lastEditedField === item.id && saveState === "saving" && "Salvando..."}
+                                  {lastEditedField === item.id && saveState === "saved" && "Salvo ✓"}
+                                  {lastEditedField === item.id && saveState === "error" &&
                                     "Erro ao salvar — guardado no navegador, vou tentar de novo"}
-                                </p>
-                              )}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setLastEditedField(item.id);
+                                    flushPendingSave().catch(() => {
+                                      // erro já cai em saveState="error"
+                                    });
+                                  }}
+                                  disabled={finalized || saveState === "saving"}
+                                  className="text-[11px] rounded-md border border-border px-2 py-0.5 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                  Salvar
+                                </button>
+                              </div>
                             </div>
                           )}
 
@@ -491,22 +506,37 @@ export function QARunClient({ run, checklist, sections }: Props) {
             rows={4}
             className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none disabled:opacity-50"
           />
-          {lastEditedField === "notes" && saveState !== "idle" && (
-            <p
-              className={`text-[11px] mt-1 ${
-                saveState === "saving"
+          <div className="flex items-center justify-between gap-2 mt-1">
+            <span
+              className={`text-[11px] ${
+                lastEditedField === "notes" && saveState === "saving"
                   ? "text-muted-foreground"
-                  : saveState === "saved"
+                  : lastEditedField === "notes" && saveState === "saved"
                   ? "text-green-700"
-                  : "text-red-600"
+                  : lastEditedField === "notes" && saveState === "error"
+                  ? "text-red-600"
+                  : "opacity-0"
               }`}
             >
-              {saveState === "saving" && "Salvando..."}
-              {saveState === "saved" && "Salvo ✓"}
-              {saveState === "error" &&
+              {lastEditedField === "notes" && saveState === "saving" && "Salvando..."}
+              {lastEditedField === "notes" && saveState === "saved" && "Salvo ✓"}
+              {lastEditedField === "notes" && saveState === "error" &&
                 "Erro ao salvar — guardado no navegador, vou tentar de novo"}
-            </p>
-          )}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setLastEditedField("notes");
+                flushPendingSave().catch(() => {
+                  // erro já cai em saveState="error"
+                });
+              }}
+              disabled={finalized || saveState === "saving"}
+              className="text-[11px] rounded-md border border-border px-2 py-0.5 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Salvar
+            </button>
+          </div>
         </div>
       </main>
 
