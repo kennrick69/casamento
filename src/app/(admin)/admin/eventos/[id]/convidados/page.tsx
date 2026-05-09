@@ -27,7 +27,7 @@ export default async function ConvidadosPage({
 
   const event = await prisma.event.findUnique({
     where: { id },
-    select: { coupleNames: true, slug: true },
+    select: { coupleNames: true, slug: true, ceremonyDate: true, publicTokenK: true },
   });
   if (!event) notFound();
 
@@ -50,9 +50,11 @@ export default async function ConvidadosPage({
   const confirmed = guests.filter((g) => g.rsvpStatus === "CONFIRMED");
   const totalWithCompanions = confirmed.reduce((sum, g) => sum + 1 + g.plusOnes, 0);
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://casamento.app";
+
   return (
     <div className="min-h-screen bg-muted/30">
-      <AdminHeader title={event.coupleNames} />
+      <AdminHeader title={event.coupleNames} eventId={id} />
 
       <main className="max-w-3xl mx-auto px-4 py-8">
         <EventNav eventId={id} />
@@ -74,7 +76,17 @@ export default async function ConvidadosPage({
           </a>
         </div>
 
-        <GuestList guests={guests} eventId={id} />
+        <GuestList
+          guests={guests}
+          eventId={id}
+          whatsappContext={{
+            coupleNames: event.coupleNames,
+            slug: event.slug,
+            ceremonyDate: event.ceremonyDate.toISOString(),
+            publicTokenK: event.publicTokenK,
+            appUrl,
+          }}
+        />
       </main>
     </div>
   );

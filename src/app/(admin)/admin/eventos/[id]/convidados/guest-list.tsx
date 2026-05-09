@@ -21,9 +21,18 @@ interface Guest {
   createdAt: Date;
 }
 
+interface WhatsappContext {
+  coupleNames: string;
+  slug: string;
+  ceremonyDate: string;
+  publicTokenK: string;
+  appUrl: string;
+}
+
 interface Props {
   guests: Guest[];
   eventId: string;
+  whatsappContext?: WhatsappContext;
 }
 
 type FilterTab = "all" | "confirmed" | "declined" | "pending" | "banned";
@@ -36,7 +45,19 @@ const FILTER_LABELS: Record<FilterTab, string> = {
   banned: "Banidos",
 };
 
-export function GuestList({ guests, eventId }: Props) {
+function buildWhatsappLink(guest: Guest, ctx: WhatsappContext): string {
+  const date = new Date(ctx.ceremonyDate).toLocaleDateString("pt-BR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  const rsvpUrl = `${ctx.appUrl}/${ctx.slug}/rsvp?k=${ctx.publicTokenK}`;
+  const msg = `Olá, ${guest.name.split(" ")[0]}! 🎊\n\nVocê está convidado(a) para o casamento de ${ctx.coupleNames} em ${date}.\n\nConfirme sua presença em:\n${rsvpUrl}`;
+  const phone = guest.phone?.replace(/\D/g, "") ?? "";
+  return `https://wa.me/${phone.startsWith("55") ? phone : `55${phone}`}?text=${encodeURIComponent(msg)}`;
+}
+
+export function GuestList({ guests, eventId, whatsappContext }: Props) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterTab>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -293,7 +314,20 @@ export function GuestList({ guests, eventId }: Props) {
                 </div>
                 <p className="text-xs text-muted-foreground truncate">{guest.email}</p>
                 {guest.phone && (
-                  <p className="text-xs text-muted-foreground">{guest.phone}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-muted-foreground">{guest.phone}</p>
+                    {whatsappContext && (
+                      <a
+                        href={buildWhatsappLink(guest, whatsappContext)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-green-700 hover:text-green-900 font-medium underline underline-offset-2"
+                        title="Enviar convite via WhatsApp"
+                      >
+                        WhatsApp
+                      </a>
+                    )}
+                  </div>
                 )}
                 <div className="flex flex-wrap gap-3 mt-1">
                   {guest.plusOnes > 0 && (
