@@ -962,3 +962,112 @@ do Bloco A documentados.
 - [ ] Rodar `pnpm seed:dev` duas vezes → idempotente (upsert não duplica evento nem convidados)
 - [ ] Tentar rodar com `DATABASE_URL` de produção (sem localhost e sem `DEV_SEED_ALLOW=1`) → processo encerra com mensagem `❌ seed:dev abortado`
 - [ ] Convidado 50 (`dev.guest.50@seed.local`) tem `banned: true` — verificar no admin
+
+---
+
+## Megabatch 3 (2026-05-09)
+
+### M3.1 — Página pública aprimorada
+
+**Fluxo do convidado:**
+- [ ] `/[slug]` renderiza: hero, countdown, CTA RSVP, seção de locais com mapa embed, traje, galeria/mural/playlist links
+- [ ] Locais com endereço exibem iframe Google Maps (lazy loaded)
+- [ ] "Abrir no Google Maps" redireciona corretamente
+- [ ] Seção "Padrinhos e Madrinhas" aparece se houver membros cadastrados no admin
+- [ ] Seção "Nossa história" aparece se houver itens de story cadastrados
+- [ ] Seção "Presentes / PIX" mostra chave PIX e link para lista
+- [ ] Convidado confirmado vê ConfirmedBanner com links rápidos
+- [ ] Convidado recusado vê DeclinedBanner com CTA de reconfiramação
+- [ ] Link inválido (sem k) mostra InvalidTokenScreen
+
+### M3.2 — RSVP refinado
+
+- [ ] Tela de sucesso pós-RSVP mostra: roteiro, locais, presentes, galeria, playlist
+- [ ] Tela de recusa mostra mensagem de empatia
+- [ ] Edição de resposta funciona (abrir /rsvp com k existente → formulário pré-preenchido)
+
+### M3.3 — Galeria do casal
+
+- [ ] `/[slug]/galeria` exibe grid de fotos com lazy loading
+- [ ] Click numa foto abre lightbox com navegação (←→, Esc)
+- [ ] Lightbox mostra contador (1/N) e caption
+- [ ] Sem fotos → estado vazio com placeholder
+- [ ] Admin: `/admin/eventos/[id]/galeria` permite upload (drag & drop ou click)
+- [ ] Admin: foto removida some do grid e do storage
+- [ ] Upload de arquivo > 10MB mostra erro
+- [ ] Upload de tipo não suportado mostra erro
+
+### M3.4 — História do casal
+
+- [ ] `/[slug]/historia` exibe timeline alternada esquerda/direita
+- [ ] Cada item mostra: data, título, descrição, foto (se houver)
+- [ ] Sem itens → estado vazio
+- [ ] Admin: `/admin/eventos/[id]/historia` lista momentos e permite adicionar/remover
+- [ ] Formulário de adição suporta: título, data textual, data exata, descrição, foto
+- [ ] Foto do momento faz upload e aparece no item
+
+### M3.5 — Moderação centralizada
+
+- [ ] `/admin/eventos/[id]/moderacao` exibe 4 abas com badges de contagem
+- [ ] Aba "Denúncias": lista reports pendentes com ações (remover/descartar)
+- [ ] Aba "Mural": lista fotos pendentes de aprovação com thumbnails
+- [ ] Aba "Playlist": lista músicas pendentes com ações (aprovar/rejeitar)
+- [ ] Aba "Banidos": lista convidados banidos com botão desbanir
+- [ ] Contadores nas abas atualizam após ação sem reload de página
+
+### M3.6 — Notificações in-app
+
+- [ ] AdminHeader em páginas de evento mostra sino 🔔
+- [ ] Sino tem badge vermelho com contagem total
+- [ ] Hover no sino abre dropdown com lista de notificações
+- [ ] Notificações incluem: confirmações recentes, fotos pendentes, músicas pendentes
+- [ ] Lembrete "faltam X dias" aparece se evento estiver a ≤ 30 dias
+- [ ] Sem nada pendente → "Tudo em dia ✓"
+
+### M3.7 — Analytics
+
+- [ ] `/admin/eventos/[id]/analytics` mostra 4 KPIs: confirmados, recusados, pendentes, dias para o evento
+- [ ] Gráfico de barras mostra confirmações e recusas por data
+- [ ] Top 5 fotos mais reagidas com contagem
+- [ ] Top 5 músicas mais votadas com contagem
+- [ ] KPI "dias para o evento" fica laranja quando ≤ 7 dias
+
+### M3.8 — WhatsApp template
+
+- [ ] Admin: lista de convidados exibe link "WhatsApp" ao lado do telefone (quando preenchido)
+- [ ] Click no link abre `wa.me/55{telefone}` com mensagem template pré-preenchida
+- [ ] Mensagem inclui: nome do convidado, casal, data do evento, link de RSVP com token público
+
+### M3.9 — PWA e ícones
+
+- [ ] `/icons/icon-192.png` e `/icons/icon-512.png` existem (letra V em fundo bordô)
+- [ ] `/icons/apple-touch-icon.png` existe (180×180)
+- [ ] `/manifest.json` referencia todos os ícones corretamente
+- [ ] `theme_color` atualizado para `#9F1239`
+- [ ] Lighthouse PWA install check passa
+
+---
+
+### Cenários de teste real — Personas
+
+**Tia idosa no celular antigo (Android 8, Chrome antigo):**
+- [ ] Landing page carrega sem erros de JS
+- [ ] Botão "Confirmar presença" ocupa largura total (≥ 48px altura)
+- [ ] Form RSVP tem campos grandes (h-12)
+- [ ] Não há elementos sobrepostos pelo teclado virtual
+- [ ] Mapa embed pode ser desativado pela lentidão de rede → graceful degradation
+
+**Padrinho com email corporativo (firewall restritivo):**
+- [ ] Email de verificação não depende de JavaScript para ser clicado
+- [ ] Link de verificação funciona em browser nativo (não só Chrome)
+- [ ] Após click no link, sessão é criada automaticamente (auto-login)
+
+**Convidado que respondeu "não vou":**
+- [ ] Landing mostra DeclinedBanner não invasivo
+- [ ] Pode mudar para "vou" a qualquer momento
+- [ ] Tela de sucesso de recusa mostra mensagem de empatia
+
+**Convidado +1 (acompanhante sem cadastro):**
+- [ ] Campo "Vai acompanhado?" no RSVP aceita 1-5 pessoas
+- [ ] Contagem de acompanhantes reflete em "N pessoas incluindo acompanhantes" no admin
+- [ ] Não há cadastro separado para o +1 (simplificação intencional)
