@@ -34,15 +34,20 @@ export async function saveCustomization(
     return { ok: false, error: "Não autorizado." };
   }
 
-  await prisma.event.update({
+  const updated = await prisma.event.update({
     where: { id: eventId },
     data: {
       paletteColors: palette as Prisma.InputJsonValue,
       customization: customization as Prisma.InputJsonValue,
     },
+    select: { slug: true },
   });
 
   revalidatePath(`/admin/eventos/${eventId}/personalizar`);
+  // CSS vars vêm do layout da landing pública; revalidar como "layout" pra
+  // que todas as rotas filhas (/[slug], /[slug]/historia, etc.) re-renderizem
+  // com a nova paleta sem precisar deploy ou refresh manual.
+  revalidatePath(`/${updated.slug}`, "layout");
   return { ok: true };
 }
 
@@ -52,10 +57,12 @@ export async function resetCustomization(eventId: string): Promise<{ ok: boolean
   } catch {
     return { ok: false };
   }
-  await prisma.event.update({
+  const updated = await prisma.event.update({
     where: { id: eventId },
     data: { paletteColors: Prisma.DbNull, customization: Prisma.DbNull },
+    select: { slug: true },
   });
   revalidatePath(`/admin/eventos/${eventId}/personalizar`);
+  revalidatePath(`/${updated.slug}`, "layout");
   return { ok: true };
 }

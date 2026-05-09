@@ -4,6 +4,13 @@ import { useState, useTransition, useCallback, useRef } from "react";
 import { saveCustomization, resetCustomization } from "./actions";
 import type { PaletteColors, EventCustomization } from "./actions";
 
+function reloadIframe(iframe: HTMLIFrameElement | null, slug: string) {
+  if (!iframe) return;
+  // Cache-bust com query timestamp pra forçar fetch fresco e ignorar HTTP cache
+  const base = window.location.origin;
+  iframe.src = `${base}/${slug}?_t=${Date.now()}`;
+}
+
 const TYPOGRAPHY_OPTIONS = [
   { value: "classic" as const, label: "Clássica", desc: "Cormorant Garamond — elegante e atemporal" },
   { value: "modern" as const, label: "Moderna", desc: "Inter — limpa e contemporânea" },
@@ -41,7 +48,7 @@ export function CustomizerClient({ eventId, slug, initialPalette, initialCustomi
     startTransition(async () => {
       await saveCustomization(eventId, palette, customization);
       setSaved(true);
-      iframeRef.current?.contentWindow?.location.reload();
+      reloadIframe(iframeRef.current, slug);
     });
   }
 
@@ -51,7 +58,7 @@ export function CustomizerClient({ eventId, slug, initialPalette, initialCustomi
       setPalette({});
       setCustomization({});
       setSaved(false);
-      iframeRef.current?.contentWindow?.location.reload();
+      reloadIframe(iframeRef.current, slug);
     });
   }
 
