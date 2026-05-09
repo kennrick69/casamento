@@ -299,17 +299,17 @@ test.describe("Guards de segurança", () => {
     expect(["ok", "degraded"]).toContain(body.status);
   });
 
-  test("C.7 — /verify-email sem sessão → redireciona para /login", async ({ page }) => {
+  test("C.7 — /verify-email sem sessão renderiza tela (sem redirect)", async ({ page }) => {
+    // Após o fix de "zero cookies antes do login completo" (mai/2026),
+    // /verify-email é acessível sem sessão — recebe ?email=xxx do signup.
     await page.context().clearCookies();
     await page.goto("/verify-email");
-    await expect(page).toHaveURL(/\/login/);
+    await expect(page).toHaveURL(/\/verify-email/);
   });
 
   test("C.8 — /verify-email não tem botão de bypass (segurança)", async ({ page }) => {
     // Testa que o botão de acesso sem verificar foi removido
     await page.goto("/verify-email");
-    // Se redirecionar para login, está correto (não há sessão)
-    if (page.url().includes("/login")) return;
     const bypassBtn = page.getByText(/acessar.*painel.*sem confirmar|pular verificação|acessar sem confirmar/i);
     await expect(bypassBtn).not.toBeVisible();
   });

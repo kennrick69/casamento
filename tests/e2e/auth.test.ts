@@ -31,16 +31,18 @@ test.describe("Auth — páginas públicas carregam", () => {
     await expect(page.getByRole("textbox")).toBeVisible();
   });
 
-  test("/termos renderiza conteúdo com badge de versão", async ({ page }) => {
+  test("/termos renderiza conteúdo legal", async ({ page }) => {
     await page.goto("/termos");
     await expect(page.getByRole("heading", { name: "Termos de Uso" })).toBeVisible();
-    await expect(page.getByText("v1.0")).toBeVisible();
+    // Badge de versão (v1.0) foi removido em maio/2026 — cliente não vê versão.
+    await expect(page.getByText(/vigente desde/i)).toBeVisible();
   });
 
-  test("/privacidade renderiza conteúdo com badge de versão", async ({ page }) => {
+  test("/privacidade renderiza conteúdo legal", async ({ page }) => {
     await page.goto("/privacidade");
     await expect(page.getByRole("heading", { name: "Política de Privacidade" })).toBeVisible();
-    await expect(page.getByText("v1.0")).toBeVisible();
+    // Badge de versão (v1.0) foi removido em maio/2026 — cliente não vê versão.
+    await expect(page.getByText(/vigente desde/i)).toBeVisible();
   });
 });
 
@@ -62,9 +64,12 @@ test.describe("Auth — guards de sessão (sem cookie)", () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test("/verify-email sem sessão → redireciona para /login", async ({ page }) => {
+  test("/verify-email sem sessão renderiza tela de verificação (sem redirect)", async ({ page }) => {
+    // Após o fix de "zero cookies antes do login completo" (mai/2026),
+    // /verify-email é acessível sem sessão — recebe ?email=xxx do signup.
     await page.goto("/verify-email");
-    await expect(page).toHaveURL(/\/login/);
+    await expect(page).toHaveURL(/\/verify-email/);
+    await expect(page.getByRole("heading", { name: /confirme seu e-mail/i })).toBeVisible();
   });
 
   test("/aceitar-termos sem sessão → redireciona para /login", async ({ page }) => {
@@ -108,14 +113,16 @@ test.describe("Auth — comportamento de formulários", () => {
     ).toBeVisible({ timeout: 12_000 });
   });
 
-  test("signup com campos em branco não submete (validação client-side)", async ({ page }) => {
+  test("signup com checkboxes de termos/privacidade desmarcados deixa botão disabled", async ({ page }) => {
+    // Após o fix de "aceite de termos no cadastro" (mai/2026), o botão "Criar conta"
+    // fica disabled enquanto os checkboxes de Termos e Privacidade não forem marcados.
     await page.goto("/login");
     await page.getByRole("tab", { name: "Criar conta" }).click();
 
-    // Tenta submeter sem preencher nada
-    await page.getByRole("button", { name: /criar conta|criando/i }).click();
+    const submitButton = page.getByRole("button", { name: /criar conta|criando/i });
+    await expect(submitButton).toBeDisabled();
 
-    // Deve permanecer na página /login (sem redirect)
+    // Permanece em /login (não há submit)
     await expect(page).toHaveURL(/\/login/);
   });
 
