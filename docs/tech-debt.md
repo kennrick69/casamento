@@ -110,6 +110,20 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 ---
 
+## 🟡 MÉDIA — Configurar e-mail contato@voem.app antes do multi-tenant
+
+**Status:** e-mail de contato nos termos e política usa `contato@joseeleticia.com` (adequado para o piloto de um casal). Para lançamento multi-tenant, criar `contato@voem.app` e configurar forwarding para inbox real.
+
+**O que fazer:**
+1. Criar domínio `voem.app` (ou subdomínio) e configurar MX records
+2. Criar `contato@voem.app` na plataforma de e-mail
+3. Configurar forwarding para o inbox do responsável
+4. Atualizar os textos nos arquivos: `src/app/(legal)/termos/page.tsx`, `src/app/(legal)/privacidade/page.tsx` e `src/components/auth/auth-tabs.tsx` (TermsContent/PrivacyContent)
+
+**Gatilho:** antes do onboarding de qualquer casal externo ao projeto piloto.
+
+---
+
 ## 🟡 MÉDIA — Atualizar GitHub Actions de Node 20 para Node 22
 
 **Status:** CI usa `node-version: 20` em todos os jobs.

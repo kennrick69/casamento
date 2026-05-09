@@ -1,24 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PRIVACY_VERSION } from "@/lib/legal/versions";
 
 export const metadata: Metadata = { title: "Política de Privacidade" };
 
 export default function PrivacidadePage() {
   return (
     <main className="max-w-2xl mx-auto px-4 py-12 prose prose-neutral dark:prose-invert">
-      <div className="not-prose mb-2 flex items-center gap-3">
+      <div className="not-prose mb-2">
         <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">← Início</Link>
-        <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-mono">
-          v{PRIVACY_VERSION}
-        </span>
-        <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-          TODO: revisão jurídica antes do lançamento
-        </span>
       </div>
 
       <h1>Política de Privacidade</h1>
-      <p className="lead">Vigente desde 8 de maio de 2026 · Versão {PRIVACY_VERSION}</p>
+      <p className="lead">Vigente desde 8 de maio de 2026</p>
 
       <h2>1. Dados que coletamos</h2>
 
@@ -138,8 +131,9 @@ export default function PrivacidadePage() {
         <li><strong>Opor-se</strong> a tratamentos baseados em legítimo interesse</li>
       </ul>
       <p>
-        Para exercer qualquer um desses direitos, entre em contato em <strong>contato@voem.app</strong>{" "}
-        com o assunto <em>Direitos LGPD — [seu nome]</em>. Responderemos em até 15 dias úteis.
+        Para exercer qualquer um desses direitos ou solicitar a exclusão dos seus dados, entre em
+        contato em <strong>contato@joseeleticia.com</strong> com o assunto{" "}
+        <em>Direitos LGPD — [seu nome]</em>. Responderemos em até 15 dias úteis.
       </p>
 
       <h2>6. Por quanto tempo mantemos seus dados</h2>
@@ -171,7 +165,7 @@ export default function PrivacidadePage() {
       <p>O Voem. utiliza apenas:</p>
       <ul>
         <li>
-          <strong>Cookie de sessão</strong> (mantém você conectado entre páginas — nome técnico: <code>authjs.session-token</code>): necessário para
+          <strong>Cookie de sessão</strong> (<code>authjs.session-token</code>): necessário para
           manter você logado. Expira com a sessão do navegador ou em 30 dias.
         </li>
         <li>
@@ -200,13 +194,13 @@ export default function PrivacidadePage() {
 
       <h2>11. Contato</h2>
       <p>
-        <strong>E-mail:</strong> contato@voem.app<br />
+        <strong>E-mail:</strong> contato@joseeleticia.com<br />
         <strong>Assunto:</strong> Privacidade / LGPD
       </p>
 
       <hr />
       <p className="text-sm text-muted-foreground not-prose mt-6">
-        Versão {PRIVACY_VERSION} · Vigente desde 8 de maio de 2026 ·{" "}
+        Vigente desde 8 de maio de 2026 ·{" "}
         <Link href="/termos" className="underline underline-offset-2">Termos de Uso</Link>
       </p>
     </main>

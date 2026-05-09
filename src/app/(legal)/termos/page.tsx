@@ -1,24 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { TERMS_VERSION } from "@/lib/legal/versions";
 
 export const metadata: Metadata = { title: "Termos de Uso" };
 
 export default function TermosPage() {
   return (
     <main className="max-w-2xl mx-auto px-4 py-12 prose prose-neutral dark:prose-invert">
-      <div className="not-prose mb-2 flex items-center gap-3">
+      <div className="not-prose mb-2">
         <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">← Início</Link>
-        <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-mono">
-          v{TERMS_VERSION}
-        </span>
-        <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-          TODO: revisão jurídica antes do lançamento
-        </span>
       </div>
 
       <h1>Termos de Uso</h1>
-      <p className="lead">Vigente desde 8 de maio de 2026 · Versão {TERMS_VERSION}</p>
+      <p className="lead">Vigente desde 8 de maio de 2026</p>
 
       <h2>1. O que é o Voem.</h2>
       <p>
@@ -78,8 +71,9 @@ export default function TermosPage() {
       <h2>6. Encerramento de conta</h2>
       <p>
         <strong>Voluntário:</strong> Você pode solicitar o encerramento da sua conta a qualquer momento
-        pelo painel ou entrando em contato pelo e-mail da plataforma. Os dados do evento serão mantidos
-        por até 90 dias após a data do casamento e então deletados.
+        pelo painel ou entrando em contato em <strong>contato@joseeleticia.com</strong>. Para solicitar
+        a exclusão dos seus dados, entre em contato pelo mesmo e-mail. Os dados do evento serão
+        mantidos por até 90 dias após a data do casamento e então deletados.
       </p>
       <p>
         <strong>Involuntário:</strong> A plataforma pode encerrar ou suspender sua conta sem aviso prévio
@@ -108,12 +102,12 @@ export default function TermosPage() {
 
       <h2>10. Contato</h2>
       <p>
-        Dúvidas sobre estes termos? Entre em contato: <strong>contato@voem.app</strong>
+        Dúvidas sobre estes termos? Entre em contato: <strong>contato@joseeleticia.com</strong>
       </p>
 
       <hr />
       <p className="text-sm text-muted-foreground not-prose mt-6">
-        Versão {TERMS_VERSION} · Vigente desde 8 de maio de 2026 ·{" "}
+        Vigente desde 8 de maio de 2026 ·{" "}
         <Link href="/privacidade" className="underline underline-offset-2">Política de Privacidade</Link>
       </p>
     </main>

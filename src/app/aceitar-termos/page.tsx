@@ -40,7 +40,7 @@ export default async function AceitarTermosPage() {
             className="flex items-center justify-between rounded-lg border border-border px-4 py-3 hover:border-primary/50 transition-colors"
           >
             <span>Termos de Uso</span>
-            <span className="text-xs text-muted-foreground font-mono">v{TERMS_VERSION} ↗</span>
+            <span className="text-xs text-muted-foreground">↗</span>
           </a>
           <a
             href="/privacidade"
@@ -49,7 +49,7 @@ export default async function AceitarTermosPage() {
             className="flex items-center justify-between rounded-lg border border-border px-4 py-3 hover:border-primary/50 transition-colors"
           >
             <span>Política de Privacidade</span>
-            <span className="text-xs text-muted-foreground font-mono">v{PRIVACY_VERSION} ↗</span>
+            <span className="text-xs text-muted-foreground">↗</span>
           </a>
         </div>
 
