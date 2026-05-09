@@ -1,6 +1,6 @@
-import { getAppUrl } from "@/lib/app-url";
 "use server";
 
+import { getAppUrl } from "@/lib/app-url";
 import { headers } from "next/headers";
 import { AuthError } from "next-auth";
 import { z } from "zod";

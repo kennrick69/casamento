@@ -1,6 +1,6 @@
-import { getAppUrl } from "@/lib/app-url";
 "use server";
 
+import { getAppUrl } from "@/lib/app-url";
 import { z } from "zod";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db";

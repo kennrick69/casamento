@@ -1,6 +1,6 @@
-import { getAppUrl } from "@/lib/app-url";
 "use server";
 
+import { getAppUrl } from "@/lib/app-url";
 import { prisma } from "@/lib/db";
 import { requireOrganizer } from "@/lib/authorization";
 import { email } from "@/lib/email";
