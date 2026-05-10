@@ -39,8 +39,12 @@ export function ShareSection({ slug, coupleNames, eventUrl }: Props) {
   }
 
   function handleWhatsApp() {
-    const text = `Você está convidado para o casamento de ${coupleNames}! ${eventUrl}`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+    // wa.me é o universal link oficial recomendado; api.whatsapp.com/send é
+    // legado e às vezes redireciona pra splash screen no desktop.
+    // Quebra de linha dupla entre mensagem e URL ajuda o WhatsApp a renderizar
+    // preview rico do link em vez de tratar tudo como texto colado.
+    const text = `Você está convidado para o casamento de ${coupleNames}!\n\n${eventUrl}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
     logShare("whatsapp");
   }
 
