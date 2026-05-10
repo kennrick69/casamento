@@ -499,15 +499,16 @@ export const CHECKLIST: ChecklistItem[] = [
   {
     id: "gincana-ranking",
     section: "Gincana",
-    title: "Ranking top-3 com medalhas",
+    title: "Ranking top-5 com medalhas",
     url: "/[slug]/gincana",
     steps: [
       "Acesse /[slug]/gincana",
-      "Verifique seção de ranking",
-      "Confirme exibição de medalhas (ouro, prata, bronze) para top-3",
+      "Verifique seção 'Top 5'",
+      "Confirme exibição de medalhas (ouro, prata, bronze) para os 3 primeiros",
+      "Confirme que 4° e 5° aparecem com número apenas",
       "Verifique posição do convidado atual no ranking",
     ],
-    expected: "Ranking exibido com medalhas para top-3 e posição do convidado destacada",
+    expected: "Top 5 do ranking visível com medalhas nos 3 primeiros, números nos 4° e 5°",
     knownIssues: [],
   },
   {

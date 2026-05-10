@@ -37,7 +37,7 @@ export default async function GincanaPage({ params, searchParams }: Props) {
 
   const guest = await getCurrentGuest(slug);
 
-  const rankingLimit = showFullRanking ? undefined : 10;
+  const rankingLimit = showFullRanking ? undefined : 5;
 
   const [missions, ranking, guestPoints, totalParticipants] = await Promise.all([
     prisma.mission.findMany({
@@ -125,7 +125,7 @@ export default async function GincanaPage({ params, searchParams }: Props) {
 
       {/* Ranking */}
       <h2 className="text-base font-semibold mb-3" style={{ fontFamily: "var(--theme-font-heading)" }}>
-        Ranking {showFullRanking ? `(${totalParticipants})` : "Top 10"}
+        Ranking {showFullRanking ? `(${totalParticipants})` : "Top 5"}
       </h2>
       <div className="flex flex-col gap-2 mb-4">
         {ranking.length === 0 && (
@@ -155,7 +155,7 @@ export default async function GincanaPage({ params, searchParams }: Props) {
         })}
       </div>
 
-      {!showFullRanking && totalParticipants > 10 && (
+      {!showFullRanking && totalParticipants > 5 && (
         <a
           href={`/${slug}/gincana?rank=1`}
           className="block text-center text-sm underline underline-offset-2 text-[var(--theme-secondary)] hover:text-[var(--theme-primary)] mb-6"
