@@ -11,13 +11,21 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Mail } from "lucide-react";
 import { LegalModal, TermsContent, PrivacyContent } from "@/components/legal/legal-modal";
 
-const DRAFT_VERSION = 1;
+const DRAFT_VERSION = 2;
+const MAX_COMPANIONS = 10;
+
+type CompanionType = "ADULT" | "CHILD";
+interface Companion {
+  name: string;
+  type: CompanionType;
+}
 
 interface RsvpDraft {
   v: number;
   status: "CONFIRMED" | "DECLINED";
   fields: Record<string, string>;
   checkboxes: Record<string, boolean>;
+  companions: Companion[];
   savedAt: string;
 }
 
@@ -32,6 +40,7 @@ interface RsvpFormProps {
     dietaryRestrictions: string;
     message: string;
     rsvpStatus: "CONFIRMED" | "DECLINED";
+    companions?: Companion[];
   };
   rsvpEarlyDeadline: Date | null;
 }
@@ -47,6 +56,9 @@ export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormPr
   const [termsOpen, setTermsOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
+  const [companions, setCompanions] = useState<Companion[]>(
+    initialData?.companions ?? []
+  );
   const formRef = useRef<HTMLFormElement>(null);
   const draftKey = `rsvp-draft-${slug}`;
 
@@ -88,6 +100,15 @@ export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormPr
     if (parsed.status === "CONFIRMED" || parsed.status === "DECLINED") {
       startTransition(() => setStatus(parsed.status));
     }
+    if (Array.isArray(parsed.companions)) {
+      const sanitized = parsed.companions
+        .slice(0, MAX_COMPANIONS)
+        .map((c) => ({
+          name: typeof c?.name === "string" ? c.name.slice(0, 80) : "",
+          type: c?.type === "CHILD" ? ("CHILD" as const) : ("ADULT" as const),
+        }));
+      startTransition(() => setCompanions(sanitized));
+    }
     startTransition(() => setDraftRestored(true));
   }, [draftKey]);
 
@@ -112,6 +133,7 @@ export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormPr
         status,
         fields,
         checkboxes,
+        companions,
         savedAt: new Date().toISOString(),
       };
       window.localStorage.setItem(draftKey, JSON.stringify(draft));
@@ -132,9 +154,20 @@ export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormPr
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+
+    // Validação client-side dos acompanhantes — todo companion precisa ter nome.
+    const sanitizedCompanions = companions
+      .map((c) => ({ name: c.name.trim(), type: c.type }))
+      .filter((c) => c.name.length > 0);
+    if (sanitizedCompanions.length !== companions.length && companions.some((c) => c.name.trim().length === 0)) {
+      setError("Preencha o nome de cada acompanhante ou remova os vazios.");
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
     formData.set("slug", slug);
     formData.set("rsvpStatus", status);
+    formData.set("companionsJson", JSON.stringify(sanitizedCompanions));
 
     startSubmit(async () => {
       const result = await submitRsvp(formData);
@@ -255,18 +288,66 @@ export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormPr
 
       {status === "CONFIRMED" && (
         <>
-          <Field label="Vai acompanhado(a)?">
-            <select
-              name="plusOnes"
-              defaultValue={initialData?.plusOnes ?? 0}
-              className="h-12 w-full rounded-[var(--theme-radius)] border border-input bg-background px-3 text-base"
-            >
-              {[0, 1, 2, 3, 4, 5].map((n) => (
-                <option key={n} value={n}>
-                  {n === 0 ? "Só eu" : `Eu + ${n} pessoa${n > 1 ? "s" : ""}`}
-                </option>
+          <Field label={`Acompanhantes (${companions.length}/${MAX_COMPANIONS})`}>
+            <div className="flex flex-col gap-2">
+              {companions.map((companion, i) => (
+                <div key={i} className="flex gap-2 items-stretch">
+                  <Input
+                    value={companion.name}
+                    onChange={(e) => {
+                      const next = [...companions];
+                      next[i] = { ...next[i], name: e.target.value };
+                      setCompanions(next);
+                      queueMicrotask(persistDraft);
+                    }}
+                    placeholder="Nome do acompanhante"
+                    maxLength={80}
+                    className="flex-1 h-12 text-base"
+                  />
+                  <select
+                    value={companion.type}
+                    onChange={(e) => {
+                      const next = [...companions];
+                      next[i] = { ...next[i], type: e.target.value as CompanionType };
+                      setCompanions(next);
+                      queueMicrotask(persistDraft);
+                    }}
+                    className="h-12 rounded-[var(--theme-radius)] border border-input bg-background px-3 text-base shrink-0"
+                  >
+                    <option value="ADULT">Adulto</option>
+                    <option value="CHILD">Criança</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCompanions(companions.filter((_, idx) => idx !== i));
+                      queueMicrotask(persistDraft);
+                    }}
+                    aria-label={`Remover acompanhante ${i + 1}`}
+                    className="h-12 w-12 shrink-0 rounded-[var(--theme-radius)] border border-[var(--theme-border)] text-[var(--theme-secondary)] hover:bg-[var(--theme-muted)] transition-colors"
+                  >
+                    ×
+                  </button>
+                </div>
               ))}
-            </select>
+              {companions.length < MAX_COMPANIONS && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCompanions([...companions, { name: "", type: "ADULT" }]);
+                    queueMicrotask(persistDraft);
+                  }}
+                  className="h-11 rounded-[var(--theme-radius)] border border-dashed border-[var(--theme-border)] text-sm text-[var(--theme-secondary)] hover:bg-[var(--theme-muted)] transition-colors"
+                >
+                  + Adicionar acompanhante
+                </button>
+              )}
+              {companions.length === 0 && (
+                <p className="text-xs text-[var(--theme-secondary)]">
+                  Vou só eu — nenhum acompanhante.
+                </p>
+              )}
+            </div>
           </Field>
 
           <Field label="Restrições alimentares">

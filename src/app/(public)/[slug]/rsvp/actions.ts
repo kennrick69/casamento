@@ -19,18 +19,23 @@ import {
   recoveryText,
 } from "@/lib/email/templates";
 
+const CompanionSchema = z.object({
+  name: z.string().min(1, "Nome do acompanhante é obrigatório").max(80),
+  type: z.enum(["ADULT", "CHILD"]),
+});
+
 const RsvpSchema = z.object({
   slug: z.string(),
   name: z.string().min(2, "Nome muito curto"),
   emailAddr: z.string().email("E-mail inválido"),
   phone: z.string().optional(),
-  plusOnes: z.coerce.number().min(0).max(10).default(0),
   dietaryRestrictions: z.string().optional(),
   message: z.string().optional(),
   rsvpStatus: z.enum(["CONFIRMED", "DECLINED"]),
   consentTerms: z.literal("on", { message: "Você precisa aceitar os termos" }),
   consentPhotoMural: z.string().optional(),
   profilePublic: z.string().optional(),
+  companionsJson: z.string().optional(),
 });
 
 export type RsvpActionResult =
@@ -59,13 +64,37 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
     name,
     emailAddr,
     phone,
-    plusOnes,
     dietaryRestrictions,
     message,
     rsvpStatus,
     consentPhotoMural,
     profilePublic,
+    companionsJson,
   } = parsed.data;
+
+  // Parse companions: lista vazia se DECLINED ou se vier inválido. plusOnes
+  // continua como contagem denormalizada (várias views ainda usam) — fica
+  // sempre em sync com companions.length.
+  let companions: { name: string; type: "ADULT" | "CHILD" }[] = [];
+  if (rsvpStatus === "CONFIRMED" && companionsJson) {
+    try {
+      const raw = JSON.parse(companionsJson);
+      if (Array.isArray(raw)) {
+        const parsedCompanions = z
+          .array(CompanionSchema)
+          .max(10, "Máximo 10 acompanhantes")
+          .safeParse(raw);
+        if (!parsedCompanions.success) {
+          const first = parsedCompanions.error.issues[0]?.message ?? "Acompanhante inválido";
+          return { ok: false, type: "ERROR", message: first };
+        }
+        companions = parsedCompanions.data;
+      }
+    } catch {
+      return { ok: false, type: "ERROR", message: "Formato de acompanhantes inválido" };
+    }
+  }
+  const plusOnes = companions.length;
 
   const event = await prisma.event.findUnique({
     where: { slug },
@@ -113,41 +142,58 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
   const isEarly =
     event.rsvpEarlyDeadline ? new Date() <= event.rsvpEarlyDeadline : false;
 
-  const guest = existing
-    ? await prisma.guest.update({
-        where: { id: existing.id },
-        data: {
-          name,
-          phone: phone || null,
-          plusOnes,
-          dietaryRestrictions: dietaryRestrictions || null,
-          message: message || null,
-          rsvpStatus,
-          consentTerms: true,
-          consentPhotoMural: consentPhotoMural === "on",
-          profilePublic: profilePublic === "on",
-          consentTimestamp: new Date(),
-          sessionToken,
-          deletedAt: null,
-        },
-      })
-    : await prisma.guest.create({
-        data: {
-          eventId: event.id,
-          name,
-          email: emailAddr,
-          phone: phone || null,
-          plusOnes,
-          dietaryRestrictions: dietaryRestrictions || null,
-          message: message || null,
-          rsvpStatus,
-          consentTerms: true,
-          consentPhotoMural: consentPhotoMural === "on",
-          profilePublic: profilePublic === "on",
-          consentTimestamp: new Date(),
-          sessionToken,
-        },
+  // Upsert guest + reset companion list em uma transação. Sempre apaga e
+  // recria os companions pra evitar drift entre form e DB; lista é curta
+  // (max 10) então o custo é desprezível.
+  const guest = await prisma.$transaction(async (tx) => {
+    const upserted = existing
+      ? await tx.guest.update({
+          where: { id: existing.id },
+          data: {
+            name,
+            phone: phone || null,
+            plusOnes,
+            dietaryRestrictions: dietaryRestrictions || null,
+            message: message || null,
+            rsvpStatus,
+            consentTerms: true,
+            consentPhotoMural: consentPhotoMural === "on",
+            profilePublic: profilePublic === "on",
+            consentTimestamp: new Date(),
+            sessionToken,
+            deletedAt: null,
+          },
+        })
+      : await tx.guest.create({
+          data: {
+            eventId: event.id,
+            name,
+            email: emailAddr,
+            phone: phone || null,
+            plusOnes,
+            dietaryRestrictions: dietaryRestrictions || null,
+            message: message || null,
+            rsvpStatus,
+            consentTerms: true,
+            consentPhotoMural: consentPhotoMural === "on",
+            profilePublic: profilePublic === "on",
+            consentTimestamp: new Date(),
+            sessionToken,
+          },
+        });
+
+    await tx.guestCompanion.deleteMany({ where: { guestId: upserted.id } });
+    if (companions.length > 0) {
+      await tx.guestCompanion.createMany({
+        data: companions.map((c) => ({
+          guestId: upserted.id,
+          name: c.name,
+          type: c.type,
+        })),
       });
+    }
+    return upserted;
+  });
 
   if (rsvpStatus === "CONFIRMED") {
     void awardPoints(guest.id, event.id, "rsvp_confirmed");

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { validateEventAccess } from "@/lib/auth/guest";
 import { RsvpForm } from "@/components/guest/rsvp-form";
+import { prisma } from "@/lib/db";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 
@@ -26,6 +27,14 @@ export default async function RsvpPage({
   if (!result.ok) notFound();
 
   const { event, guest } = result;
+
+  const companions = guest
+    ? await prisma.guestCompanion.findMany({
+        where: { guestId: guest.id },
+        select: { name: true, type: true },
+        orderBy: { createdAt: "asc" },
+      })
+    : [];
 
   return (
     <div className="px-4 py-6 max-w-lg mx-auto">
@@ -56,6 +65,7 @@ export default async function RsvpPage({
                 dietaryRestrictions: guest.dietaryRestrictions ?? "",
                 message: guest.message ?? "",
                 rsvpStatus: guest.rsvpStatus as "CONFIRMED" | "DECLINED",
+                companions: companions.map((c) => ({ name: c.name, type: c.type })),
               }
             : undefined
         }

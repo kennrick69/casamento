@@ -314,6 +314,7 @@ model Guest {
   giftReservations    Gift[]
   guestPoints         GuestPoints?
   reportsMade         Report[]             @relation("Reporter")
+  companions          GuestCompanion[]
 
   @@unique([eventId, email])
   @@index([eventId, sessionToken])
@@ -323,6 +324,24 @@ enum RsvpStatus {
   PENDING
   CONFIRMED
   DECLINED
+}
+
+enum CompanionType {
+  ADULT
+  CHILD
+}
+
+model GuestCompanion {
+  id        String        @id @default(cuid())
+  guestId   String
+  name      String
+  type      CompanionType @default(ADULT)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  guest Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@index([guestId])
 }
 
 model EventLocation {
