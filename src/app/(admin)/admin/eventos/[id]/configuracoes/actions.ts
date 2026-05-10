@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { requireOrganizer } from "@/lib/authorization";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { fromZonedTime } from "date-fns-tz";
 import { isHttpUrl } from "@/lib/utils/safe-href";
 import { isReservedSlug } from "@/lib/utils/slug-validation";
 
@@ -62,9 +63,11 @@ export async function updateEventBasic(formData: FormData): Promise<void> {
     data: {
       coupleNames,
       title: `Casamento de ${coupleNames}`,
-      ceremonyDate: new Date(`${ceremonyDate}T${ceremonyTime}:00`),
+      // Sem fromZonedTime, "16:00" sem Z é interpretado no fuso do runtime
+      // (UTC em Railway), o que jogava o horário 3h pra trás nos emails.
+      ceremonyDate: fromZonedTime(`${ceremonyDate}T${ceremonyTime}:00`, timezone),
       timezone,
-      rsvpEarlyDeadline: rsvpEarlyDeadline ? new Date(rsvpEarlyDeadline) : null,
+      rsvpEarlyDeadline: rsvpEarlyDeadline ? fromZonedTime(rsvpEarlyDeadline, timezone) : null,
       ...(resolvedSlug ? { slug: resolvedSlug } : {}),
     },
   });

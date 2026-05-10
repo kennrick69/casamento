@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { nanoid } from "nanoid";
+import { fromZonedTime } from "date-fns-tz";
 import { seedDefaultMissions } from "@/lib/points";
 import { isReservedSlug } from "@/lib/utils/slug-validation";
 
@@ -72,9 +73,13 @@ export async function createEventBasic(formData: FormData): Promise<void> {
       slug,
       title: `Casamento de ${coupleNames}`,
       coupleNames,
-      ceremonyDate: new Date(`${ceremonyDate}T${ceremonyTime}:00`),
+      // Bug histórico: new Date("2027-05-29T16:00:00") sem Z interpreta no
+      // fuso do runtime (Railway = UTC), então 16h SP virava 16h UTC = 13h SP
+      // nos emails. fromZonedTime trata a string como já estando em `timezone`
+      // e retorna o UTC correto.
+      ceremonyDate: fromZonedTime(`${ceremonyDate}T${ceremonyTime}:00`, timezone),
       timezone,
-      rsvpEarlyDeadline: rsvpEarlyDeadline ? new Date(rsvpEarlyDeadline) : null,
+      rsvpEarlyDeadline: rsvpEarlyDeadline ? fromZonedTime(rsvpEarlyDeadline, timezone) : null,
       themeId: defaultTheme.id,
       publicTokenK: nanoid(16),
       status: "DRAFT",
