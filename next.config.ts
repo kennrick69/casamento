@@ -25,6 +25,11 @@ const CSP_DIRECTIVES = [
   // Frames: Turnstile renders its challenge inside an iframe; Google Maps
   // embed na seção de locais da landing pública.
   "frame-src https://challenges.cloudflare.com https://maps.google.com https://www.google.com",
+  // Permite que páginas do próprio app embedem outras páginas do app
+  // (ex: customizer em /admin/eventos/[id]/personalizar usando iframe pra
+  // preview ao vivo da landing /[slug]). Equivalente moderno ao
+  // X-Frame-Options: SAMEORIGIN.
+  "frame-ancestors 'self'",
   // Block plugins and dynamic base URL overrides
   "object-src 'none'",
   "base-uri 'self'",
@@ -40,8 +45,11 @@ const securityHeaders = [
     value: "max-age=31536000; includeSubDomains",
   },
   {
+    // SAMEORIGIN em vez de DENY pra permitir o iframe de preview do customizer
+    // embedar a landing pública. CSP frame-ancestors 'self' é o equivalente
+    // moderno e cobre o mesmo controle anti-clickjacking.
     key: "X-Frame-Options",
-    value: "DENY",
+    value: "SAMEORIGIN",
   },
   {
     key: "X-Content-Type-Options",
