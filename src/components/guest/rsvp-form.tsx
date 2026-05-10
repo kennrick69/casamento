@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import { submitRsvp } from "@/app/(public)/[slug]/rsvp/actions";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Mail } from "lucide-react";
 import { LegalModal, TermsContent, PrivacyContent } from "@/components/legal/legal-modal";
+
+const DRAFT_VERSION = 1;
+
+interface RsvpDraft {
+  v: number;
+  status: "CONFIRMED" | "DECLINED";
+  fields: Record<string, string>;
+  checkboxes: Record<string, boolean>;
+  savedAt: string;
+}
 
 interface RsvpFormProps {
   slug: string;
@@ -28,7 +38,7 @@ interface RsvpFormProps {
 
 export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isPending, startSubmit] = useTransition();
   const [status, setStatus] = useState<"CONFIRMED" | "DECLINED">(
     initialData?.rsvpStatus ?? "CONFIRMED"
   );
@@ -36,8 +46,88 @@ export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormPr
   const [recoverySent, setRecoverySent] = useState<string | null>(null);
   const [termsOpen, setTermsOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const draftKey = `rsvp-draft-${slug}`;
 
   const isEarly = rsvpEarlyDeadline ? new Date() <= new Date(rsvpEarlyDeadline) : false;
+
+  // Restaura rascunho do localStorage no mount. Convidado pode sair e voltar
+  // sem perder o que digitou.
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form) return;
+    let parsed: RsvpDraft | null = null;
+    try {
+      const raw = window.localStorage.getItem(draftKey);
+      if (raw) {
+        const data = JSON.parse(raw) as RsvpDraft;
+        if (data.v === DRAFT_VERSION) parsed = data;
+      }
+    } catch {
+      // ignora rascunhos corrompidos
+    }
+    if (!parsed) return;
+
+    Object.entries(parsed.fields).forEach(([name, value]) => {
+      const el = form.elements.namedItem(name) as
+        | HTMLInputElement
+        | HTMLTextAreaElement
+        | HTMLSelectElement
+        | null;
+      if (el && "value" in el && el.type !== "checkbox") {
+        el.value = value;
+      }
+    });
+    Object.entries(parsed.checkboxes).forEach(([name, checked]) => {
+      const el = form.elements.namedItem(name);
+      if (el instanceof HTMLInputElement && el.type === "checkbox") {
+        el.checked = checked;
+      }
+    });
+    if (parsed.status === "CONFIRMED" || parsed.status === "DECLINED") {
+      startTransition(() => setStatus(parsed.status));
+    }
+    startTransition(() => setDraftRestored(true));
+  }, [draftKey]);
+
+  function persistDraft() {
+    const form = formRef.current;
+    if (!form) return;
+    const fd = new FormData(form);
+    const fields: Record<string, string> = {};
+    const checkboxes: Record<string, boolean> = {};
+    for (const el of Array.from(form.elements) as HTMLElement[]) {
+      const input = el as HTMLInputElement;
+      if (!input.name) continue;
+      if (input.type === "checkbox") {
+        checkboxes[input.name] = input.checked;
+      } else if (input.type !== "submit" && input.type !== "button" && input.type !== "hidden") {
+        fields[input.name] = String(fd.get(input.name) ?? "");
+      }
+    }
+    try {
+      const draft: RsvpDraft = {
+        v: DRAFT_VERSION,
+        status,
+        fields,
+        checkboxes,
+        savedAt: new Date().toISOString(),
+      };
+      window.localStorage.setItem(draftKey, JSON.stringify(draft));
+    } catch {
+      // localStorage indisponível (Safari modo privado, quota): tudo bem,
+      // perda de rascunho é graceful — usuário só perde o draft, não o submit.
+    }
+  }
+
+  function clearDraft() {
+    try {
+      window.localStorage.removeItem(draftKey);
+    } catch {
+      // ignore
+    }
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -46,9 +136,10 @@ export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormPr
     formData.set("slug", slug);
     formData.set("rsvpStatus", status);
 
-    startTransition(async () => {
+    startSubmit(async () => {
       const result = await submitRsvp(formData);
       if (result.ok) {
+        clearDraft();
         const kParam = k ? `&k=${encodeURIComponent(k)}` : "";
         router.push(`/${slug}/rsvp/sucesso?status=${result.status}${kParam}`);
       } else if (result.type === "RECOVERY_SENT") {
@@ -76,17 +167,46 @@ export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormPr
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form
+      ref={formRef}
+      onSubmit={handleSubmit}
+      onInput={persistDraft}
+      onChange={persistDraft}
+      className="flex flex-col gap-5"
+    >
+      {draftRestored && (
+        <div className="rounded-[var(--theme-radius)] border border-[var(--theme-accent)]/40 bg-[var(--theme-muted)] px-3 py-2 text-xs text-[var(--theme-secondary)] flex items-center justify-between gap-2">
+          <span>📝 Rascunho do que você já tinha digitado.</span>
+          <button
+            type="button"
+            onClick={() => {
+              clearDraft();
+              formRef.current?.reset();
+              setDraftRestored(false);
+            }}
+            className="underline underline-offset-2 hover:text-[var(--theme-foreground)]"
+          >
+            Começar do zero
+          </button>
+        </div>
+      )}
+
       {/* Vai / Não vai */}
       <div className="flex gap-3">
         <ToggleButton
           active={status === "CONFIRMED"}
-          onClick={() => setStatus("CONFIRMED")}
+          onClick={() => {
+            setStatus("CONFIRMED");
+            queueMicrotask(persistDraft);
+          }}
           label="✓  Vou ao casamento!"
         />
         <ToggleButton
           active={status === "DECLINED"}
-          onClick={() => setStatus("DECLINED")}
+          onClick={() => {
+            setStatus("DECLINED");
+            queueMicrotask(persistDraft);
+          }}
           label="✗  Não poderei ir"
         />
       </div>
