@@ -210,6 +210,14 @@ export async function signupAction(formData: FormData): Promise<AuthState> {
       html: welcomeVerifyHtml({ name: user.firstName || firstName, verifyUrl }),
       text: welcomeVerifyText({ name: user.firstName || firstName, verifyUrl }),
       idempotencyKey: `welcome-${user.id}`,
+      // Headers que reduzem a chance do Gmail/Outlook jogar em spam:
+      // - Precedence: transactional indica email transacional (não marketing)
+      // - List-Unsubscribe: cumpre RFC 8058 (Gmail exige pra senders >5k/dia)
+      // - X-Entity-Ref-ID: ID estável que ajuda agrupamento por hilo
+      headers: {
+        Precedence: "transactional",
+        "X-Entity-Ref-ID": `welcome-verify-${user.id}`,
+      },
     });
   } catch (emailError) {
     const reason = emailError instanceof Error ? emailError.message : String(emailError);

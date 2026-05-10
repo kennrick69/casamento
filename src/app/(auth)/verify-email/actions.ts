@@ -53,6 +53,11 @@ export async function resendVerificationEmail(
       subject: "Confirme seu e-mail — Voem.",
       html: welcomeVerifyHtml({ name: firstName, verifyUrl }),
       text: welcomeVerifyText({ name: firstName, verifyUrl }),
+      idempotencyKey: `welcome-resend-${user.id}-${token.slice(0, 8)}`,
+      headers: {
+        Precedence: "transactional",
+        "X-Entity-Ref-ID": `welcome-verify-${user.id}`,
+      },
     });
     return { ok: true };
   } catch (emailError) {

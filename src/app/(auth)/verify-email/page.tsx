@@ -50,9 +50,17 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
             </p>
           )}
 
-          <p className="text-xs text-muted-foreground">
-            Não encontrou? Verifique a pasta de spam. O link expira em 24 horas.
-          </p>
+          <div className="text-xs text-muted-foreground space-y-1.5 text-left bg-muted/40 rounded-lg px-4 py-3">
+            <p className="font-medium text-foreground">Não encontrou o e-mail?</p>
+            <ol className="list-decimal list-inside space-y-1">
+              <li>Verifique a pasta de <strong>spam/lixo eletrônico</strong> — costuma cair lá no primeiro envio.</li>
+              <li>Confira se o e-mail digitado está correto.</li>
+              <li>Aguarde até 2 minutos e clique em &quot;Reenviar e-mail&quot;.</li>
+            </ol>
+            <p className="text-[11px] mt-2">
+              Remetente: <code className="font-mono">{process.env.EMAIL_FROM || "noreply@joseeleticia.com"}</code> · Link expira em 24h.
+            </p>
+          </div>
 
           <ResendButton email={userEmail} />
         </div>
