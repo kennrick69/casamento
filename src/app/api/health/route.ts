@@ -40,6 +40,8 @@ function checkPusher(): HealthCheck {
 
 async function checkStorage(): Promise<HealthCheck> {
   const volumePath = process.env.RAILWAY_VOLUME_PATH ?? "/tmp";
+
+  // Caminho pra statfs — gives us free space details when supported
   try {
     const stats = await fs.promises.statfs(volumePath);
     const freeGb = (stats.bfree * stats.bsize) / 1024 ** 3;
@@ -53,7 +55,18 @@ async function checkStorage(): Promise<HealthCheck> {
     }
     return { status: "ok", detail: `${freeGb.toFixed(1)}GB free / ${totalGb.toFixed(1)}GB total` };
   } catch {
-    return { status: "degraded", detail: "statfs unavailable" };
+    // statfs não funciona em alguns containers Linux (ex.: Railway com volume
+    // montado via overlayfs). Cai pra um teste de escrita/leitura: se a gente
+    // consegue criar e remover um arquivo no volume, o storage está saudável.
+    try {
+      const probePath = `${volumePath}/.health-probe-${Date.now()}`;
+      await fs.promises.writeFile(probePath, "ok");
+      await fs.promises.unlink(probePath);
+      return { status: "ok", detail: "writable (statfs unavailable nesse runtime)" };
+    } catch (writeErr) {
+      const reason = writeErr instanceof Error ? writeErr.message : String(writeErr);
+      return { status: "degraded", detail: `volume não escrevível: ${reason}` };
+    }
   }
 }
 
