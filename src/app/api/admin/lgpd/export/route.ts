@@ -51,7 +51,13 @@ export async function GET() {
           where: { deletedAt: null },
           select: {
             name: true, email: true, phone: true, rsvpStatus: true,
-            plusOnes: true, dietaryRestrictions: true, createdAt: true,
+            plusOnes: true, dietaryRestrictions: true, message: true,
+            consentTerms: true, consentPhotoMural: true, profilePublic: true,
+            createdAt: true,
+            companions: {
+              select: { name: true, type: true, createdAt: true },
+              orderBy: { createdAt: "asc" },
+            },
           },
         },
         organizers: { select: { role: true, userId: true } },
@@ -84,9 +90,29 @@ export async function GET() {
     archive.append(JSON.stringify(eventMeta, null, 2), { name: `eventos/${event.slug}/evento.json` });
     if (guests.length > 0) {
       archive.append(
-        toCsv(guests.map((g) => ({ ...g, createdAt: g.createdAt.toISOString() }))),
-        { name: `eventos/${event.slug}/convidados.csv` }
+        toCsv(
+          guests.map(({ companions: _companions, ...g }) => ({
+            ...g,
+            createdAt: g.createdAt.toISOString(),
+            companionsCount: _companions.length,
+          })),
+        ),
+        { name: `eventos/${event.slug}/convidados.csv` },
       );
+      const companionsRows = guests.flatMap((g) =>
+        g.companions.map((c) => ({
+          guestName: g.name,
+          guestEmail: g.email,
+          companionName: c.name,
+          companionType: c.type,
+          addedAt: c.createdAt.toISOString(),
+        })),
+      );
+      if (companionsRows.length > 0) {
+        archive.append(toCsv(companionsRows), {
+          name: `eventos/${event.slug}/acompanhantes.csv`,
+        });
+      }
     }
   }
 
