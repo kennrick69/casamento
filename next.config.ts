@@ -22,8 +22,9 @@ const CSP_DIRECTIVES = [
   "img-src 'self' data: blob: https://i.scdn.co https://mosaic.scdn.co https://images-ak.spotifycdn.com",
   // Connections: own API + Pusher WebSocket (all clusters) + Turnstile + Spotify API + Sentry ingest
   "connect-src 'self' wss://*.pusher.com https://*.pusher.com https://challenges.cloudflare.com https://api.spotify.com https://accounts.spotify.com https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.us.sentry.io",
-  // Frames: Turnstile renders its challenge inside an iframe
-  "frame-src https://challenges.cloudflare.com",
+  // Frames: Turnstile renders its challenge inside an iframe; Google Maps
+  // embed na seção de locais da landing pública.
+  "frame-src https://challenges.cloudflare.com https://maps.google.com https://www.google.com",
   // Block plugins and dynamic base URL overrides
   "object-src 'none'",
   "base-uri 'self'",
