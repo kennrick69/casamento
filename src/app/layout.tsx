@@ -11,6 +11,7 @@ import {
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Toaster } from "@/components/ui/sonner";
+import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
 // Todas as fontes usadas pelos 5 temas — carregadas estaticamente para otimização
@@ -93,6 +94,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <NextIntlClientProvider messages={messages} locale={locale}>
           {children}
           <Toaster richColors position="top-center" />
+          <PwaRegister />
         </NextIntlClientProvider>
       </body>
     </html>
