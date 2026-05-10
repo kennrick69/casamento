@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { getOrganizerEvents } from "@/lib/authorization";
+import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
@@ -13,6 +14,14 @@ export const metadata: Metadata = { title: "Meus eventos" };
 export default async function AdminPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
+
+  // MEL-3: primeiro login → onboarding. A flag onboardingCompleted vira true
+  // ao fim do tour; aqui é o gate que evita pular o tour direto pro painel.
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { onboardingCompleted: true },
+  });
+  if (user && !user.onboardingCompleted) redirect("/admin/onboarding");
 
   const organizers = await getOrganizerEvents(session.user.id);
 

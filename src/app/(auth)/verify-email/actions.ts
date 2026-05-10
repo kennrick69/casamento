@@ -42,7 +42,9 @@ export async function resendVerificationEmail(
   const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
   await prisma.verificationToken.create({ data: { identifier: userEmail, token, expires } });
 
-  const verifyUrl = `${BASE_URL}/api/auth/verify?token=${token}`;
+  // MEL-3: link aponta pro fluxo magic-link (auto-login). Mesma URL usada
+  // pelo signupAction.
+  const verifyUrl = `${BASE_URL}/auth/magic?token=${token}`;
   const firstName = user.firstName ?? user.name?.split(" ")[0] ?? "você";
 
   try {

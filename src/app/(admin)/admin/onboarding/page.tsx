@@ -1,7 +1,9 @@
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { completeOnboarding } from "./actions";
 
 export const metadata: Metadata = { title: "Bem-vindo ao Voem." };
 
@@ -47,11 +49,19 @@ const STEPS = [
 
 export default async function OnboardingPage({ searchParams }: Props) {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  if (!session?.user?.id) redirect("/login");
+
+  // Quem já completou o onboarding não precisa ver de novo
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { onboardingCompleted: true },
+  });
+  if (user?.onboardingCompleted) redirect("/admin");
 
   const { step: stepStr } = await searchParams;
   const stepIndex = Math.max(0, Math.min(2, parseInt(stepStr ?? "1", 10) - 1));
   const step = STEPS[stepIndex];
+  const isLastStep = stepIndex === STEPS.length - 1;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-slate-50 flex items-center justify-center px-4">
@@ -99,19 +109,36 @@ export default async function OnboardingPage({ searchParams }: Props) {
           </div>
 
           <div className="mt-8 flex flex-col gap-3">
-            <Link
-              href={step.next}
-              className="w-full text-center bg-primary text-primary-foreground rounded-lg py-3 text-sm font-medium hover:opacity-90 transition-opacity"
-            >
-              {step.nextLabel}
-            </Link>
-
-            {"skip" in step && step.skip && (
+            {isLastStep ? (
+              // Último passo: marca onboardingCompleted antes de redirecionar
+              <>
+                <form action={completeOnboarding}>
+                  <input type="hidden" name="redirectTo" value={step.next} />
+                  <button
+                    type="submit"
+                    className="w-full text-center bg-primary text-primary-foreground rounded-lg py-3 text-sm font-medium hover:opacity-90 transition-opacity"
+                  >
+                    {step.nextLabel}
+                  </button>
+                </form>
+                {"skip" in step && step.skip && (
+                  <form action={completeOnboarding}>
+                    <input type="hidden" name="redirectTo" value={step.skip} />
+                    <button
+                      type="submit"
+                      className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
+                    >
+                      Ir para o painel
+                    </button>
+                  </form>
+                )}
+              </>
+            ) : (
               <Link
-                href={step.skip}
-                className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
+                href={step.next}
+                className="w-full text-center bg-primary text-primary-foreground rounded-lg py-3 text-sm font-medium hover:opacity-90 transition-opacity"
               >
-                Ir para o painel
+                {step.nextLabel}
               </Link>
             )}
           </div>

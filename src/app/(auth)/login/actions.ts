@@ -200,7 +200,10 @@ export async function signupAction(formData: FormData): Promise<AuthState> {
     const token = crypto.randomUUID();
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await prisma.verificationToken.create({ data: { identifier: email, token, expires } });
-    const verifyUrl = `${BASE_URL}/api/auth/verify?token=${token}`;
+    // MEL-3: link aponta pro fluxo magic-link, que valida o token, marca
+    // emailVerified, cria sessão e redireciona — tudo num clique. Não há
+    // mais o passo "agora faça login com sua senha" depois da verificação.
+    const verifyUrl = `${BASE_URL}/auth/magic?token=${token}`;
     await emailProvider.send({
       to: email,
       subject: "Confirme seu e-mail — Voem.",
