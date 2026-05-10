@@ -97,7 +97,7 @@ function buildHtml(today: string, fileDates: Record<string, string>): string {
       checkRow(false, "<strong>Wizard de criação de evento</strong> — 4 passos, validação inline pt-BR, auto-save onBlur, guard step=4 em eventos publicados"),
       checkRow(false, "<strong>RSVP do convidado</strong> — formulário completo (+1, dietético, mensagem), email de confirmação com data/local/links"),
       checkRow(false, "<strong>Mural de fotos</strong> — upload com compressão client-side, modal com swipe/teclado, reações toggleáveis por sessionId"),
-      checkRow(false, "<strong>Chat em tempo real</strong> — Pusher, typing indicator, reações por duplo clique, badge Casal para organizadores"),
+      checkRow(false, "<strong>Chat em tempo real</strong> — Pusher, reações por duplo clique, badge Casal para organizadores"),
       checkRow(false, "<strong>Playlist com Spotify</strong> — busca debounced 400ms, preview 30s, limite 3 sugestões/convidado, modo manual fallback"),
       checkRow(false, "<strong>Gincana</strong> — barra de progresso por faixa de pontos, missões customizadas no admin, QR code check-in, ranking top-3 com medalhas"),
       checkRow(false, "<strong>Plano de mesas</strong> — drag-and-drop, export PDF, mesa exibida na tela de sucesso do RSVP"),

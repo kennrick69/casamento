@@ -67,7 +67,6 @@ export default async function ChatPage({
       eventId={event.id}
       initialMessages={serialized}
       guestId={guest?.id ?? null}
-      guestName={guest?.name ?? null}
       coupleGuestIds={[...coupleGuestIds]}
       pusherKey={process.env.NEXT_PUBLIC_PUSHER_KEY ?? null}
       pusherCluster={process.env.NEXT_PUBLIC_PUSHER_CLUSTER ?? null}

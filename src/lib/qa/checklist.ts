@@ -421,20 +421,6 @@ export const CHECKLIST: ChecklistItem[] = [
     knownIssues: [],
   },
   {
-    id: "chat-typing",
-    section: "Chat",
-    title: "Indicador de digitação",
-    url: "/[slug]/chat",
-    steps: [
-      "Abra o chat em dois navegadores com contas diferentes",
-      "No primeiro, comece a digitar",
-      "Verifique que o segundo exibe '... está digitando'",
-      "Pare de digitar e verifique que o indicador some",
-    ],
-    expected: "Indicador de digitação aparece e desaparece corretamente em tempo real",
-    knownIssues: [],
-  },
-  {
     id: "chat-reactions",
     section: "Chat",
     title: "Reações duplo-clique",

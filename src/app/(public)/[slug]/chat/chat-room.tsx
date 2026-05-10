@@ -19,7 +19,6 @@ interface ChatRoomProps {
   eventId: string;
   initialMessages: Message[];
   guestId: string | null;
-  guestName: string | null;
   coupleGuestIds: string[];
   pusherKey: string | null;
   pusherCluster: string | null;
@@ -51,7 +50,6 @@ export function ChatRoom({
   eventId,
   initialMessages,
   guestId,
-  guestName: _guestName,
   coupleGuestIds,
   pusherKey,
   pusherCluster,
@@ -59,14 +57,12 @@ export function ChatRoom({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [text, setText] = useState("");
   const [isPending, startTransition] = useTransition();
-  const [typingNames, setTypingNames] = useState<string[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [atBottom, setAtBottom] = useState(true);
   const [reactionPicker, setReactionPicker] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const coupleSet = new Set(coupleGuestIds);
 
   // Pusher connection
@@ -98,17 +94,6 @@ export function ChatRoom({
           prev.map((m) => m.id === messageId ? { ...m, reactions } : m)
         );
       });
-
-      channel.bind("typing", ({ name, guestId: typerId }: { name: string; guestId: string }) => {
-        if (typerId === guestId) return;
-        setTypingNames((prev) => {
-          if (prev.includes(name)) return prev;
-          return [...prev, name];
-        });
-        setTimeout(() => {
-          setTypingNames((prev) => prev.filter((n) => n !== name));
-        }, 3000);
-      });
     });
 
     return () => {
@@ -138,18 +123,6 @@ export function ChatRoom({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     setAtBottom(true);
     setUnreadCount(0);
-  }
-
-  // Typing indicator trigger
-  function notifyTyping() {
-    if (!pusherKey || !guestId) return;
-    if (typingTimeout.current) clearTimeout(typingTimeout.current);
-    void fetch(`/api/pusher/typing`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ eventId, name: _guestName ?? "Alguém", guestId }),
-    }).catch(() => null);
-    typingTimeout.current = setTimeout(() => { typingTimeout.current = null; }, 2000);
   }
 
   // Image paste
@@ -299,12 +272,6 @@ export function ChatRoom({
           );
         })}
 
-        {typingNames.length > 0 && (
-          <div className="self-start text-xs text-[var(--theme-secondary)] px-1 italic">
-            {typingNames.join(", ")} está digitando…
-          </div>
-        )}
-
         <div ref={bottomRef} />
       </div>
 
@@ -329,7 +296,7 @@ export function ChatRoom({
             ref={inputRef}
             type="text"
             value={text}
-            onChange={(e) => { setText(e.target.value); notifyTyping(); }}
+            onChange={(e) => setText(e.target.value)}
             onPaste={handlePaste}
             placeholder="Mensagem…"
             maxLength={500}
