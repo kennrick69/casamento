@@ -143,8 +143,12 @@ export function ProtoScene() {
         const point = 'touches' in e ? e.touches[0] : e;
         const dx = point.clientX - startX;
         const dy = point.clientY - startY;
-        posObj.current.x = Math.max(0, Math.min(330, startPosX + dx));
-        posObj.current.y = Math.max(80, Math.min(450, startPosY + dy));
+        // Limites dinâmicos: container 380x580, descontando tamanho do boneco
+        // para a Letícia (125x225) e o José (50x90) terem clamps corretos.
+        const maxX = 380 - (el?.offsetWidth || 50);
+        const maxY = 580 - (el?.offsetHeight || 90);
+        posObj.current.x = Math.max(0, Math.min(maxX, startPosX + dx));
+        posObj.current.y = Math.max(80, Math.min(maxY, startPosY + dy));
         if (el) {
           el.style.left = posObj.current.x + 'px';
           el.style.top = posObj.current.y + 'px';
@@ -406,15 +410,16 @@ export function ProtoScene() {
         UNA O CASAL
       </div>
 
-      {/* Noiva — GIF animado (Letícia). Wrapper mantém o tamanho/posição do drag.  */}
+      {/* Noiva — GIF animado (Letícia). Wrapper 2.5x do tamanho-base do José
+          para dar destaque visual à arte real; drag continua pelo wrapper. */}
       <div
         ref={brideRef}
         style={{
           position: 'absolute',
           top: '220px',
           left: '60px',
-          width: '50px',
-          height: '90px',
+          width: '125px',
+          height: '225px',
           cursor: 'grab',
           touchAction: 'none',
           zIndex: 5,
