@@ -406,7 +406,7 @@ export function ProtoScene() {
         UNA O CASAL
       </div>
 
-      {/* Noiva */}
+      {/* Noiva — GIF animado (Letícia). Wrapper mantém o tamanho/posição do drag.  */}
       <div
         ref={brideRef}
         style={{
@@ -420,71 +420,18 @@ export function ProtoScene() {
           zIndex: 5,
         }}
       >
-        {/* Cabeça */}
-        <div
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/landing/pingpong.gif"
+          alt="Letícia"
+          draggable={false}
           style={{
-            position: 'absolute',
-            top: 0,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '28px',
-            height: '28px',
-            background: '#f4d4c0',
-            borderRadius: '50%',
-            border: '2px solid #2c1810',
-          }}
-        />
-        {/* Cabelo */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '-8px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '36px',
-            height: '24px',
-            background: '#4a2c1f',
-            borderRadius: '50% 50% 30% 30%',
-          }}
-        />
-        {/* Vestido */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '26px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '44px',
-            height: '60px',
-            background: '#ffffff',
-            borderRadius: '30% 30% 8% 8%',
-            border: '2px solid #2c1810',
-          }}
-        />
-        {/* Braço esquerdo */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '30px',
-            left: '-2px',
-            width: '14px',
-            height: '4px',
-            background: '#f4d4c0',
-            borderRadius: '4px',
-            border: '1.5px solid #2c1810',
-          }}
-        />
-        {/* Braço direito */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '30px',
-            right: '-2px',
-            width: '14px',
-            height: '4px',
-            background: '#f4d4c0',
-            borderRadius: '4px',
-            border: '1.5px solid #2c1810',
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            pointerEvents: 'none',
+            mixBlendMode: 'multiply',
+            userSelect: 'none',
           }}
         />
       </div>
