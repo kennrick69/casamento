@@ -5,6 +5,24 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## 2026-05-10 — Landing com GIFs animados dos personagens
+
+### Mudado
+- **ProtoScene** (`src/components/landing/ProtoScene.tsx`) — bonecos do casal substituídos por GIFs animados.
+  - **Letícia** (`/landing/pingpong.gif`, 928 KB): assume a posição direita da cena (`right:60`), espelhada horizontalmente via `transform: scaleX(-1)`.
+  - **José** (`/landing/josepingpong.gif`, 948 KB): assume a posição esquerda (`left:60`). Antes era greybox CSS.
+  - Wrappers passam de 50×90 px para **125×225 px** (2.5×) para destaque visual proporcional à arte real.
+  - `<img>` interno: `mix-blend-mode: multiply` para integrar fundo claro do GIF com o gradiente, `pointer-events: none` + `draggable={false}` para não conflitar com o drag custom do wrapper.
+  - Drag clamp passa a usar `offsetWidth/Height` em vez de constantes 330/450 — robusto para qualquer tamanho de boneco.
+  - `unite()` reposiciona os bonecos para sobreposição visual de ~50 px no estado de voo (antes ficavam lado-a-lado sem gap).
+  - `checkUnion` threshold ajustado para `dx<100` para acomodar as novas posições iniciais (`dx=135`) sem disparar `unite()` no primeiro pixel de drag.
+- Banner `data-testid="prototype-banner"` ("🚧 Protótipo · arte final em produção") mantido — definir se os GIFs ping-pong são a arte final ou interim.
+
+### Commits
+`33f26e1` · `21c33dc` · `ceaa8d0` · `fba15c5` · `a7a3ce1`
+
+---
+
 ## [M5] — 2026-05-09 — Refinamentos avançados
 
 ### Adicionado

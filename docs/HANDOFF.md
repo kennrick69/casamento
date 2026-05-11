@@ -15,7 +15,27 @@ Dashboard de QA built-in em `/admin/qa` com:
 - Relatório copiável (Markdown) com resumo pass/fail/skip
 - Modelo Prisma `QATestRun` com campo `results Json`
 
-### Últimos 6 itens corrigidos — QA de autenticação (2026-05-09)
+### Última sprint — Landing com GIFs animados dos personagens (2026-05-10)
+
+Substituição parcial do `ProtoScene` (cena interativa "una o casal" da landing) pelos GIFs reais dos personagens, mantendo o banner "🚧 Protótipo · arte final em produção" até a arte definitiva chegar.
+
+1. **GIF da Letícia integrado** — `public/landing/pingpong.gif` substitui as 5 divs CSS greybox que compunham a noiva. Wrapper `brideRef` mantido intocado para preservar o drag custom; `<img>` interno com `pointer-events:none + draggable={false} + mix-blend-mode:multiply` para integrar fundo claro do GIF com o gradiente.
+
+2. **Bonecos aumentados 2.5x** — wrapper passa de 50×90 para 125×225 px para dar peso visual proporcional à arte real. Drag clamp passa a usar `offsetWidth/Height` em vez de hardcoded 330/450 — funciona corretamente para qualquer tamanho de boneco.
+
+3. **GIF do José integrado + posições invertidas** — `public/landing/josepingpong.gif` substitui o boneco CSS do José. **José assume a esquerda (left:60) e Letícia passa para a direita (right:60)**. A Letícia ganha `transform: scaleX(-1)` para ficar espelhada e encarar o José. `bridePos`/`groomPos`, `unite()` e `reset()` reescritos para refletir as novas posições.
+
+4. **Bug do drag corrigido** — `checkUnion` threshold subiu de 70 → 140 no commit 21c33dc, mas as posições iniciais têm `dx=135`, então o `unite()` disparava no primeiro pixel de drag e os bonecos "fugiam" ao toque. Threshold final: **100** (exige ~35px de aproximação para disparar o voo).
+
+5. **Bonecos se abraçam no voo** — posições finais do `unite()` passam de groom.x=65/bride.x=190 (gap=0) para groom.x=90/bride.x=165 (**sobreposição visual de 50px**).
+
+**Commits:** `33f26e1` · `21c33dc` · `ceaa8d0` · `fba15c5` · `a7a3ce1`
+
+**Tech-debt remanescente:** banner "Protótipo · arte final em produção" segue ativo (`ProtoScene.tsx` `data-testid="prototype-banner"`). Próximo passo é decidir se os GIFs ping-pong são a arte definitiva ou interim — se interim, falta a versão final (estilo igual mas talvez com cenário/luz integrada).
+
+---
+
+### Sprint anterior — QA de autenticação (2026-05-09)
 
 1. **Zero cookies antes do login completo** — removido `signIn()` do `signupAction`; fluxo agora é signup → email → `/verify-email?email=xxx` (sem sessão) → clicar no link → `/login?verified=1` → usuário faz login → cookie de sessão criado. Elimina o bug de sessão preematura após Cmd+Shift+R na tela de verificação.
 
