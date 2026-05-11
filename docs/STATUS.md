@@ -90,7 +90,7 @@
 | Item | Status |
 |------|--------|
 | Substituir hero da landing (`/`) por ilustração final (arte do casal) | Aguardando Midjourney |
-| Substituir greybox do ProtoScene por arte final | Letícia (esquerda) integrada como GIF animado em 2026-05-10. Falta arte do José (direita). |
+| Substituir greybox do ProtoScene por arte final | José (esquerda) e Letícia (direita, espelhada) integrados como GIFs animados em 2026-05-10. Banner "Protótipo · arte final em produção" mantido até substituir GIFs por arte definitiva. |
 | Gateway de pagamento real (Stripe/Pagar.me) | Stub implementado |
 | Lembretes via WhatsApp (Twilio) | Email cobre o caso de uso atual |
 | Remover campos legados de local no model Event | Após confirmar migração completa para EventLocation |

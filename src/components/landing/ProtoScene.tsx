@@ -20,8 +20,10 @@ export function ProtoScene() {
   const [showFailText, setShowFailText] = useState(false);
 
   const stateRef = useRef<SceneState>('falling');
-  const bridePos = useRef({ x: 60, y: 220 });
-  const groomPos = useRef({ x: 270, y: 220 });
+  // José (groom) começa à esquerda em left=60. Letícia (bride) começa à direita
+  // em right=60 — com largura 125 e container 380, left-effective = 380-125-60 = 195.
+  const bridePos = useRef({ x: 195, y: 220 });
+  const groomPos = useRef({ x: 60, y: 220 });
 
   const cloudPositions = useRef([
     { x: -60, y: 80, vx: 0.8, vy: 1.2 },
@@ -42,17 +44,21 @@ export function ProtoScene() {
     stateRef.current = 'flying';
 
     const centerY = 280;
-    bridePos.current = { x: 130, y: centerY };
-    groomPos.current = { x: 200, y: centerY };
+    // Lado-a-lado centralizados: dois bonecos de 125w preenchem 250 do canvas 380,
+    // sobrando 65 de cada lado. José (esquerda) em x=65, Letícia (direita) em x=190.
+    bridePos.current = { x: 190, y: centerY };
+    groomPos.current = { x: 65, y: centerY };
 
     if (brideRef.current) {
       brideRef.current.style.transition = 'all 0.8s ease-out';
-      brideRef.current.style.left = '130px';
+      brideRef.current.style.left = '190px';
+      brideRef.current.style.right = 'auto';
       brideRef.current.style.top = centerY + 'px';
     }
     if (groomRef.current) {
       groomRef.current.style.transition = 'all 0.8s ease-out';
-      groomRef.current.style.left = '200px';
+      groomRef.current.style.left = '65px';
+      groomRef.current.style.right = 'auto';
       groomRef.current.style.top = centerY + 'px';
     }
 
@@ -107,8 +113,9 @@ export function ProtoScene() {
   const checkUnion = useCallback(() => {
     const dx = Math.abs(bridePos.current.x - groomPos.current.x);
     const dy = Math.abs(bridePos.current.y - groomPos.current.y);
-    // Threshold permissivo (70x50) pra facilitar acerto em mobile
-    if (dx < 70 && dy < 50) {
+    // Threshold ajustado pros bonecos 125w: lado-a-lado tem dx≈125, então
+    // dx<140 dispara quando estão "quase tocando". dy mantém 50 (vertical pouco varia).
+    if (dx < 140 && dy < 50) {
       unite();
     }
   }, [unite]);
@@ -253,19 +260,19 @@ export function ProtoScene() {
     setShowButton(false);
     setShowFailText(false);
 
-    bridePos.current = { x: 60, y: 220 };
-    groomPos.current = { x: 270, y: 220 };
+    bridePos.current = { x: 195, y: 220 };
+    groomPos.current = { x: 60, y: 220 };
 
     if (brideRef.current) {
       brideRef.current.style.transition = 'none';
-      brideRef.current.style.left = '60px';
+      brideRef.current.style.left = 'auto';
+      brideRef.current.style.right = '60px';
       brideRef.current.style.top = '220px';
-      brideRef.current.style.right = 'auto';
     }
     if (groomRef.current) {
       groomRef.current.style.transition = 'none';
-      groomRef.current.style.left = 'auto';
-      groomRef.current.style.right = '60px';
+      groomRef.current.style.left = '60px';
+      groomRef.current.style.right = 'auto';
       groomRef.current.style.top = '220px';
     }
   }
@@ -410,14 +417,14 @@ export function ProtoScene() {
         UNA O CASAL
       </div>
 
-      {/* Noiva — GIF animado (Letícia). Wrapper 2.5x do tamanho-base do José
-          para dar destaque visual à arte real; drag continua pelo wrapper. */}
+      {/* Noiva — GIF animado da Letícia. Fica à DIREITA da cena, espelhada
+          horizontalmente para encarar o José que vem da esquerda. */}
       <div
         ref={brideRef}
         style={{
           position: 'absolute',
           top: '220px',
-          left: '60px',
+          right: '60px',
           width: '125px',
           height: '225px',
           cursor: 'grab',
@@ -437,99 +444,38 @@ export function ProtoScene() {
             pointerEvents: 'none',
             mixBlendMode: 'multiply',
             userSelect: 'none',
+            transform: 'scaleX(-1)',
           }}
         />
       </div>
 
-      {/* Noivo */}
+      {/* Noivo — GIF animado do José. Fica à ESQUERDA da cena (mesmo tamanho
+          da Letícia para coerência visual). */}
       <div
         ref={groomRef}
         style={{
           position: 'absolute',
           top: '220px',
-          right: '60px',
-          width: '50px',
-          height: '90px',
+          left: '60px',
+          width: '125px',
+          height: '225px',
           cursor: 'grab',
           touchAction: 'none',
           zIndex: 5,
         }}
       >
-        {/* Cabeça */}
-        <div
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/landing/josepingpong.gif"
+          alt="José"
+          draggable={false}
           style={{
-            position: 'absolute',
-            top: 0,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '28px',
-            height: '28px',
-            background: '#f4d4c0',
-            borderRadius: '50%',
-            border: '2px solid #2c1810',
-          }}
-        />
-        {/* Cabelo */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '-4px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '32px',
-            height: '16px',
-            background: '#2c1810',
-            borderRadius: '50% 50% 20% 20%',
-          }}
-        />
-        {/* Smoking */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '26px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '36px',
-            height: '56px',
-            background: '#1a1a1a',
-            borderRadius: '8px',
-          }}
-        />
-        {/* Camisa branca no centro */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '32px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '6px',
-            height: '30px',
-            background: '#ffffff',
-          }}
-        />
-        {/* Braços */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '30px',
-            left: '-2px',
-            width: '14px',
-            height: '4px',
-            background: '#f4d4c0',
-            borderRadius: '4px',
-            border: '1.5px solid #2c1810',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            top: '30px',
-            right: '-2px',
-            width: '14px',
-            height: '4px',
-            background: '#f4d4c0',
-            borderRadius: '4px',
-            border: '1.5px solid #2c1810',
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            pointerEvents: 'none',
+            mixBlendMode: 'multiply',
+            userSelect: 'none',
           }}
         />
       </div>
