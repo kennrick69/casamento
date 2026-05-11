@@ -113,9 +113,12 @@ export function ProtoScene() {
   const checkUnion = useCallback(() => {
     const dx = Math.abs(bridePos.current.x - groomPos.current.x);
     const dy = Math.abs(bridePos.current.y - groomPos.current.y);
-    // Threshold ajustado pros bonecos 125w: lado-a-lado tem dx≈125, então
-    // dx<140 dispara quando estão "quase tocando". dy mantém 50 (vertical pouco varia).
-    if (dx < 140 && dy < 50) {
+    // Threshold ajustado pros bonecos 125w. Posições iniciais (José x=60,
+    // Letícia x=195) têm dx=135, então o threshold tem que ficar BEM abaixo
+    // disso ou o unite() dispara no primeiro pixel de drag e os bonecos
+    // "fogem" antes do usuário arrastar. 100 = exige ~35px de aproximação,
+    // sobreposição visual de ~25px (eles se "abraçam" antes do voo).
+    if (dx < 100 && dy < 50) {
       unite();
     }
   }, [unite]);
