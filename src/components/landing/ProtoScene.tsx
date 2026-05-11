@@ -44,20 +44,21 @@ export function ProtoScene() {
     stateRef.current = 'flying';
 
     const centerY = 280;
-    // Lado-a-lado centralizados: dois bonecos de 125w preenchem 250 do canvas 380,
-    // sobrando 65 de cada lado. José (esquerda) em x=65, Letícia (direita) em x=190.
-    bridePos.current = { x: 190, y: centerY };
-    groomPos.current = { x: 65, y: centerY };
+    // Abraçados: cada boneco se aproxima 25px do centro a partir do lado-a-lado,
+    // criando sobreposição visual de ~50px (40% da largura). Combinação ainda
+    // centrada no canvas 380 (centro em 190).
+    bridePos.current = { x: 165, y: centerY };
+    groomPos.current = { x: 90, y: centerY };
 
     if (brideRef.current) {
       brideRef.current.style.transition = 'all 0.8s ease-out';
-      brideRef.current.style.left = '190px';
+      brideRef.current.style.left = '165px';
       brideRef.current.style.right = 'auto';
       brideRef.current.style.top = centerY + 'px';
     }
     if (groomRef.current) {
       groomRef.current.style.transition = 'all 0.8s ease-out';
-      groomRef.current.style.left = '65px';
+      groomRef.current.style.left = '90px';
       groomRef.current.style.right = 'auto';
       groomRef.current.style.top = centerY + 'px';
     }
