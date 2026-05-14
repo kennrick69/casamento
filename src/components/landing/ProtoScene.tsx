@@ -9,10 +9,11 @@ export function ProtoScene() {
   const containerRef = useRef<HTMLDivElement>(null);
   const brideRef = useRef<HTMLDivElement>(null);
   const groomRef = useRef<HTMLDivElement>(null);
-  const cloud0Ref = useRef<HTMLDivElement>(null);
-  const cloud1Ref = useRef<HTMLDivElement>(null);
-  const cloud2Ref = useRef<HTMLDivElement>(null);
-  const cloud3Ref = useRef<HTMLDivElement>(null);
+  const sunRef = useRef<HTMLImageElement>(null);
+  const cloud0Ref = useRef<HTMLImageElement>(null);
+  const cloud1Ref = useRef<HTMLImageElement>(null);
+  const cloud2Ref = useRef<HTMLImageElement>(null);
+  const cloud3Ref = useRef<HTMLImageElement>(null);
 
   const [state, setState] = useState<SceneState>('falling');
   const [timeLeft, setTimeLeft] = useState(15);
@@ -25,11 +26,13 @@ export function ProtoScene() {
   const bridePos = useRef({ x: 195, y: 220 });
   const groomPos = useRef({ x: 60, y: 220 });
 
+  // Parallax horizontal contínuo. vx em px/tick a 50ms.
+  // Travessia ~30s para a frontal maior, ~60s para a traseira menor.
   const cloudPositions = useRef([
-    { x: -60, y: 80, vx: 0.8, vy: 1.2 },
-    { x: 290, y: 200, vx: -0.6, vy: 1.5 },
-    { x: 20, y: 340, vx: 0.5, vy: 1.0 },
-    { x: 250, y: 420, vx: -0.7, vy: 1.3 },
+    { x: 20, y: 90, vx: 0.93 },    // nuvem1 — 180w, frente do sol
+    { x: 220, y: 170, vx: 0.5 },   // nuvem2 — 120w, atrás do sol
+    { x: -40, y: 340, vx: 0.625 }, // nuvem3 — 120w, frente do sol
+    { x: 280, y: 440, vx: 0.383 }, // nuvem4 —  80w, atrás do sol
   ]);
 
   useEffect(() => {
@@ -231,29 +234,38 @@ export function ProtoScene() {
   }, [state, fail]);
 
   // ========== CLOUDS ==========
+  // Parallax horizontal contínuo, independente do state. Cada nuvem com
+  // velocidade diferente (vx) para dar sensação de profundidade. Sai pela
+  // esquerda e volta entrando pela direita (x=380).
   useEffect(() => {
-    // Array local dentro do effect — acesso a .current aqui é seguro (fora do render)
     const cloudElRefs = [cloud0Ref, cloud1Ref, cloud2Ref, cloud3Ref];
+    const cloudWidths = [180, 120, 120, 80];
     const interval = setInterval(() => {
       cloudPositions.current.forEach((c, i) => {
-        if (stateRef.current === 'flying') {
-          c.x -= 1.5;
-          if (c.x < -150) c.x = 380;
-        } else {
-          c.y -= c.vy;
-          if (c.y < -50) {
-            c.y = 600;
-            c.x = Math.random() * 320 - 40;
-          }
-        }
+        c.x -= c.vx;
+        if (c.x < -cloudWidths[i]) c.x = 380;
         const el = cloudElRefs[i].current;
-        if (el) {
-          el.style.left = c.x + 'px';
-          el.style.top = c.y + 'px';
-        }
+        if (el) el.style.left = c.x + 'px';
       });
     }, 50);
     return () => clearInterval(interval);
+  }, []);
+
+  // ========== SUN BREATHE ==========
+  // Oscilação leve de escala (1.0 → 1.05 → 1.0) em loop de 4s ease-in-out.
+  // Web Animations API evita injetar @keyframes no CSS global.
+  useEffect(() => {
+    const el = sunRef.current;
+    if (!el) return;
+    const anim = el.animate(
+      [
+        { transform: 'scale(1)' },
+        { transform: 'scale(1.05)' },
+        { transform: 'scale(1)' },
+      ],
+      { duration: 4000, iterations: Infinity, easing: 'ease-in-out' }
+    );
+    return () => anim.cancel();
   }, []);
 
   // ========== RESET ==========
@@ -299,85 +311,105 @@ export function ProtoScene() {
         margin: '0 auto',
         overflow: 'hidden',
         borderRadius: '16px',
-        background:
-          'linear-gradient(180deg, #f5b893 0%, #f7a07c 30%, #e8849a 60%, #b67ea8 90%, #5d5680 100%)',
+        // ceu.png já traz céu pôr do sol + cidade no horizonte + oceano com
+        // ondas cartoon. Substitui o gradiente CSS e o SVG de mar/horizonte.
+        backgroundImage: 'url(/landing/ceu.png)',
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
         userSelect: 'none',
         touchAction: 'none',
       }}
     >
-      {/* Mar e horizonte */}
-      <svg
-        viewBox="0 0 380 580"
-        style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
-        preserveAspectRatio="none"
-      >
-        <ellipse cx="190" cy="540" rx="280" ry="60" fill="#d68a6a" opacity="0.6" />
-        <ellipse cx="190" cy="555" rx="320" ry="50" fill="#a85f6e" opacity="0.5" />
-        <line
-          x1="0"
-          y1="510"
-          x2="380"
-          y2="510"
-          stroke="#f9d896"
-          strokeWidth="2"
-          opacity="0.7"
-        />
-        {/* Sol */}
-        <circle cx="280" cy="120" r="40" fill="#fde0a8" opacity="0.5" />
-        <circle cx="280" cy="120" r="28" fill="#fbc678" opacity="0.7" />
-      </svg>
-
-      {/* Nuvens */}
-      <div
-        ref={cloud0Ref}
+      {/* Sol cartoon — z-index 2 fica entre nuvens-trás (1) e nuvens-frente (3) */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        ref={sunRef}
+        src="/landing/sol.png"
+        alt=""
+        draggable={false}
         style={{
           position: 'absolute',
-          top: '80px',
-          left: '-60px',
-          width: '120px',
-          height: '35px',
-          background: 'rgba(255,240,230,0.7)',
-          borderRadius: '50px',
-          pointerEvents: 'none',
-        }}
-      />
-      <div
-        ref={cloud1Ref}
-        style={{
-          position: 'absolute',
-          top: '200px',
-          right: '-40px',
+          top: '55px',
+          right: '58px',
           width: '90px',
-          height: '28px',
-          background: 'rgba(255,220,210,0.6)',
-          borderRadius: '50px',
+          height: 'auto',
           pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 2,
+          transformOrigin: 'center',
         }}
       />
-      <div
+
+      {/* Nuvens — parallax horizontal. zIndex alternado para profundidade:
+          1, 3, 1, 3 → algumas passam atrás do sol (z=2), outras na frente.
+          O `top` é fixo no JSX; o `left` é controlado pelo useEffect CLOUDS. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        ref={cloud0Ref}
+        src="/landing/nuvem1.png"
+        alt=""
+        draggable={false}
+        style={{
+          position: 'absolute',
+          top: '90px',
+          left: '20px',
+          width: '180px',
+          height: 'auto',
+          pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 3,
+        }}
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        ref={cloud1Ref}
+        src="/landing/nuvem2.png"
+        alt=""
+        draggable={false}
+        style={{
+          position: 'absolute',
+          top: '170px',
+          left: '220px',
+          width: '120px',
+          height: 'auto',
+          pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 1,
+        }}
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         ref={cloud2Ref}
+        src="/landing/nuvem3.png"
+        alt=""
+        draggable={false}
         style={{
           position: 'absolute',
           top: '340px',
-          left: '20px',
-          width: '140px',
-          height: '38px',
-          background: 'rgba(255,200,200,0.5)',
-          borderRadius: '50px',
+          left: '-40px',
+          width: '120px',
+          height: 'auto',
           pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 3,
         }}
       />
-      <div
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         ref={cloud3Ref}
+        src="/landing/nuvem4.png"
+        alt=""
+        draggable={false}
         style={{
           position: 'absolute',
-          top: '420px',
-          right: '10px',
-          width: '100px',
-          height: '30px',
-          background: 'rgba(255,180,190,0.6)',
-          borderRadius: '50px',
+          top: '440px',
+          left: '280px',
+          width: '80px',
+          height: 'auto',
           pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 1,
         }}
       />
 

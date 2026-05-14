@@ -90,7 +90,7 @@
 | Item | Status |
 |------|--------|
 | Substituir hero da landing (`/`) por ilustração final (arte do casal) | Aguardando Midjourney |
-| Substituir greybox do ProtoScene por arte final | José (esquerda) e Letícia (direita, espelhada) integrados como GIFs animados em 2026-05-10. Banner "Protótipo · arte final em produção" mantido até substituir GIFs por arte definitiva. |
+| Substituir greybox do ProtoScene por arte final | Personagens: José (esquerda) e Letícia (direita, espelhada) integrados como GIFs animados em 2026-05-10. Cenário: background (`/landing/ceu.png`), sol cartoon (`/landing/sol.png` com animação "respirar") e 4 nuvens (`/landing/nuvem1–4.png` com parallax horizontal contínuo) integrados em 2026-05-14. **Pendente:** versão transparente dos GIFs `pingpong.gif` e `josepingpong.gif` (ambos ainda renderizam com halo bege via `mix-blend-mode: multiply`). Banner "Protótipo · arte final em produção" mantido. |
 | Gateway de pagamento real (Stripe/Pagar.me) | Stub implementado |
 | Lembretes via WhatsApp (Twilio) | Email cobre o caso de uso atual |
 | Remover campos legados de local no model Event | Após confirmar migração completa para EventLocation |

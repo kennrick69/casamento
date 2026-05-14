@@ -98,15 +98,20 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 ---
 
-## 🟡 MÉDIA — Substituir greybox por arte final do casal (landing interativa)
+## 🟡 MÉDIA — Substituir interim por arte final do casal (landing interativa)
 
-**Status:** landing `/` usa bonecos greybox (CSS puro). Arte real aguardando produção com Midjourney.
+**Status:** integração parcial dos assets reais em andamento.
 
-**O que falta:** assets finais (6 imagens de personagens + cenário) gerados e aprovados pela noiva. Quando prontos, substituir os divs greybox no `ProtoScene` pelas imagens reais e remover o banner `data-testid="prototype-banner"`.
+- **Personagens (interim):** Letícia (`/landing/pingpong.gif`) e José (`/landing/josepingpong.gif`) integrados em 2026-05-10 como GIFs com `mix-blend-mode: multiply`.
+- **Cenário (completo):** background (`/landing/ceu.png` — céu pôr do sol + cidade no horizonte + oceano com ondas), sol (`/landing/sol.png`, animação "respirar" 4s ease-in-out) e 4 nuvens (`/landing/nuvem1–4.png`, parallax horizontal contínuo com `vx` variável e zIndex alternado para passar atrás/na frente do sol) integrados em 2026-05-14.
+
+**O que falta:**
+
+1. **Versão transparente do `pingpong.gif`** — o GIF atual da Letícia tem fundo bege opaco. Mesmo com `mix-blend-mode: multiply`, ele sangra um halo bege/marrom contra o novo background (`ceu.png`). Quando a versão transparente subir: substituir o arquivo e **remover** o `mixBlendMode: 'multiply'` da `<img>` interna do `brideRef`.
+2. **Versão transparente do `josepingpong.gif`** — mesma situação do José. Por enquanto também usa `mix-blend-mode: multiply`.
+3. **Arte definitiva dos personagens** (caso os GIFs ping-pong sejam interim e não final) — substituir e remover banner `data-testid="prototype-banner"`.
 
 **Spec completa:** `docs/future-features/landing-interativa-una-o-casal.md`
-
-**Quando fazer:** após conclusão do Bloco A e aprovação visual com a noiva.
 
 ---
 
