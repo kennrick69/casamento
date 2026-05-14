@@ -35,18 +35,20 @@ export function ProtoScene() {
   //  - flying/failed: nuvens passam horizontal (x -= speed) — viagem
   // Valores diferentes por nuvem dão parallax (mais próxima = mais rápida).
   // Velocidades dobradas a pedido (eram 0.93/0.5/0.625/0.383).
+  // Y de todas mantido dentro de [80, 435] — 3/4 superiores do container
+  // 580px. O quarto inferior é mar/cidade no ceu.png e fica sem nuvens.
   const cloudPositions = useRef([
-    { x: 20, y: 90, speed: 1.86 },    // nuvem1 — 180w, frente do sol
+    { x: 20, y: 80, speed: 1.86 },    // nuvem1 — 180w, frente do sol
     { x: 220, y: 170, speed: 1.0 },   // nuvem2 — 120w, atrás do sol
-    { x: -40, y: 340, speed: 1.25 },  // nuvem3 — 120w, frente do sol
-    { x: 280, y: 440, speed: 0.766 }, // nuvem4 —  80w, atrás do sol
+    { x: -40, y: 270, speed: 1.25 },  // nuvem3 — 120w, frente do sol
+    { x: 280, y: 360, speed: 0.766 }, // nuvem4 —  80w, atrás do sol
   ]);
   // Posições iniciais salvas para o reset().
   const cloudInitial = useRef([
-    { x: 20, y: 90 },
+    { x: 20, y: 80 },
     { x: 220, y: 170 },
-    { x: -40, y: 340 },
-    { x: 280, y: 440 },
+    { x: -40, y: 270 },
+    { x: 280, y: 360 },
   ]);
 
   useEffect(() => {
@@ -271,7 +273,9 @@ export function ProtoScene() {
           c.y -= c.speed;
           const h = el?.offsetHeight ?? 100;
           if (c.y < -h) {
-            c.y = 580;
+            // Reentra na metade inferior da zona de céu (250–435),
+            // evitando o quarto inferior (mar/cidade do ceu.png).
+            c.y = 250 + Math.random() * 185;
             c.x = Math.random() * 320 - 40;
           }
         } else {
