@@ -382,7 +382,7 @@ export function ProtoScene() {
         touchAction: 'none',
       }}
     >
-      {/* Sol cartoon — z-index 2 fica entre nuvens-trás (1) e nuvens-frente (3) */}
+      {/* Sol cartoon — z-index 1, atrás de todas as nuvens (z=3). */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         ref={sunRef}
@@ -391,20 +391,20 @@ export function ProtoScene() {
         draggable={false}
         style={{
           position: 'absolute',
-          top: '35px',
-          right: '25px',
-          width: '140px',
+          top: '20px',
+          right: '10px',
+          width: '280px',
           height: 'auto',
           pointerEvents: 'none',
           userSelect: 'none',
-          zIndex: 2,
+          zIndex: 1,
           transformOrigin: 'center',
         }}
       />
 
-      {/* Nuvens — parallax horizontal. zIndex alternado para profundidade:
-          1, 3, 1, 3 → algumas passam atrás do sol (z=2), outras na frente.
-          O `top` é fixo no JSX; o `left` é controlado pelo useEffect CLOUDS. */}
+      {/* Nuvens — todas em zIndex 3, à frente do sol (z=1). O `top` é
+          definido pelo JSX inicialmente e atualizado em runtime pelo
+          useEffect CLOUDS (sobem no falling, ficam fixas no flying). */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         ref={cloud0Ref}
@@ -413,7 +413,7 @@ export function ProtoScene() {
         draggable={false}
         style={{
           position: 'absolute',
-          top: '90px',
+          top: '80px',
           left: '20px',
           width: '180px',
           height: 'auto',
@@ -436,7 +436,7 @@ export function ProtoScene() {
           height: 'auto',
           pointerEvents: 'none',
           userSelect: 'none',
-          zIndex: 1,
+          zIndex: 3,
         }}
       />
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -447,7 +447,7 @@ export function ProtoScene() {
         draggable={false}
         style={{
           position: 'absolute',
-          top: '340px',
+          top: '270px',
           left: '-40px',
           width: '120px',
           height: 'auto',
@@ -464,13 +464,13 @@ export function ProtoScene() {
         draggable={false}
         style={{
           position: 'absolute',
-          top: '440px',
+          top: '360px',
           left: '280px',
           width: '80px',
           height: 'auto',
           pointerEvents: 'none',
           userSelect: 'none',
-          zIndex: 1,
+          zIndex: 3,
         }}
       />
 
