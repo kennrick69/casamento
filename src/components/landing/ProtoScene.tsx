@@ -473,7 +473,7 @@ export function ProtoScene() {
         draggable={false}
         style={{
           position: 'absolute',
-          top: '-40px',
+          top: '-100px',
           right: '0px',
           width: '340px',
           height: 'auto',
