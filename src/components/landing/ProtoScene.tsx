@@ -5,6 +5,67 @@ import { useRouter } from 'next/navigation';
 
 type SceneState = 'falling' | 'flying' | 'failed';
 
+// Splash de água ao boneco bater na superfície. 8 gotinhas saem em
+// semicírculo superior (-180° a 0°) com distâncias variadas, fade-out
+// e shrink em ~900ms. Renderizado condicionalmente após o fail().
+function Splash({ x, y }: { x: number; y: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const drops = ref.current?.querySelectorAll<HTMLDivElement>('[data-drop]');
+    if (!drops || drops.length === 0) return;
+    const anims: Animation[] = [];
+    drops.forEach((drop, i) => {
+      const angle = -Math.PI + (i / (drops.length - 1)) * Math.PI;
+      const distance = 28 + Math.random() * 30;
+      const dx = Math.cos(angle) * distance;
+      const dy = Math.sin(angle) * distance;
+      const a = drop.animate(
+        [
+          { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+          {
+            transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.35)`,
+            opacity: 0,
+          },
+        ],
+        { duration: 900, easing: 'ease-out', fill: 'forwards' }
+      );
+      anims.push(a);
+    });
+    return () => anims.forEach((a) => a.cancel());
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        position: 'absolute',
+        top: y,
+        left: x,
+        pointerEvents: 'none',
+        zIndex: 6,
+      }}
+    >
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div
+          key={i}
+          data-drop
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '9px',
+            height: '9px',
+            borderRadius: '50%',
+            background: 'rgba(220, 240, 255, 0.92)',
+            boxShadow: '0 0 5px rgba(255,255,255,0.7)',
+            transform: 'translate(-50%, -50%)',
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function ProtoScene() {
   const containerRef = useRef<HTMLDivElement>(null);
   const brideRef = useRef<HTMLDivElement>(null);
@@ -19,6 +80,14 @@ export function ProtoScene() {
   const [timeLeft, setTimeLeft] = useState(15);
   const [showButton, setShowButton] = useState(false);
   const [showFailText, setShowFailText] = useState(false);
+  // Após fail() o boneco "bate na água": dispara splash e sumiço.
+  // Posições congeladas no momento do impacto para o componente Splash.
+  const [brideFell, setBrideFell] = useState<{ x: number; y: number } | null>(
+    null
+  );
+  const [groomFell, setGroomFell] = useState<{ x: number; y: number } | null>(
+    null
+  );
 
   const stateRef = useRef<SceneState>('falling');
   // José (groom) começa à esquerda em left=60. Letícia (bride) começa à direita
@@ -124,6 +193,15 @@ export function ProtoScene() {
       groomRef.current.style.transition = 'all 1s ease-in';
       groomRef.current.style.top = '470px';
     }
+
+    // Após 1s os bonecos chegam à parte inferior (mar). Dispara splash
+    // no ponto de impacto e fade-out via opacity (controlada no JSX).
+    // Splash X = centro do boneco (x + 62, metade da largura 125).
+    // Splash Y ≈ 540 (linha da água perto da base do container 580).
+    setTimeout(() => {
+      setBrideFell({ x: bridePos.current.x + 62, y: 540 });
+      setGroomFell({ x: groomPos.current.x + 62, y: 540 });
+    }, 1000);
 
     setTimeout(() => setShowFailText(true), 1800);
   }, []);
@@ -316,6 +394,8 @@ export function ProtoScene() {
     setTimeLeft(15);
     setShowButton(false);
     setShowFailText(false);
+    setBrideFell(null);
+    setGroomFell(null);
 
     bridePos.current = { x: 195, y: 220 };
     groomPos.current = { x: 60, y: 220 };
@@ -382,7 +462,9 @@ export function ProtoScene() {
         touchAction: 'none',
       }}
     >
-      {/* Sol cartoon — z-index 1, atrás de todas as nuvens (z=3). */}
+      {/* Sol cartoon — z-index 1, atrás de todas as nuvens (z=3).
+          top negativo faz parte do sol sair pelo topo (efeito de sol gigante
+          baixando do céu); o overflow:hidden do container corta. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         ref={sunRef}
@@ -391,9 +473,9 @@ export function ProtoScene() {
         draggable={false}
         style={{
           position: 'absolute',
-          top: '20px',
-          right: '10px',
-          width: '280px',
+          top: '-40px',
+          right: '0px',
+          width: '340px',
           height: 'auto',
           pointerEvents: 'none',
           userSelect: 'none',
@@ -527,6 +609,8 @@ export function ProtoScene() {
           cursor: 'grab',
           touchAction: 'none',
           zIndex: 5,
+          opacity: brideFell ? 0 : 1,
+          transition: 'opacity 0.5s ease-out',
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -559,6 +643,8 @@ export function ProtoScene() {
           cursor: 'grab',
           touchAction: 'none',
           zIndex: 5,
+          opacity: groomFell ? 0 : 1,
+          transition: 'opacity 0.5s ease-out',
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -576,6 +662,10 @@ export function ProtoScene() {
           }}
         />
       </div>
+
+      {/* Splash de água quando os bonecos batem na superfície (após fail) */}
+      {brideFell && <Splash x={brideFell.x} y={brideFell.y} />}
+      {groomFell && <Splash x={groomFell.x} y={groomFell.y} />}
 
       {/* Botão "Você é digno" */}
       <button
