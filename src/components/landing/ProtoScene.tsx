@@ -25,14 +25,28 @@ export function ProtoScene() {
   // em right=60 — com largura 125 e container 380, left-effective = 380-125-60 = 195.
   const bridePos = useRef({ x: 195, y: 220 });
   const groomPos = useRef({ x: 60, y: 220 });
+  // Pan vertical do background durante a queda: 0% = topo do ceu.png (céu
+  // aberto), 100% = base (cidade no horizonte + oceano). Animado conforme
+  // o tempo passa para reforçar que estão caindo de muito alto.
+  const bgPosY = useRef(0);
 
-  // Parallax horizontal contínuo. vx em px/tick a 50ms.
-  // Travessia ~30s para a frontal maior, ~60s para a traseira menor.
+  // Velocidade base (px/tick a 50ms). Usada em ambos os eixos:
+  //  - falling: nuvens sobem (y -= speed) — efeito de queda dos personagens
+  //  - flying/failed: nuvens passam horizontal (x -= speed) — viagem
+  // Valores diferentes por nuvem dão parallax (mais próxima = mais rápida).
+  // Velocidades dobradas a pedido (eram 0.93/0.5/0.625/0.383).
   const cloudPositions = useRef([
-    { x: 20, y: 90, vx: 0.93 },    // nuvem1 — 180w, frente do sol
-    { x: 220, y: 170, vx: 0.5 },   // nuvem2 — 120w, atrás do sol
-    { x: -40, y: 340, vx: 0.625 }, // nuvem3 — 120w, frente do sol
-    { x: 280, y: 440, vx: 0.383 }, // nuvem4 —  80w, atrás do sol
+    { x: 20, y: 90, speed: 1.86 },    // nuvem1 — 180w, frente do sol
+    { x: 220, y: 170, speed: 1.0 },   // nuvem2 — 120w, atrás do sol
+    { x: -40, y: 340, speed: 1.25 },  // nuvem3 — 120w, frente do sol
+    { x: 280, y: 440, speed: 0.766 }, // nuvem4 —  80w, atrás do sol
+  ]);
+  // Posições iniciais salvas para o reset().
+  const cloudInitial = useRef([
+    { x: 20, y: 90 },
+    { x: 220, y: 170 },
+    { x: -40, y: 340 },
+    { x: 280, y: 440 },
   ]);
 
   useEffect(() => {
@@ -203,6 +217,8 @@ export function ProtoScene() {
   }, [checkUnion]);
 
   // ========== FALLING ==========
+  // Enquanto cai: bonecos descem (clamp em 450) e o background do céu
+  // panneia verticalmente revelando a cidade (~14s do topo até a base).
   useEffect(() => {
     if (state !== 'falling') return;
     const interval = setInterval(() => {
@@ -214,6 +230,13 @@ export function ProtoScene() {
         brideRef.current.style.top = bridePos.current.y + 'px';
       if (groomRef.current)
         groomRef.current.style.top = groomPos.current.y + 'px';
+
+      if (bgPosY.current < 100) {
+        bgPosY.current = Math.min(100, bgPosY.current + 0.35);
+        if (containerRef.current) {
+          containerRef.current.style.backgroundPosition = `center ${bgPosY.current}%`;
+        }
+      }
     }, 50);
     return () => clearInterval(interval);
   }, [state]);
@@ -234,18 +257,32 @@ export function ProtoScene() {
   }, [state, fail]);
 
   // ========== CLOUDS ==========
-  // Parallax horizontal contínuo, independente do state. Cada nuvem com
-  // velocidade diferente (vx) para dar sensação de profundidade. Sai pela
-  // esquerda e volta entrando pela direita (x=380).
+  // Direção depende do state:
+  //  - falling: nuvens sobem (mundo subindo enquanto bonecos caem). Quando
+  //    saem por cima, reentram por baixo em x aleatório para variar a cena.
+  //  - flying/failed: nuvens passam horizontalmente da direita pra esquerda,
+  //    reforçando a viagem após o casal se unir.
   useEffect(() => {
     const cloudElRefs = [cloud0Ref, cloud1Ref, cloud2Ref, cloud3Ref];
-    const cloudWidths = [180, 120, 120, 80];
     const interval = setInterval(() => {
       cloudPositions.current.forEach((c, i) => {
-        c.x -= c.vx;
-        if (c.x < -cloudWidths[i]) c.x = 380;
         const el = cloudElRefs[i].current;
-        if (el) el.style.left = c.x + 'px';
+        if (stateRef.current === 'falling') {
+          c.y -= c.speed;
+          const h = el?.offsetHeight ?? 100;
+          if (c.y < -h) {
+            c.y = 580;
+            c.x = Math.random() * 320 - 40;
+          }
+        } else {
+          c.x -= c.speed;
+          const w = el?.offsetWidth ?? 100;
+          if (c.x < -w) c.x = 380;
+        }
+        if (el) {
+          el.style.left = c.x + 'px';
+          el.style.top = c.y + 'px';
+        }
       });
     }, 50);
     return () => clearInterval(interval);
@@ -291,6 +328,24 @@ export function ProtoScene() {
       groomRef.current.style.right = 'auto';
       groomRef.current.style.top = '220px';
     }
+
+    // Volta o pan do céu pro topo (céu aberto, sem cidade ainda).
+    bgPosY.current = 0;
+    if (containerRef.current) {
+      containerRef.current.style.backgroundPosition = 'center 0%';
+    }
+
+    // Restaura nuvens nas posições iniciais e nos elementos DOM.
+    const cloudElRefs = [cloud0Ref, cloud1Ref, cloud2Ref, cloud3Ref];
+    cloudInitial.current.forEach((init, i) => {
+      cloudPositions.current[i].x = init.x;
+      cloudPositions.current[i].y = init.y;
+      const el = cloudElRefs[i].current;
+      if (el) {
+        el.style.left = init.x + 'px';
+        el.style.top = init.y + 'px';
+      }
+    });
   }
 
   const router = useRouter();
@@ -313,10 +368,12 @@ export function ProtoScene() {
         borderRadius: '16px',
         // ceu.png já traz céu pôr do sol + cidade no horizonte + oceano com
         // ondas cartoon. Substitui o gradiente CSS e o SVG de mar/horizonte.
+        // backgroundPosition é alterado em runtime pelo useEffect FALLING
+        // (pan vertical 0% → 100% revelando a cidade conforme caem).
         backgroundImage: 'url(/landing/ceu.png)',
         backgroundSize: 'cover',
         backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center',
+        backgroundPosition: 'center 0%',
         userSelect: 'none',
         touchAction: 'none',
       }}
@@ -330,9 +387,9 @@ export function ProtoScene() {
         draggable={false}
         style={{
           position: 'absolute',
-          top: '55px',
-          right: '58px',
-          width: '90px',
+          top: '35px',
+          right: '25px',
+          width: '140px',
           height: 'auto',
           pointerEvents: 'none',
           userSelect: 'none',
