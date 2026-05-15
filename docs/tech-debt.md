@@ -117,12 +117,12 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 ## 🟡 MÉDIA — Pendências da transição do coração (ProtoScene)
 
-**Status:** transição implementada inline no `ProtoScene.tsx` em 2026-05-15. Quando o usuário aproxima os bonecos, dispara `unite()` → após 800ms inicia a sequência `BIRTH → GROWTH → MERGE → CROSSFADE → DONE` do coração SVG. No `CROSSFADE`, os 2 wrappers de Letícia/José fazem fade-out e o `<img src="/landing/casalvoando.gif">` central faz fade-in. Cenário (céu/sol/nuvens) permanece intacto o tempo todo.
+**Status:** transição pixel art em produção desde 2026-05-15 (HeartFlightTransition v2 pattern). Coração 16-bit, 5 paletas power-up, SNAP instantâneo com partículas. Cenário (céu/sol/nuvens) preservado.
 
 **Componentes idle no repo (não importados por nada):**
-- `src/components/landing/HeartFlightTransition.tsx` — substituição de cena inteira via state machine. Mantido como referência.
-- `src/components/landing/FallingScene.tsx` — versão simplificada do falling com `framer-motion`. Mantido como referência.
-- `src/components/landing/FlyingScene.tsx` — `<img>` puro renderizando o GIF. Mantido como referência.
+- `src/components/landing/HeartFlightTransition.tsx` — v2 pixel art (atualizado em 2026-05-15). Mantido como referência para futura arquitetura de cena separada.
+- `src/components/landing/FallingScene.tsx` — versão com `framer-motion`. Mantido como referência.
+- `src/components/landing/FlyingScene.tsx` — `<img>` puro. Mantido como referência.
 
 **Pendências:**
 
@@ -131,8 +131,7 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
    - ffmpeg: `ffmpeg -i casalvoando.gif -filter_complex "[0]reverse[r];[0][r]concat=n=2:v=1:a=0" casalvoando-pp.gif`
    - Substituir `public/landing/casalvoando.gif` quando pronto.
 2. **Versão transparente do `pingpong.gif`** — `Downloads/leticia_transparente.gif` pronto. Quando substituir em `public/landing/pingpong.gif`, remover `mixBlendMode: 'multiply'` da `<img>` interna do `brideRef` no `ProtoScene.tsx`. O José ainda fica com `multiply` até também ganhar versão transparente.
-3. **Cor exata do céu em `HEART_COLORS.end`** — placeholder `#FFD4B8`. Para o coração "casar" com o céu do GIF do casal voando no fim da transição, atualizar para o hex do pixel central de um frame do `casalvoando.gif`. Não é "costura" como na arquitetura anterior, mas afeta a beleza da fase `MERGE`.
-4. **Limpeza opcional dos 3 componentes idle** — `HeartFlightTransition.tsx`, `FallingScene.tsx`, `FlyingScene.tsx` podem ser deletados se a abordagem inline atual ficar.
+3. **Limpeza opcional dos 3 componentes idle** — `HeartFlightTransition.tsx`, `FallingScene.tsx`, `FlyingScene.tsx` podem ser deletados se a abordagem inline definitiva ficar.
 
 ---
 

@@ -1,5 +1,25 @@
 # Changelog
 
+## [ProtoScene — pixel art heart transition] — 2026-05-15
+
+### Changed
+
+- `ProtoScene.tsx` — transição do coração migrada da estética v1 (SVG suave + crossfade) para pixel art 16-bit (padrão HeartFlightTransition v2):
+  - Coração SVG substituído por sprite pixel 15×13 px com `shape-rendering: crispEdges`
+  - Crescimento contínuo substituído por 6 steps discretos sem easing (vibe Mario power-up)
+  - Cor única substituída por 5 paletas ciclando (vermelho → dourado → teal → roxo → rosa)
+  - Fade crossfade 400ms substituído por SNAP instantâneo (1 frame)
+  - 32 partículas pixel explodem no momento do SNAP
+  - `unite()` refatorado de cascade de `setTimeout` para padrão `async/await + cancelledRef`
+  - Todo comportamento de drag, detecção de proximidade e threshold de união preservados integralmente
+
+### Added
+
+- `HeartFlightTransition.tsx` — atualizado para v2 (pixel art edition), substituição direta da v1
+- `HeartFlightTransition.README.md` — documentação da v2 criada em `src/components/landing/`
+
+---
+
 ## [R.6 — Toasts de feedback em ações admin] — 2026-05-08
 
 ### Added

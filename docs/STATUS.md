@@ -91,7 +91,7 @@
 |------|--------|
 | Substituir hero da landing (`/`) por ilustração final (arte do casal) | Aguardando Midjourney |
 | Substituir greybox do ProtoScene por arte final | Personagens: José (esquerda) e Letícia (direita, espelhada) integrados como GIFs animados em 2026-05-10. Cenário: background (`/landing/ceu.png`), sol cartoon (`/landing/sol.png` com animação "respirar") e 4 nuvens (`/landing/nuvem1–4.png` com parallax horizontal contínuo) integrados em 2026-05-14. Banner protótipo removido em 2026-05-14. **Pendente:** versão transparente dos GIFs `pingpong.gif` e `josepingpong.gif` (ambos ainda renderizam com halo bege via `mix-blend-mode: multiply`). |
-| Transição do coração interna ao ProtoScene (cenário preservado) | Em produção 2026-05-15. Trocar só os 2 personagens pelo `casalvoando.gif`, com coração SVG crescendo entre as fases. Cenário (céu/sol/nuvens/parallax) permanece intacto. **Pendente:** GIF do casal voando em ping-pong (atualmente forward simples). Componentes `HeartFlightTransition.tsx`/`FallingScene.tsx`/`FlyingScene.tsx` ficaram idle no repo — referência opcional. |
+| Transição do coração interna ao ProtoScene (cenário preservado) | Em produção 2026-05-15. Pixel art 16-bit (HeartFlightTransition v2 pattern): coração nasce em steps, bate 3×, power-up grow (5 paletas), SNAP instantâneo com 32 partículas. Cenário (céu/sol/nuvens) preservado. **Pendente:** GIF do casal voando em ping-pong (atualmente forward simples). |
 | Gateway de pagamento real (Stripe/Pagar.me) | Stub implementado |
 | Lembretes via WhatsApp (Twilio) | Email cobre o caso de uso atual |
 | Remover campos legados de local no model Event | Após confirmar migração completa para EventLocation |

@@ -7,6 +7,27 @@
 
 ## Estado atual do projeto
 
+### Última sprint — ProtoScene pixel art heart (2026-05-15)
+
+Migração da estética do coração no `ProtoScene.tsx` da v1 (SVG suave + crossfade) para o padrão da HeartFlightTransition v2 (pixel art 16-bit). **Todo o comportamento de drag, detecção de proximidade e threshold de união foi preservado integralmente.**
+
+**O que mudou:**
+- `HeartPhase`: `IDLE | BIRTH | GROWTH | MERGE | CROSSFADE | DONE` → `IDLE | BIRTH | BEAT | POWER_UP | SNAP`
+- Coração SVG com curvas Bézier → sprite pixel 15×13 px (`PixelHeart`, `shape-rendering: crispEdges`)
+- Crescimento contínuo com easing → 6 steps discretos sem easing (`GROW_STEPS_PROTO`: scales 1.5→7)
+- 1 cor com crossfade → 5 paletas ciclando (`POWER_UP_PALETTES`: vermelho→dourado→teal→roxo→rosa)
+- Crossfade 400ms → SNAP instantâneo (1 frame)
+- 32 partículas pixel explodem no SNAP (`PixelParticle`)
+- `unite()` refatorado de cascade de `setTimeout` para `async/await + cancelledRef`
+- `HeartFlightTransition.tsx` atualizado para v2 (arquivo idle, não importado em produção)
+- `HeartFlightTransition.README.md` criado em `src/components/landing/`
+
+**Pendências remanescentes (ver `docs/tech-debt.md`):**
+1. Ping-pong do `casalvoando.gif` (atualmente loopa forward só)
+2. Versões transparentes dos GIFs dos personagens (remove `mix-blend-mode: multiply`)
+
+---
+
 ### Última milestone implementada: M5.Z — QA Dashboard
 
 Dashboard de QA built-in em `/admin/qa` com:

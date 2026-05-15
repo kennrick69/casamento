@@ -5,78 +5,56 @@ import { useRouter } from 'next/navigation';
 
 type SceneState = 'falling' | 'flying' | 'failed';
 
-// Fases internas da transição do coração + troca dos personagens pelo GIF
-// do casal voando. Cenário (céu/sol/nuvens) permanece intacto o tempo todo.
-type HeartPhase = 'IDLE' | 'BIRTH' | 'GROWTH' | 'MERGE' | 'CROSSFADE' | 'DONE';
+type HeartPhase = 'IDLE' | 'BIRTH' | 'BEAT' | 'POWER_UP' | 'SNAP';
 
-const HEART_TIMING = {
-  birth: 400,
-  growth: 500,
-  merge: 300,
-  crossfade: 400,
+const TIMING = {
+  popStep: 80,
+  beatExpand: 120,
+  beatContract: 180,
+  beatCount: 3,
+  growStep: 110,
+  particleDuration: 600,
 } as const;
 
-const HEART_COLORS = {
-  start: '#FF6B9D',
-  mid: '#FFB088',
-  end: '#FFD4B8',
-} as const;
+const POWER_UP_PALETTES = [
+  { dark: '#C71B2E', mid: '#FF3B5C', light: '#FFB3C0' },
+  { dark: '#B8860B', mid: '#FFD700', light: '#FFF59D' },
+  { dark: '#0B7B5F', mid: '#22D3A8', light: '#A7F3D0' },
+  { dark: '#6B21A8', mid: '#A855F7', light: '#E9D5FF' },
+  { dark: '#A04050', mid: '#FFB8C8', light: '#FFE0E8' },
+] as const;
 
-function getHeartState(phase: HeartPhase) {
-  switch (phase) {
-    case 'IDLE':
-      return {
-        scale: 0,
-        opacity: 0,
-        fill: HEART_COLORS.start,
-        easing: 'ease',
-        duration: 0,
-      };
-    case 'BIRTH':
-      return {
-        scale: 1.5,
-        opacity: 1,
-        fill: HEART_COLORS.start,
-        easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-        duration: HEART_TIMING.birth,
-      };
-    case 'GROWTH':
-      return {
-        scale: 4,
-        opacity: 1,
-        fill: HEART_COLORS.mid,
-        easing: 'ease-in',
-        duration: HEART_TIMING.growth,
-      };
-    case 'MERGE':
-      return {
-        scale: 2.5,
-        opacity: 1,
-        fill: HEART_COLORS.end,
-        easing: 'ease-out',
-        duration: HEART_TIMING.merge,
-      };
-    case 'CROSSFADE':
-      return {
-        scale: 2.5,
-        opacity: 0,
-        fill: HEART_COLORS.end,
-        easing: 'ease',
-        duration: HEART_TIMING.crossfade,
-      };
-    case 'DONE':
-      return {
-        scale: 0,
-        opacity: 0,
-        fill: HEART_COLORS.end,
-        easing: 'ease',
-        duration: 0,
-      };
-  }
+// Escala máxima ajustada ao canvas 380×580 do ProtoScene
+// (v2 usa 32 para fullscreen; scale 7 cobre os 380px do container)
+const GROW_STEPS_PROTO = [
+  { scale: 1.5, paletteIdx: 0 },
+  { scale: 2,   paletteIdx: 1 },
+  { scale: 2.8, paletteIdx: 2 },
+  { scale: 4,   paletteIdx: 3 },
+  { scale: 5.5, paletteIdx: 4 },
+  { scale: 7,   paletteIdx: 4 },
+] as const;
+
+const PARTICLE_COLORS = ['#FF3B5C', '#FFD700', '#22D3A8', '#A855F7', '#FFB3C0'] as const;
+const PARTICLE_COUNT = 32;
+
+interface Particle {
+  id: string;
+  angle: number;
+  distance: number;
+  scale: number;
+  color: string;
 }
 
-function Heart({ phase }: { phase: HeartPhase }) {
-  const s = getHeartState(phase);
+function PixelHeart({
+  scale,
+  opacity,
+  palette,
+}: {
+  scale: number;
+  opacity: number;
+  palette: { dark: string; mid: string; light: string };
+}) {
   return (
     <div
       aria-hidden
@@ -84,27 +62,99 @@ function Heart({ phase }: { phase: HeartPhase }) {
         position: 'absolute',
         left: '50%',
         top: '280px',
-        width: 80,
-        height: 80,
+        width: 60,
+        height: 52,
         pointerEvents: 'none',
-        transform: `translate(-50%, -50%) scale(${s.scale})`,
-        opacity: s.opacity,
-        transition: `transform ${s.duration}ms ${s.easing}, opacity ${s.duration}ms ease`,
+        transform: `translate(-50%, -50%) scale(${scale})`,
+        opacity,
         willChange: 'transform, opacity',
         zIndex: 7,
       }}
     >
       <svg
-        viewBox="0 0 100 100"
-        style={{ width: '100%', height: '100%', display: 'block' }}
+        width="60"
+        height="52"
+        viewBox="0 0 15 13"
+        shapeRendering="crispEdges"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ display: 'block', imageRendering: 'pixelated' }}
       >
-        <path
-          d="M50 88 C20 65, 10 40, 25 25 C35 15, 45 20, 50 32 C55 20, 65 15, 75 25 C90 40, 80 65, 50 88 Z"
-          fill={s.fill}
-          style={{ transition: `fill ${s.duration}ms ease-in` }}
-        />
+        <g fill={palette.dark}>
+          <rect x="2" y="0" width="4" height="1" />
+          <rect x="9" y="0" width="4" height="1" />
+          <rect x="1" y="1" width="1" height="1" />
+          <rect x="6" y="1" width="3" height="1" />
+          <rect x="13" y="1" width="1" height="1" />
+          <rect x="0" y="2" width="1" height="3" />
+          <rect x="14" y="2" width="1" height="3" />
+          <rect x="0" y="5" width="2" height="1" />
+          <rect x="13" y="5" width="2" height="1" />
+          <rect x="1" y="6" width="2" height="1" />
+          <rect x="12" y="6" width="2" height="1" />
+          <rect x="2" y="7" width="2" height="1" />
+          <rect x="11" y="7" width="2" height="1" />
+          <rect x="3" y="8" width="2" height="1" />
+          <rect x="10" y="8" width="2" height="1" />
+          <rect x="4" y="9" width="2" height="1" />
+          <rect x="9" y="9" width="2" height="1" />
+          <rect x="5" y="10" width="2" height="1" />
+          <rect x="8" y="10" width="2" height="1" />
+          <rect x="6" y="11" width="3" height="1" />
+          <rect x="7" y="12" width="1" height="1" />
+        </g>
+        <g fill={palette.mid}>
+          <rect x="2" y="1" width="4" height="1" />
+          <rect x="9" y="1" width="4" height="1" />
+          <rect x="1" y="2" width="13" height="3" />
+          <rect x="2" y="5" width="11" height="1" />
+          <rect x="3" y="6" width="9" height="1" />
+          <rect x="4" y="7" width="7" height="1" />
+          <rect x="5" y="8" width="5" height="1" />
+          <rect x="6" y="9" width="3" height="1" />
+          <rect x="7" y="10" width="1" height="1" />
+        </g>
+        <g fill={palette.light}>
+          <rect x="2" y="2" width="2" height="1" />
+          <rect x="3" y="3" width="1" height="1" />
+          <rect x="9" y="2" width="1" height="1" />
+        </g>
       </svg>
     </div>
+  );
+}
+
+function PixelParticle({ particle }: { particle: Particle }) {
+  const [animated, setAnimated] = useState(false);
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setAnimated(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const tx = Math.cos(particle.angle) * particle.distance;
+  const ty = Math.sin(particle.angle) * particle.distance;
+
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        left: '50%',
+        top: '280px',
+        width: 8,
+        height: 8,
+        background: particle.color,
+        pointerEvents: 'none',
+        transform: animated
+          ? `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(${particle.scale})`
+          : 'translate(-50%, -50%) scale(1)',
+        opacity: animated ? 0 : 1,
+        transition: `transform ${TIMING.particleDuration}ms cubic-bezier(0.2, 0.6, 0.4, 1), opacity ${TIMING.particleDuration}ms ease-out`,
+        willChange: 'transform, opacity',
+        zIndex: 8,
+        imageRendering: 'pixelated',
+      }}
+    />
   );
 }
 
@@ -212,6 +262,10 @@ export function ProtoScene() {
   // Transição do coração após união. Letícia/José fazem fade-out e o
   // casalvoando.gif aparece no centro. Cenário não é tocado.
   const [heartPhase, setHeartPhase] = useState<HeartPhase>('IDLE');
+  const [heartScale, setHeartScale] = useState(0);
+  const [heartOpacity, setHeartOpacity] = useState(0);
+  const [paletteIdx, setPaletteIdx] = useState(0);
+  const [particles, setParticles] = useState<Particle[]>([]);
   // Após fail() o boneco "bate na água": dispara splash e sumiço.
   // Posições congeladas no momento do impacto para o componente Splash.
   const [brideFell, setBrideFell] = useState<{ x: number; y: number } | null>(
@@ -253,16 +307,37 @@ export function ProtoScene() {
     { x: 280, y: 310 },
   ]);
 
+  const cancelledRef = useRef(false);
+
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
 
-  // ========== UNITE (transição pra voo) ==========
+  // ========== SPAWN PARTICLES ==========
+  const spawnParticles = useCallback(() => {
+    const newParticles: Particle[] = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const angle = (i / PARTICLE_COUNT) * Math.PI * 2;
+      const distance = 60 + Math.random() * 100;
+      newParticles.push({
+        id: `${Date.now()}-${i}`,
+        angle,
+        distance,
+        scale: 0.5 + Math.random() * 1.5,
+        color: PARTICLE_COLORS[i % PARTICLE_COLORS.length],
+      });
+    }
+    setParticles(newParticles);
+    setTimeout(() => setParticles([]), TIMING.particleDuration + 100);
+  }, []);
+
+  // ========== UNITE (transição pra voo — pixel art) ==========
   // Sequência:
   //   1. Bonecos se aproximam no centro (800ms).
-  //   2. Coração nasce/cresce/funde (BIRTH→GROWTH→MERGE→CROSSFADE).
-  //   3. Durante o CROSSFADE, os 2 GIFs somem e o casalvoando.gif aparece.
-  //   4. Botão "você é digno" aparece 600ms depois.
+  //   2. BIRTH: coração pixel aparece em 3 steps discretos.
+  //   3. BEAT: 3 batidas.
+  //   4. POWER_UP: cresce em 6 steps com paletas ciclando.
+  //   5. SNAP: troca instantânea — coração some, casal voando aparece.
   const unite = useCallback(() => {
     if (stateRef.current !== 'falling') return;
     setState('flying');
@@ -288,25 +363,58 @@ export function ProtoScene() {
       groomRef.current.style.top = centerY + 'px';
     }
 
-    // Vibração leve no celular ao unir (haptic API)
     if ('vibrate' in navigator) {
       navigator.vibrate(50);
     }
 
-    // Sequência: aproximação termina em 800ms → começa o coração
-    const t0 = 800;
-    const tBirth = t0 + HEART_TIMING.birth;
-    const tGrowth = tBirth + HEART_TIMING.growth;
-    const tMerge = tGrowth + HEART_TIMING.merge;
-    const tCrossfade = tMerge + HEART_TIMING.crossfade;
+    cancelledRef.current = false;
+    const wait = (ms: number) =>
+      new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-    setTimeout(() => setHeartPhase('BIRTH'), t0);
-    setTimeout(() => setHeartPhase('GROWTH'), tBirth);
-    setTimeout(() => setHeartPhase('MERGE'), tGrowth);
-    setTimeout(() => setHeartPhase('CROSSFADE'), tMerge);
-    setTimeout(() => setHeartPhase('DONE'), tCrossfade);
-    setTimeout(() => setShowButton(true), tCrossfade + 600);
-  }, []);
+    const run = async () => {
+      // Aguarda bonecos chegarem ao centro
+      await wait(800);
+      if (cancelledRef.current) return;
+
+      // BIRTH — 3 steps discretos
+      setHeartPhase('BIRTH');
+      setHeartOpacity(1);
+      setPaletteIdx(0);
+      for (const s of [1, 1.5, 1]) {
+        setHeartScale(s);
+        await wait(TIMING.popStep);
+        if (cancelledRef.current) return;
+      }
+
+      // BEAT — 3 batidas
+      setHeartPhase('BEAT');
+      for (let i = 0; i < TIMING.beatCount; i++) {
+        setHeartScale(1.3);
+        await wait(TIMING.beatExpand);
+        if (cancelledRef.current) return;
+        setHeartScale(1);
+        await wait(TIMING.beatContract);
+        if (cancelledRef.current) return;
+      }
+
+      // POWER_UP — 6 steps com cores ciclando
+      setHeartPhase('POWER_UP');
+      for (const step of GROW_STEPS_PROTO) {
+        setHeartScale(step.scale);
+        setPaletteIdx(step.paletteIdx);
+        await wait(TIMING.growStep);
+        if (cancelledRef.current) return;
+      }
+
+      // SNAP — troca instantânea: coração some, casal voando aparece
+      setHeartPhase('SNAP');
+      setHeartOpacity(0);
+      spawnParticles();
+      setTimeout(() => setShowButton(true), 600);
+    };
+
+    void run();
+  }, [spawnParticles]);
 
   // ========== FAIL ==========
   // useCallback com [] — todas as deps são refs ou setters estáveis do React
@@ -516,6 +624,11 @@ export function ProtoScene() {
     return () => anim.cancel();
   }, []);
 
+  // Cancela animação em-flight do coração se o componente desmontar.
+  useEffect(() => {
+    return () => { cancelledRef.current = true; };
+  }, []);
+
   // ========== RESET ==========
   function reset() {
     setState('falling');
@@ -526,6 +639,11 @@ export function ProtoScene() {
     setBrideFell(null);
     setGroomFell(null);
     setHeartPhase('IDLE');
+    setHeartScale(0);
+    setHeartOpacity(0);
+    setPaletteIdx(0);
+    setParticles([]);
+    cancelledRef.current = true;
 
     bridePos.current = { x: 195, y: 220 };
     groomPos.current = { x: 60, y: 220 };
@@ -745,9 +863,7 @@ export function ProtoScene() {
           pointerEvents: 'none',
           userSelect: 'none',
           zIndex: 5,
-          opacity:
-            heartPhase === 'CROSSFADE' || heartPhase === 'DONE' ? 1 : 0,
-          transition: 'opacity 400ms ease',
+          opacity: heartPhase === 'SNAP' ? 1 : 0,
         }}
       />
 
@@ -765,11 +881,7 @@ export function ProtoScene() {
           touchAction: 'none',
           zIndex: 5,
           opacity:
-            brideFell ||
-            heartPhase === 'CROSSFADE' ||
-            heartPhase === 'DONE'
-              ? 0
-              : 1,
+            brideFell || heartPhase === 'SNAP' ? 0 : 1,
           transition: 'opacity 0.5s ease-out',
         }}
       >
@@ -804,11 +916,7 @@ export function ProtoScene() {
           touchAction: 'none',
           zIndex: 5,
           opacity:
-            groomFell ||
-            heartPhase === 'CROSSFADE' ||
-            heartPhase === 'DONE'
-              ? 0
-              : 1,
+            groomFell || heartPhase === 'SNAP' ? 0 : 1,
           transition: 'opacity 0.5s ease-out',
         }}
       >
@@ -828,8 +936,17 @@ export function ProtoScene() {
         />
       </div>
 
-      {/* Coração da transição (over os personagens) */}
-      <Heart phase={heartPhase} />
+      {/* Coração pixel da transição (over os personagens) */}
+      <PixelHeart
+        scale={heartScale}
+        opacity={heartOpacity}
+        palette={POWER_UP_PALETTES[paletteIdx]}
+      />
+
+      {/* Partículas pixel explodem no SNAP */}
+      {particles.map((p) => (
+        <PixelParticle key={p.id} particle={p} />
+      ))}
 
       {/* Splash de água quando os bonecos batem na superfície (após fail) */}
       {brideFell && <Splash x={brideFell.x} y={brideFell.y} />}
