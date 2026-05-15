@@ -5,6 +5,17 @@ import { useRouter } from 'next/navigation';
 
 type SceneState = 'falling' | 'flying' | 'failed';
 
+type ProtoSceneProps = {
+  /**
+   * Callback opcional disparado quando os bonecos se aproximam e a cena
+   * entra no estado 'flying'. Usado pela HeartFlightTransition para
+   * disparar a transição do coração + crossfade para a FlyingScene. O
+   * ProtoScene continua rodando normalmente (fly loop, botão interno) —
+   * fica invisível porque o pai faz fade-out via opacity.
+   */
+  onUnite?: () => void;
+};
+
 // Splash de água ao boneco bater na superfície. Duas camadas:
 //  - principal: 14 gotinhas grandes, 40–110px de alcance, ~1000ms
 //  - spray:      8 gotinhas pequenas, 90–160px de alcance, ~1300ms
@@ -92,7 +103,7 @@ function Splash({ x, y }: { x: number; y: number }) {
   );
 }
 
-export function ProtoScene() {
+export function ProtoScene({ onUnite }: ProtoSceneProps = {}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const brideRef = useRef<HTMLDivElement>(null);
   const groomRef = useRef<HTMLDivElement>(null);
@@ -152,11 +163,12 @@ export function ProtoScene() {
   }, [state]);
 
   // ========== UNITE (transição pra voo) ==========
-  // useCallback com [] — todas as deps são refs ou setters estáveis do React
+  // useCallback com [onUnite] — sinaliza imediatamente pra HeartFlightTransition
   const unite = useCallback(() => {
     if (stateRef.current !== 'falling') return;
     setState('flying');
     stateRef.current = 'flying';
+    onUnite?.();
 
     const centerY = 280;
     // Abraçados: cada boneco se aproxima 25px do centro a partir do lado-a-lado,
@@ -204,7 +216,7 @@ export function ProtoScene() {
       // Botão aparece 1.5s depois
       setTimeout(() => setShowButton(true), 1500);
     }, 800);
-  }, []);
+  }, [onUnite]);
 
   // ========== FAIL ==========
   // useCallback com [] — todas as deps são refs ou setters estáveis do React

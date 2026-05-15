@@ -15,7 +15,33 @@ Dashboard de QA built-in em `/admin/qa` com:
 - Relatório copiável (Markdown) com resumo pass/fail/skip
 - Modelo Prisma `QATestRun` com campo `results Json`
 
-### Última sprint — Arquitetura de transição da landing (2026-05-15)
+### Última sprint — Landing integrada com transição do coração (2026-05-15)
+
+A nova arquitetura foi plugada em produção. `src/app/page.tsx` agora é um server component (mantém `export const metadata`) que renderiza `<LandingClient />` (client component). Dentro do LandingClient:
+
+```tsx
+<HeartFlightTransition
+  trigger={united}
+  fallingScene={<ProtoScene onUnite={() => setUnited(true)} />}
+  flyingScene={<FlyingScene src="/landing/casalvoando.gif" />}
+/>
+```
+
+Fluxo do usuário: arrasta os bonecos → quando se aproximam, `ProtoScene.unite()` dispara `onUnite` → `trigger` vira true → `HeartFlightTransition` toca a sequência de 7 fases do coração → `SKY_CROSSFADE` faz a troca → `FlyingScene` mostra o `casalvoando.gif` em loop.
+
+**Mudanças além da integração:**
+- `ProtoScene` ganhou prop opcional `onUnite` (chamada dentro de `unite()`). Standalone continua igual.
+- `FlyingScene` simplificada pra `<img>` puro (todos os assets de voo são GIF).
+- `FallingScene.tsx` foi criada mas **não está em uso** — o ProtoScene segue como cena de queda porque tem a cenografia completa (céu, sol, nuvens, parallax, splash, countdown, fail).
+
+**Pendências (ver `docs/tech-debt.md`):**
+
+1. **Cor exata do céu** do `casalvoando.gif` → `COLORS.heartEnd/skyTarget` em `HeartFlightTransition.tsx` (atualmente placeholder `#FFD4B8`).
+2. **Versão transparente do `pingpong.gif`** — `Downloads/leticia_transparente.gif` pronto. Quando substituir, remover `mix-blend-mode: multiply` na linha ~496 do ProtoScene.
+
+---
+
+### Sprint anterior — Arquitetura de transição da landing (2026-05-15)
 
 3 componentes novos em `src/components/landing/`, **ainda não integrados** em `src/app/page.tsx` — o `ProtoScene` atual segue ativo até a integração final.
 

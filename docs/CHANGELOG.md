@@ -5,6 +5,40 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## 2026-05-15 — Landing com voo final integrado (transição do coração ao vivo)
+
+### Mudado
+
+- **`src/app/page.tsx`** virou server component só com `export const metadata`;
+  toda a árvore interativa foi extraída pra **`src/components/landing/LandingClient.tsx`**
+  (necessário porque o client component não pode coexistir com `export const metadata`).
+- **Landing agora usa a arquitetura `HeartFlightTransition`**: o `ProtoScene` ainda
+  é a cena de queda (preserva ceu/sol/nuvens/splash/countdown/fail), mas ao
+  detectar a união dos bonecos chama o callback `onUnite` que dispara a transição
+  do coração; após o `SKY_CROSSFADE` aparece o `FlyingScene` com o GIF
+  `casalvoando.gif`.
+- **`ProtoScene.tsx`** ganhou prop opcional `onUnite?: () => void` chamada dentro
+  de `unite()`. Sem a prop, comportamento standalone idêntico ao anterior.
+- **`FlyingScene.tsx`** simplificado pra `<img>` puro (briefing confirmou que
+  todos os assets de voo são GIF). Removida toda a lógica de `<video>`, warm-up
+  e ping-pong manual (o GIF já loopa nativamente).
+
+### Adicionado
+
+- **`public/landing/casalvoando.gif`** (3.9 MB) — cena de voo.
+
+### Pendente
+
+- **Cor exata do céu** (`COLORS.heartEnd` / `COLORS.skyTarget` em
+  `HeartFlightTransition.tsx`) — placeholder `#FFD4B8` deve ser trocado pelo
+  hex do pixel central de um frame do `casalvoando.gif`, senão a fase
+  `HEART_MERGE → SKY_CROSSFADE` tem "costura" visível.
+- **Versão transparente do `pingpong.gif`** (em `Downloads/leticia_transparente.gif`)
+  — quando substituir em `public/landing/`, remover o `mix-blend-mode: multiply`
+  da `<img>` interna do `brideRef` em `ProtoScene.tsx` (linha ~496).
+
+---
+
 ## 2026-05-15 — Arquitetura de transição da landing (3 componentes novos)
 
 ### Adicionado
