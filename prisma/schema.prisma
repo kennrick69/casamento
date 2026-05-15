@@ -208,6 +208,7 @@ model Event {
   reports             Report[]
   weddingParty        WeddingPartyMember[]
   storyItems          CoupleStoryItem[]
+  venue3d             Venue3D?
 }
 
 enum EventStatus {
@@ -780,4 +781,97 @@ model QATestRun {
   createdBy   User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
   @@index([createdById, startedAt])
+}
+
+// --- Sala 3D Voxel (Mapa do Salão) ---
+
+enum Venue3DObjectKind {
+  TABLE_ROUND_6
+  TABLE_ROUND_8
+  TABLE_ROUND_10
+  TABLE_ROUND_12
+  TABLE_RECT_4
+  TABLE_RECT_6
+  TABLE_IMPERIAL_16
+  TABLE_U
+  TABLE_C
+  TABLE_T
+  BUFFET
+  CAKE_TABLE
+  STAGE
+  DJ_BOOTH
+  DANCE_FLOOR
+  BAR
+  PLANT
+  CHANDELIER
+  RUG
+  FLOWER_ARCH
+}
+
+enum AvatarSource {
+  PHOTO_AI
+  MANUAL
+}
+
+model Venue3D {
+  id             String          @id @default(cuid())
+  eventId        String          @unique
+  floorWidthTiles Int            @default(20)
+  floorDepthTiles Int            @default(20)
+  floorColor     String          @default("#F5F0E8")
+  wallColor      String          @default("#E8E0D0")
+  ambientLight   Float           @default(0.6)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  event   Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  objects Venue3DObject[]
+  avatars Venue3DAvatar[]
+}
+
+model Venue3DObject {
+  id          String            @id @default(cuid())
+  venueId     String
+  kind        Venue3DObjectKind
+  voxModelKey String?
+  posX        Float             @default(0)
+  posZ        Float             @default(0)
+  rotation    Float             @default(0)
+  number      Int?
+  label       String?
+  seats       Int?
+  guests      Json              @default("[]")
+  createdAt   DateTime          @default(now())
+
+  venue   Venue3D         @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  avatars Venue3DAvatar[]
+
+  @@index([venueId])
+}
+
+model Venue3DAvatar {
+  id                String       @id @default(cuid())
+  venueId           String
+  guestId           String       @unique
+  source            AvatarSource @default(MANUAL)
+  skinTone          String       @default("#FDBCB4")
+  hairColor         String       @default("#3B2314")
+  hairStyle         String       @default("short")
+  shirtColor        String       @default("#4A90D9")
+  pantsColor        String       @default("#2C3E50")
+  hasGlasses        Boolean      @default(false)
+  hasBeard          Boolean      @default(false)
+  assignedSeatIndex Int?
+  assignedObjectId  String?
+  currentX          Float        @default(0)
+  currentZ          Float        @default(0)
+  facing            String       @default("south")
+  isWalking         Boolean      @default(false)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  venue          Venue3D        @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  assignedObject Venue3DObject? @relation(fields: [assignedObjectId], references: [id])
+
+  @@index([venueId])
 }

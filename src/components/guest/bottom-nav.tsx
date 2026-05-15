@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Camera, MessageCircle, Music, Gift, Map, MapPin } from "lucide-react";
+import { Home, Camera, MessageCircle, Music, Gift, Map, MapPin, type LucideIcon } from "lucide-react";
 import { toZonedTime } from "date-fns-tz";
 import { startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -11,12 +11,12 @@ import { useTranslations } from "next-intl";
 type Tab = {
   href: string;
   label: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
 };
 
 // Exported so it can be unit-tested independently.
 // Returns fixed pt-BR labels — the BottomNav component overrides with i18n at render time.
-export function getActiveBottomNav(ceremonyDateIso: string, timezone: string): { href: string; label: string; icon: React.ElementType }[] {
+export function getActiveBottomNav(ceremonyDateIso: string, timezone: string): { href: string; label: string; icon: LucideIcon }[] {
   const now = new Date();
   const todayInTz = startOfDay(toZonedTime(now, timezone));
   const ceremonyInTz = startOfDay(toZonedTime(new Date(ceremonyDateIso), timezone));
