@@ -109,7 +109,7 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 1. **Versão transparente do `pingpong.gif`** — o GIF atual da Letícia tem fundo bege opaco. Mesmo com `mix-blend-mode: multiply`, ele sangra um halo bege/marrom contra o novo background (`ceu.png`). Quando a versão transparente subir: substituir o arquivo e **remover** o `mixBlendMode: 'multiply'` da `<img>` interna do `brideRef`.
 2. **Versão transparente do `josepingpong.gif`** — mesma situação do José. Por enquanto também usa `mix-blend-mode: multiply`.
-3. **Arte definitiva dos personagens** (caso os GIFs ping-pong sejam interim e não final) — substituir e remover banner `data-testid="prototype-banner"`.
+3. **Arte definitiva dos personagens** (caso os GIFs ping-pong sejam interim e não final) — substituir. Banner `data-testid="prototype-banner"` já foi removido em 2026-05-14.
 
 **Spec completa:** `docs/future-features/landing-interativa-una-o-casal.md`
 

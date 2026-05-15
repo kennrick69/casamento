@@ -5,29 +5,37 @@ import { useRouter } from 'next/navigation';
 
 type SceneState = 'falling' | 'flying' | 'failed';
 
-// Splash de água ao boneco bater na superfície. 8 gotinhas saem em
-// semicírculo superior (-180° a 0°) com distâncias variadas, fade-out
-// e shrink em ~900ms. Renderizado condicionalmente após o fail().
+// Splash de água ao boneco bater na superfície. Duas camadas:
+//  - principal: 14 gotinhas grandes, 40–110px de alcance, ~1000ms
+//  - spray:      8 gotinhas pequenas, 90–160px de alcance, ~1300ms
+// Renderizado condicionalmente após o fail().
 function Splash({ x, y }: { x: number; y: number }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const drops = ref.current?.querySelectorAll<HTMLDivElement>('[data-drop]');
     if (!drops || drops.length === 0) return;
     const anims: Animation[] = [];
-    drops.forEach((drop, i) => {
-      const angle = -Math.PI + (i / (drops.length - 1)) * Math.PI;
-      const distance = 28 + Math.random() * 30;
+    drops.forEach((drop) => {
+      const isSpray = drop.dataset.layer === 'spray';
+      const angle = -Math.PI + Math.random() * Math.PI; // semicírculo superior
+      const distance = isSpray
+        ? 90 + Math.random() * 70
+        : 40 + Math.random() * 70;
       const dx = Math.cos(angle) * distance;
       const dy = Math.sin(angle) * distance;
       const a = drop.animate(
         [
           { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
           {
-            transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.35)`,
+            transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.3)`,
             opacity: 0,
           },
         ],
-        { duration: 900, easing: 'ease-out', fill: 'forwards' }
+        {
+          duration: isSpray ? 1300 : 1000,
+          easing: 'ease-out',
+          fill: 'forwards',
+        }
       );
       anims.push(a);
     });
@@ -45,19 +53,37 @@ function Splash({ x, y }: { x: number; y: number }) {
         zIndex: 6,
       }}
     >
-      {Array.from({ length: 8 }).map((_, i) => (
+      {Array.from({ length: 14 }).map((_, i) => (
         <div
-          key={i}
+          key={`main-${i}`}
           data-drop
           style={{
             position: 'absolute',
             top: 0,
             left: 0,
-            width: '9px',
-            height: '9px',
+            width: '12px',
+            height: '12px',
             borderRadius: '50%',
-            background: 'rgba(220, 240, 255, 0.92)',
-            boxShadow: '0 0 5px rgba(255,255,255,0.7)',
+            background: 'rgba(220, 240, 255, 0.95)',
+            boxShadow: '0 0 6px rgba(255,255,255,0.75)',
+            transform: 'translate(-50%, -50%)',
+          }}
+        />
+      ))}
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div
+          key={`spray-${i}`}
+          data-drop
+          data-layer="spray"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '7px',
+            height: '7px',
+            borderRadius: '50%',
+            background: 'rgba(200, 230, 255, 0.85)',
+            boxShadow: '0 0 4px rgba(255,255,255,0.6)',
             transform: 'translate(-50%, -50%)',
           }}
         />
@@ -104,20 +130,21 @@ export function ProtoScene() {
   //  - flying/failed: nuvens passam horizontal (x -= speed) — viagem
   // Valores diferentes por nuvem dão parallax (mais próxima = mais rápida).
   // Velocidades dobradas a pedido (eram 0.93/0.5/0.625/0.383).
-  // Y de todas mantido dentro de [80, 435] — 3/4 superiores do container
-  // 580px. O quarto inferior é mar/cidade no ceu.png e fica sem nuvens.
+  // Y de todas mantido dentro de [60, 320] — bem acima do quarto inferior
+  // (mar/cidade do ceu.png), considerando que cada nuvem renderizada
+  // ocupa ~30–80px de altura abaixo do `top`.
   const cloudPositions = useRef([
-    { x: 20, y: 80, speed: 1.86 },    // nuvem1 — 180w, frente do sol
-    { x: 220, y: 170, speed: 1.0 },   // nuvem2 — 120w, atrás do sol
-    { x: -40, y: 270, speed: 1.25 },  // nuvem3 — 120w, frente do sol
-    { x: 280, y: 360, speed: 0.766 }, // nuvem4 —  80w, atrás do sol
+    { x: 20, y: 60, speed: 1.86 },    // nuvem1 — 180w, frente do sol
+    { x: 220, y: 140, speed: 1.0 },   // nuvem2 — 120w, atrás do sol
+    { x: -40, y: 230, speed: 1.25 },  // nuvem3 — 120w, frente do sol
+    { x: 280, y: 310, speed: 0.766 }, // nuvem4 —  80w, atrás do sol
   ]);
   // Posições iniciais salvas para o reset().
   const cloudInitial = useRef([
-    { x: 20, y: 80 },
-    { x: 220, y: 170 },
-    { x: -40, y: 270 },
-    { x: 280, y: 360 },
+    { x: 20, y: 60 },
+    { x: 220, y: 140 },
+    { x: -40, y: 230 },
+    { x: 280, y: 310 },
   ]);
 
   useEffect(() => {
@@ -351,9 +378,9 @@ export function ProtoScene() {
           c.y -= c.speed;
           const h = el?.offsetHeight ?? 100;
           if (c.y < -h) {
-            // Reentra na metade inferior da zona de céu (250–435),
-            // evitando o quarto inferior (mar/cidade do ceu.png).
-            c.y = 250 + Math.random() * 185;
+            // Reentra na zona segura de céu (180–330), bem acima do
+            // mar/cidade (que começa em y ≈ 435).
+            c.y = 180 + Math.random() * 150;
             c.x = Math.random() * 320 - 40;
           }
         } else {
@@ -495,7 +522,7 @@ export function ProtoScene() {
         draggable={false}
         style={{
           position: 'absolute',
-          top: '80px',
+          top: '60px',
           left: '20px',
           width: '180px',
           height: 'auto',
@@ -512,7 +539,7 @@ export function ProtoScene() {
         draggable={false}
         style={{
           position: 'absolute',
-          top: '170px',
+          top: '140px',
           left: '220px',
           width: '120px',
           height: 'auto',
@@ -529,7 +556,7 @@ export function ProtoScene() {
         draggable={false}
         style={{
           position: 'absolute',
-          top: '270px',
+          top: '230px',
           left: '-40px',
           width: '120px',
           height: 'auto',
@@ -546,7 +573,7 @@ export function ProtoScene() {
         draggable={false}
         style={{
           position: 'absolute',
-          top: '360px',
+          top: '310px',
           left: '280px',
           width: '80px',
           height: 'auto',
@@ -745,23 +772,6 @@ export function ProtoScene() {
         </button>
       </div>
 
-      {/* Banner de protótipo */}
-      <div
-        data-testid="prototype-banner"
-        style={{
-          position: 'absolute',
-          bottom: '8px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          color: 'rgba(255,248,220,0.5)',
-          fontSize: '10px',
-          fontFamily: 'monospace',
-          zIndex: 10,
-          pointerEvents: 'none',
-        }}
-      >
-        🚧 Protótipo · arte final em produção
-      </div>
     </div>
   );
 }
