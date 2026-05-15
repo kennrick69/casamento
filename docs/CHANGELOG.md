@@ -5,7 +5,63 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
-## 2026-05-15 — Landing com voo final integrado (transição do coração ao vivo)
+## 2026-05-15 — Transição do coração interna ao ProtoScene (cenário preservado)
+
+### Corrigido
+
+Versão anterior usava `HeartFlightTransition` cobrindo a cena inteira
+(`fallingScene = ProtoScene`, `flyingScene = FlyingScene 100%×100%`),
+o que **trocava o cenário todo** (céu, sol, nuvens) pelo `casalvoando.gif`.
+Não era o desejado: a intenção sempre foi trocar **só os personagens**,
+mantendo céu/sol/nuvens intactos.
+
+### Mudado
+
+- **`src/app/page.tsx`** voltou a renderizar `<ProtoScene />` direto
+  (server component com `export const metadata`).
+- **`src/components/landing/LandingClient.tsx`** removido (não é mais
+  necessário — sem split client/server porque o `ProtoScene` é o cliente).
+- **`ProtoScene.tsx`** ganhou a transição do coração **inline**:
+  - Tipo `HeartPhase` com 6 fases (`IDLE → BIRTH → GROWTH → MERGE →
+    CROSSFADE → DONE`), constantes `HEART_TIMING` e `HEART_COLORS`.
+  - Helper `getHeartState(phase)` e componente `Heart` SVG inline,
+    posicionados no centro horizontal e em `top: 280px` (onde os
+    bonecos se uniam).
+  - `unite()` foi reescrito: agora, depois dos 800ms de aproximação,
+    dispara `setTimeout` em cascata para cada fase do coração. Fly loop
+    interno removido (o `casalvoando.gif` é quem anima o casal voando).
+  - JSX ganhou `<img src="/landing/casalvoando.gif">` no centro
+    (`width: 300px`, `transform: translate(-50%, -50%)`, `zIndex: 5`),
+    com `opacity` controlada por `heartPhase` (0 → 1 no `CROSSFADE`).
+  - `opacity` dos wrappers `brideRef` e `groomRef` também é amarrada
+    a `heartPhase`: 1 → 0 no `CROSSFADE`. Cenário não é tocado.
+  - `reset()` zera `heartPhase` junto com os outros estados.
+  - Botão "Você é digno deste convite" aparece 600ms após a fase `DONE`.
+
+### Componentes que ficaram criados mas idle
+
+`HeartFlightTransition.tsx`, `FallingScene.tsx` e `FlyingScene.tsx`
+continuam no repo (commit `a94033c`) — não estão sendo importados por
+nada agora. Mantidos como referência/alternativa caso futuramente a
+landing inteira precise mudar de cena.
+
+### Pendente
+
+- **Loop ping-pong do `casalvoando.gif`** — o arquivo atual loopa em
+  forward simples. Para vai-e-volta suave, regerar via [ezgif.com](https://ezgif.com)
+  (Effects → Reverse, depois concatenar) ou ffmpeg
+  (`ffmpeg -i in.gif -filter_complex "[0]reverse[r];[0][r]concat=n=2:v=1:a=0" out.gif`).
+  Substituir `public/landing/casalvoando.gif` quando pronto.
+- **Versão transparente do `pingpong.gif`** (em `Downloads/leticia_transparente.gif`)
+  — quando substituir em `public/landing/`, remover `mix-blend-mode: multiply`
+  da `<img>` interna do `brideRef` em `ProtoScene.tsx`.
+
+---
+
+## 2026-05-15 — Landing com voo final integrado (substituição de cena inteira — REVERTIDO)
+
+> ⚠️ Esta entrada foi corrigida pela seguinte (transição interna ao
+> ProtoScene). Mantida pra histórico.
 
 ### Mudado
 
@@ -26,16 +82,6 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 ### Adicionado
 
 - **`public/landing/casalvoando.gif`** (3.9 MB) — cena de voo.
-
-### Pendente
-
-- **Cor exata do céu** (`COLORS.heartEnd` / `COLORS.skyTarget` em
-  `HeartFlightTransition.tsx`) — placeholder `#FFD4B8` deve ser trocado pelo
-  hex do pixel central de um frame do `casalvoando.gif`, senão a fase
-  `HEART_MERGE → SKY_CROSSFADE` tem "costura" visível.
-- **Versão transparente do `pingpong.gif`** (em `Downloads/leticia_transparente.gif`)
-  — quando substituir em `public/landing/`, remover o `mix-blend-mode: multiply`
-  da `<img>` interna do `brideRef` em `ProtoScene.tsx` (linha ~496).
 
 ---
 

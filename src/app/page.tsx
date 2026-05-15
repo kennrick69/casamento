@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { LandingClient } from '@/components/landing/LandingClient';
+import { ProtoScene } from '@/components/landing/ProtoScene';
 
 export const metadata: Metadata = {
   title: 'Voem. — Convites interativos de casamento',
@@ -20,5 +20,18 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return <LandingClient />;
+  return (
+    <div
+      style={{
+        minHeight: '100dvh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#111111',
+        padding: '24px 16px',
+      }}
+    >
+      <ProtoScene />
+    </div>
+  );
 }

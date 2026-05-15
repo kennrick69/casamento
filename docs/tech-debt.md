@@ -115,22 +115,24 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 ---
 
-## 🟡 MÉDIA — Pendências da arquitetura de transição (HeartFlightTransition)
+## 🟡 MÉDIA — Pendências da transição do coração (ProtoScene)
 
-**Status:** integrada em produção em 2026-05-15. `src/app/page.tsx` → `LandingClient` → `HeartFlightTransition` envolvendo `ProtoScene` (como falling) e `FlyingScene` (com `/landing/casalvoando.gif`).
+**Status:** transição implementada inline no `ProtoScene.tsx` em 2026-05-15. Quando o usuário aproxima os bonecos, dispara `unite()` → após 800ms inicia a sequência `BIRTH → GROWTH → MERGE → CROSSFADE → DONE` do coração SVG. No `CROSSFADE`, os 2 wrappers de Letícia/José fazem fade-out e o `<img src="/landing/casalvoando.gif">` central faz fade-in. Cenário (céu/sol/nuvens) permanece intacto o tempo todo.
 
-**Arquivos:**
-- `src/app/page.tsx` (server) → `src/components/landing/LandingClient.tsx` (client) → monta a árvore abaixo.
-- `src/components/landing/HeartFlightTransition.tsx` — máquina de estados de 7 fases que orquestra a passagem entre falling → flying com coração SVG crescendo/explodindo no centro.
-- `src/components/landing/ProtoScene.tsx` — atua como `fallingScene`. Tem prop opcional `onUnite` que sinaliza o pai quando os bonecos se aproximam.
-- `src/components/landing/FlyingScene.tsx` — `<img>` simples renderizando `/landing/casalvoando.gif` em 100%×100% com `objectFit: cover`.
-- `src/components/landing/FallingScene.tsx` — versão simplificada do falling com `framer-motion`. **Não está em uso** (o ProtoScene tem cenografia completa). Manter como alternativa ou remover na próxima limpeza.
+**Componentes idle no repo (não importados por nada):**
+- `src/components/landing/HeartFlightTransition.tsx` — substituição de cena inteira via state machine. Mantido como referência.
+- `src/components/landing/FallingScene.tsx` — versão simplificada do falling com `framer-motion`. Mantido como referência.
+- `src/components/landing/FlyingScene.tsx` — `<img>` puro renderizando o GIF. Mantido como referência.
 
 **Pendências:**
 
-1. **Cor exata do céu** — abrir um frame central do `public/landing/casalvoando.gif` (qualquer player ou ImageMagick), pegar pixel central com [imagecolorpicker.com](https://imagecolorpicker.com/), atualizar `COLORS.heartEnd` e `COLORS.skyTarget` em `HeartFlightTransition.tsx`. Atualmente `#FFD4B8` placeholder — a fase `HEART_MERGE → SKY_CROSSFADE` vai mostrar "costura" enquanto não casar.
-2. **Versão transparente do `pingpong.gif`** — `Downloads/leticia_transparente.gif` está pronto. Quando substituir em `public/landing/pingpong.gif`, remover `mixBlendMode: 'multiply'` da `<img>` interna do `brideRef` no `ProtoScene.tsx` (~linha 496). O José ainda fica com `multiply` até também ganhar versão transparente.
-3. **Limpeza opcional do `FallingScene.tsx`** — não está em uso. Manter por enquanto (pode servir como base pra uma versão mais minimalista da landing no futuro).
+1. **Ping-pong do `casalvoando.gif`** — arquivo atual loopa em forward só, dá um "salto" cada vez que reinicia. Regenerar em vai-e-volta:
+   - [ezgif.com](https://ezgif.com) → "Effects → Reverse" → concatenar forward + reverse, OU
+   - ffmpeg: `ffmpeg -i casalvoando.gif -filter_complex "[0]reverse[r];[0][r]concat=n=2:v=1:a=0" casalvoando-pp.gif`
+   - Substituir `public/landing/casalvoando.gif` quando pronto.
+2. **Versão transparente do `pingpong.gif`** — `Downloads/leticia_transparente.gif` pronto. Quando substituir em `public/landing/pingpong.gif`, remover `mixBlendMode: 'multiply'` da `<img>` interna do `brideRef` no `ProtoScene.tsx`. O José ainda fica com `multiply` até também ganhar versão transparente.
+3. **Cor exata do céu em `HEART_COLORS.end`** — placeholder `#FFD4B8`. Para o coração "casar" com o céu do GIF do casal voando no fim da transição, atualizar para o hex do pixel central de um frame do `casalvoando.gif`. Não é "costura" como na arquitetura anterior, mas afeta a beleza da fase `MERGE`.
+4. **Limpeza opcional dos 3 componentes idle** — `HeartFlightTransition.tsx`, `FallingScene.tsx`, `FlyingScene.tsx` podem ser deletados se a abordagem inline atual ficar.
 
 ---
 

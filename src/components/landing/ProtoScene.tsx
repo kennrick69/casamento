@@ -5,16 +5,108 @@ import { useRouter } from 'next/navigation';
 
 type SceneState = 'falling' | 'flying' | 'failed';
 
-type ProtoSceneProps = {
-  /**
-   * Callback opcional disparado quando os bonecos se aproximam e a cena
-   * entra no estado 'flying'. Usado pela HeartFlightTransition para
-   * disparar a transição do coração + crossfade para a FlyingScene. O
-   * ProtoScene continua rodando normalmente (fly loop, botão interno) —
-   * fica invisível porque o pai faz fade-out via opacity.
-   */
-  onUnite?: () => void;
-};
+// Fases internas da transição do coração + troca dos personagens pelo GIF
+// do casal voando. Cenário (céu/sol/nuvens) permanece intacto o tempo todo.
+type HeartPhase = 'IDLE' | 'BIRTH' | 'GROWTH' | 'MERGE' | 'CROSSFADE' | 'DONE';
+
+const HEART_TIMING = {
+  birth: 400,
+  growth: 500,
+  merge: 300,
+  crossfade: 400,
+} as const;
+
+const HEART_COLORS = {
+  start: '#FF6B9D',
+  mid: '#FFB088',
+  end: '#FFD4B8',
+} as const;
+
+function getHeartState(phase: HeartPhase) {
+  switch (phase) {
+    case 'IDLE':
+      return {
+        scale: 0,
+        opacity: 0,
+        fill: HEART_COLORS.start,
+        easing: 'ease',
+        duration: 0,
+      };
+    case 'BIRTH':
+      return {
+        scale: 1.5,
+        opacity: 1,
+        fill: HEART_COLORS.start,
+        easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+        duration: HEART_TIMING.birth,
+      };
+    case 'GROWTH':
+      return {
+        scale: 4,
+        opacity: 1,
+        fill: HEART_COLORS.mid,
+        easing: 'ease-in',
+        duration: HEART_TIMING.growth,
+      };
+    case 'MERGE':
+      return {
+        scale: 2.5,
+        opacity: 1,
+        fill: HEART_COLORS.end,
+        easing: 'ease-out',
+        duration: HEART_TIMING.merge,
+      };
+    case 'CROSSFADE':
+      return {
+        scale: 2.5,
+        opacity: 0,
+        fill: HEART_COLORS.end,
+        easing: 'ease',
+        duration: HEART_TIMING.crossfade,
+      };
+    case 'DONE':
+      return {
+        scale: 0,
+        opacity: 0,
+        fill: HEART_COLORS.end,
+        easing: 'ease',
+        duration: 0,
+      };
+  }
+}
+
+function Heart({ phase }: { phase: HeartPhase }) {
+  const s = getHeartState(phase);
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: 'absolute',
+        left: '50%',
+        top: '280px',
+        width: 80,
+        height: 80,
+        pointerEvents: 'none',
+        transform: `translate(-50%, -50%) scale(${s.scale})`,
+        opacity: s.opacity,
+        transition: `transform ${s.duration}ms ${s.easing}, opacity ${s.duration}ms ease`,
+        willChange: 'transform, opacity',
+        zIndex: 7,
+      }}
+    >
+      <svg
+        viewBox="0 0 100 100"
+        style={{ width: '100%', height: '100%', display: 'block' }}
+      >
+        <path
+          d="M50 88 C20 65, 10 40, 25 25 C35 15, 45 20, 50 32 C55 20, 65 15, 75 25 C90 40, 80 65, 50 88 Z"
+          fill={s.fill}
+          style={{ transition: `fill ${s.duration}ms ease-in` }}
+        />
+      </svg>
+    </div>
+  );
+}
 
 // Splash de água ao boneco bater na superfície. Duas camadas:
 //  - principal: 14 gotinhas grandes, 40–110px de alcance, ~1000ms
@@ -103,7 +195,7 @@ function Splash({ x, y }: { x: number; y: number }) {
   );
 }
 
-export function ProtoScene({ onUnite }: ProtoSceneProps = {}) {
+export function ProtoScene() {
   const containerRef = useRef<HTMLDivElement>(null);
   const brideRef = useRef<HTMLDivElement>(null);
   const groomRef = useRef<HTMLDivElement>(null);
@@ -117,6 +209,9 @@ export function ProtoScene({ onUnite }: ProtoSceneProps = {}) {
   const [timeLeft, setTimeLeft] = useState(15);
   const [showButton, setShowButton] = useState(false);
   const [showFailText, setShowFailText] = useState(false);
+  // Transição do coração após união. Letícia/José fazem fade-out e o
+  // casalvoando.gif aparece no centro. Cenário não é tocado.
+  const [heartPhase, setHeartPhase] = useState<HeartPhase>('IDLE');
   // Após fail() o boneco "bate na água": dispara splash e sumiço.
   // Posições congeladas no momento do impacto para o componente Splash.
   const [brideFell, setBrideFell] = useState<{ x: number; y: number } | null>(
@@ -163,12 +258,15 @@ export function ProtoScene({ onUnite }: ProtoSceneProps = {}) {
   }, [state]);
 
   // ========== UNITE (transição pra voo) ==========
-  // useCallback com [onUnite] — sinaliza imediatamente pra HeartFlightTransition
+  // Sequência:
+  //   1. Bonecos se aproximam no centro (800ms).
+  //   2. Coração nasce/cresce/funde (BIRTH→GROWTH→MERGE→CROSSFADE).
+  //   3. Durante o CROSSFADE, os 2 GIFs somem e o casalvoando.gif aparece.
+  //   4. Botão "você é digno" aparece 600ms depois.
   const unite = useCallback(() => {
     if (stateRef.current !== 'falling') return;
     setState('flying');
     stateRef.current = 'flying';
-    onUnite?.();
 
     const centerY = 280;
     // Abraçados: cada boneco se aproxima 25px do centro a partir do lado-a-lado,
@@ -195,28 +293,20 @@ export function ProtoScene({ onUnite }: ProtoSceneProps = {}) {
       navigator.vibrate(50);
     }
 
-    // Após transição, inicia loop de voo
-    setTimeout(() => {
-      if (brideRef.current) brideRef.current.style.transition = 'none';
-      if (groomRef.current) groomRef.current.style.transition = 'none';
+    // Sequência: aproximação termina em 800ms → começa o coração
+    const t0 = 800;
+    const tBirth = t0 + HEART_TIMING.birth;
+    const tGrowth = tBirth + HEART_TIMING.growth;
+    const tMerge = tGrowth + HEART_TIMING.merge;
+    const tCrossfade = tMerge + HEART_TIMING.crossfade;
 
-      let t = 0;
-      function flyLoop() {
-        if (stateRef.current !== 'flying') return;
-        t += 0.04;
-        const offsetY = Math.sin(t) * 8;
-        if (brideRef.current)
-          brideRef.current.style.top = centerY + offsetY + 'px';
-        if (groomRef.current)
-          groomRef.current.style.top = centerY + offsetY + 'px';
-        requestAnimationFrame(flyLoop);
-      }
-      flyLoop();
-
-      // Botão aparece 1.5s depois
-      setTimeout(() => setShowButton(true), 1500);
-    }, 800);
-  }, [onUnite]);
+    setTimeout(() => setHeartPhase('BIRTH'), t0);
+    setTimeout(() => setHeartPhase('GROWTH'), tBirth);
+    setTimeout(() => setHeartPhase('MERGE'), tGrowth);
+    setTimeout(() => setHeartPhase('CROSSFADE'), tMerge);
+    setTimeout(() => setHeartPhase('DONE'), tCrossfade);
+    setTimeout(() => setShowButton(true), tCrossfade + 600);
+  }, []);
 
   // ========== FAIL ==========
   // useCallback com [] — todas as deps são refs ou setters estáveis do React
@@ -435,6 +525,7 @@ export function ProtoScene({ onUnite }: ProtoSceneProps = {}) {
     setShowFailText(false);
     setBrideFell(null);
     setGroomFell(null);
+    setHeartPhase('IDLE');
 
     bridePos.current = { x: 195, y: 220 };
     groomPos.current = { x: 60, y: 220 };
@@ -635,6 +726,31 @@ export function ProtoScene({ onUnite }: ProtoSceneProps = {}) {
         UNA O CASAL
       </div>
 
+      {/* Casal voando — substitui os 2 GIFs após a transição do coração.
+          Fica oculto até o CROSSFADE; fade-in junto com o sumiço dos
+          bonecos. Cenário (céu/sol/nuvens) permanece intacto. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/landing/casalvoando.gif"
+        alt="Casal voando"
+        draggable={false}
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '300px',
+          height: 'auto',
+          objectFit: 'contain',
+          pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 5,
+          opacity:
+            heartPhase === 'CROSSFADE' || heartPhase === 'DONE' ? 1 : 0,
+          transition: 'opacity 400ms ease',
+        }}
+      />
+
       {/* Noiva — GIF animado da Letícia. Fica à DIREITA da cena, espelhada
           horizontalmente para encarar o José que vem da esquerda. */}
       <div
@@ -648,7 +764,12 @@ export function ProtoScene({ onUnite }: ProtoSceneProps = {}) {
           cursor: 'grab',
           touchAction: 'none',
           zIndex: 5,
-          opacity: brideFell ? 0 : 1,
+          opacity:
+            brideFell ||
+            heartPhase === 'CROSSFADE' ||
+            heartPhase === 'DONE'
+              ? 0
+              : 1,
           transition: 'opacity 0.5s ease-out',
         }}
       >
@@ -682,7 +803,12 @@ export function ProtoScene({ onUnite }: ProtoSceneProps = {}) {
           cursor: 'grab',
           touchAction: 'none',
           zIndex: 5,
-          opacity: groomFell ? 0 : 1,
+          opacity:
+            groomFell ||
+            heartPhase === 'CROSSFADE' ||
+            heartPhase === 'DONE'
+              ? 0
+              : 1,
           transition: 'opacity 0.5s ease-out',
         }}
       >
@@ -701,6 +827,9 @@ export function ProtoScene({ onUnite }: ProtoSceneProps = {}) {
           }}
         />
       </div>
+
+      {/* Coração da transição (over os personagens) */}
+      <Heart phase={heartPhase} />
 
       {/* Splash de água quando os bonecos batem na superfície (após fail) */}
       {brideFell && <Splash x={brideFell.x} y={brideFell.y} />}
