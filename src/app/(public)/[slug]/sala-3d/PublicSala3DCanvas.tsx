@@ -1,34 +1,34 @@
 'use client';
 
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Grid } from '@react-three/drei';
-import type { Venue3D, Venue3DObject, Venue3DAvatar } from '@prisma/client';
+import { Grid } from '@react-three/drei';
+import type { Venue3D, Venue3DObject } from '@prisma/client';
 import { Venue3DObjectRenderer } from '@/components/venue3d/Venue3DObjectRenderer';
 
 interface Props {
-  venue: Venue3D & { objects: Venue3DObject[]; avatars: Venue3DAvatar[] };
-  eventId: string;
+  venue: Venue3D & { objects: Venue3DObject[] };
 }
 
-export default function Sala3DCanvas({ venue }: Props) {
+export default function PublicSala3DCanvas({ venue }: Props) {
   const { floorWidthTiles: fw, floorDepthTiles: fd } = venue;
+  // Câmera isométrica fixa: elevação 45°, ângulo azimutal 45°
+  const dist = Math.max(fw, fd) * 1.1;
+  const camPos: [number, number, number] = [dist * 0.7, dist * 0.75, dist * 0.7];
 
   return (
     <Canvas
-      camera={{ position: [0, fw * 0.7, fd * 0.85], fov: 45 }}
+      camera={{ position: camPos, fov: 40 }}
       style={{ background: '#1a1a2e' }}
     >
       <ambientLight intensity={venue.ambientLight} />
-      <directionalLight position={[fw / 2, 12, fd / 2]} intensity={0.9} castShadow />
+      <directionalLight position={[fw / 2, 12, fd / 2]} intensity={0.9} />
       <directionalLight position={[-fw / 2, 8, -fd / 2]} intensity={0.4} />
 
-      {/* Piso */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
         <planeGeometry args={[fw, fd]} />
         <meshStandardMaterial color={venue.floorColor} />
       </mesh>
 
-      {/* Grid */}
       <Grid
         position={[0, 0, 0]}
         args={[fw, fd]}
@@ -43,7 +43,6 @@ export default function Sala3DCanvas({ venue }: Props) {
         infiniteGrid={false}
       />
 
-      {/* Objetos do salão */}
       {venue.objects.map((obj) => (
         <Venue3DObjectRenderer
           key={obj.id}
@@ -55,16 +54,6 @@ export default function Sala3DCanvas({ venue }: Props) {
           label={obj.label}
         />
       ))}
-
-      <OrbitControls
-        enablePan
-        enableZoom
-        enableRotate
-        minPolarAngle={0}
-        maxPolarAngle={Math.PI / 2.2}
-        minDistance={4}
-        maxDistance={fw * 2}
-      />
     </Canvas>
   );
 }
