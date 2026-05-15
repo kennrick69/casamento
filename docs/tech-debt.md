@@ -115,6 +115,49 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 ---
 
+## 🟡 MÉDIA — Integrar a nova arquitetura de transição (HeartFlightTransition)
+
+**Status:** componentes criados em 2026-05-15, NÃO integrados em `src/app/page.tsx`.
+
+**Arquivos:**
+- `src/components/landing/HeartFlightTransition.tsx` — máquina de estados de 7 fases que orquestra a passagem entre falling → flying com coração SVG crescendo/explodindo no centro.
+- `src/components/landing/FallingScene.tsx` — Letícia + José draggáveis via `framer-motion`. Distância euclidiana < 80px entre centros → `onHandsUnited`.
+- `src/components/landing/FlyingScene.tsx` — `<video>` com warm-up no mount e loop ping-pong manual em rAF (cross-browser, inclusive iOS Safari).
+
+**Como integrar (próxima sessão):**
+
+```tsx
+// src/app/page.tsx
+'use client';
+import { useState } from 'react';
+import HeartFlightTransition from '@/components/landing/HeartFlightTransition';
+import { FallingScene } from '@/components/landing/FallingScene';
+import { FlyingScene } from '@/components/landing/FlyingScene';
+
+export default function HomePage() {
+  const [united, setUnited] = useState(false);
+  const [showCta, setShowCta] = useState(false);
+  return (
+    <HeartFlightTransition
+      trigger={united}
+      fallingScene={<FallingScene onHandsUnited={() => setUnited(true)} />}
+      flyingScene={<FlyingScene src="/casal-voando.mp4" />}
+      onFlightStart={() => setTimeout(() => setShowCta(true), 800)}
+    />
+  );
+}
+```
+
+**Pré-condições antes da integração:**
+
+1. **Cor exata do céu** — abrir um frame central do MP4 final do voo (ffmpeg ou player), pegar pixel central com [imagecolorpicker.com](https://imagecolorpicker.com/), atualizar `COLORS.heartEnd` e `COLORS.skyTarget` em `HeartFlightTransition.tsx`. Sem isso, a fase `HEART_MERGE → SKY_CROSSFADE` tem "costura" visível.
+2. **Asset `public/casal-voando.mp4`** — escolher entre os candidatos em `Downloads/`: `casalvoando.gif` (3.9 MB), `The_two_characters_fly_together...mp4` (486 KB) ou `flying_like_a_superman...mp4` (287 KB). Briefing pede MP4 + `<2 MB`. Se necessário comprimir: `ffmpeg -i input.mp4 -vcodec libx264 -crf 28 -preset slow -movflags +faststart output.mp4`.
+3. **Versão transparente do `pingpong.gif`** — `leticia_transparente.gif` está em `Downloads/`. Quando substituir em `public/landing/pingpong.gif`, passar `brideBlendMode="normal"` no `<FallingScene>`.
+
+**Quando o ProtoScene atual sai:** ao integrar com sucesso. Pode arquivar em `_archive/` ou deletar.
+
+---
+
 ## 🟡 MÉDIA — Configurar e-mail contato@voem.app antes do multi-tenant
 
 **Status:** e-mail de contato nos termos e política usa `contato@joseeleticia.com` (adequado para o piloto de um casal). Para lançamento multi-tenant, criar `contato@voem.app` e configurar forwarding para inbox real.

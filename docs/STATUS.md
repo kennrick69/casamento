@@ -90,7 +90,8 @@
 | Item | Status |
 |------|--------|
 | Substituir hero da landing (`/`) por ilustração final (arte do casal) | Aguardando Midjourney |
-| Substituir greybox do ProtoScene por arte final | Personagens: José (esquerda) e Letícia (direita, espelhada) integrados como GIFs animados em 2026-05-10. Cenário: background (`/landing/ceu.png`), sol cartoon (`/landing/sol.png` com animação "respirar") e 4 nuvens (`/landing/nuvem1–4.png` com parallax horizontal contínuo) integrados em 2026-05-14. **Pendente:** versão transparente dos GIFs `pingpong.gif` e `josepingpong.gif` (ambos ainda renderizam com halo bege via `mix-blend-mode: multiply`). Banner "Protótipo · arte final em produção" mantido. |
+| Substituir greybox do ProtoScene por arte final | Personagens: José (esquerda) e Letícia (direita, espelhada) integrados como GIFs animados em 2026-05-10. Cenário: background (`/landing/ceu.png`), sol cartoon (`/landing/sol.png` com animação "respirar") e 4 nuvens (`/landing/nuvem1–4.png` com parallax horizontal contínuo) integrados em 2026-05-14. Banner protótipo removido em 2026-05-14. **Pendente:** versão transparente dos GIFs `pingpong.gif` e `josepingpong.gif` (ambos ainda renderizam com halo bege via `mix-blend-mode: multiply`). |
+| Nova arquitetura de transição (FallingScene + HeartFlightTransition + FlyingScene) | Componentes criados em 2026-05-15 em `src/components/landing/` mas **não integrados** em `src/app/page.tsx` ainda. Pendências antes de plugar: (1) cor exata do céu do MP4 do voo → `COLORS.heartEnd/skyTarget` no HeartFlightTransition; (2) asset `public/casal-voando.mp4` final (candidatos em Downloads); (3) versão transparente do `pingpong.gif`. ProtoScene segue ativo. |
 | Gateway de pagamento real (Stripe/Pagar.me) | Stub implementado |
 | Lembretes via WhatsApp (Twilio) | Email cobre o caso de uso atual |
 | Remover campos legados de local no model Event | Após confirmar migração completa para EventLocation |

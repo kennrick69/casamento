@@ -5,6 +5,64 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## 2026-05-15 — Arquitetura de transição da landing (3 componentes novos)
+
+### Adicionado
+
+- **`HeartFlightTransition`** (`src/components/landing/HeartFlightTransition.tsx`) —
+  máquina de estados linear que orquestra a passagem entre a cena de queda
+  e a cena de voo. 7 fases: `IDLE → UNION_PAUSE → HEART_BIRTH → HEART_GROWTH
+  → HEART_MERGE → SKY_CROSSFADE → FLYING`. Coração SVG cresce/explode no
+  centro, transição cobre o cut entre cenas. Respeita `prefers-reduced-motion`
+  (degrada pra fade simples). API:
+  ```tsx
+  <HeartFlightTransition
+    trigger={handsUnited}
+    fallingScene={<FallingScene onHandsUnited={...} />}
+    flyingScene={<FlyingScene src="/casal-voando.mp4" />}
+    onFlightStart={() => setShowInviteBtn(true)}
+  />
+  ```
+- **`FallingScene`** (`src/components/landing/FallingScene.tsx`) —
+  Letícia + José em lados opostos, ambos draggáveis via `framer-motion`
+  (`<motion.div drag />`). Loop de `requestAnimationFrame` calcula
+  distância euclidiana entre os centros dos `getBoundingClientRect()`;
+  quando < 80px, dispara `onHandsUnited` uma única vez. Altura inicial
+  aleatória (25–45%). Props para trocar `src` dos GIFs e desligar o
+  `mix-blend-mode: multiply` quando as versões transparentes subirem.
+- **`FlyingScene`** (`src/components/landing/FlyingScene.tsx`) —
+  `<video>` com `autoPlay muted playsInline preload="auto"` (`playsInline`
+  é crítico em iOS). `.load()` + `.play()` no mount para warm-up; a
+  `HeartFlightTransition` monta este componente em `opacity 0` desde o
+  início, então quando aparecer já está rodando. **Loop ping-pong**
+  (forward → reverse → forward) implementado em JS via manipulação de
+  `currentTime` em `requestAnimationFrame` — evita `playbackRate < 0` que
+  não funciona em iOS Safari. Pode ser desligado com `pingPong={false}`
+  se o asset já vier com ping-pong embutido no MP4 (via ffmpeg concat).
+
+### Pendente (não integrado nesta entrega)
+
+- **Integração em `src/app/page.tsx`** — `ProtoScene` segue sendo o
+  componente renderizado na landing. A nova arquitetura existe mas ainda
+  não substitui o ProtoScene. Próxima sessão: trocar `<ProtoScene />` por
+  `<HeartFlightTransition trigger={...} fallingScene={...} flyingScene={...} />`
+  e levar o ProtoScene pra arquivamento ou deletar.
+- **Cor exata do coração final** (`COLORS.heartEnd` e `COLORS.skyTarget`
+  em `HeartFlightTransition.tsx`) — atualmente `#FFD4B8` como placeholder.
+  Precisa de pixel-picker num frame central do MP4 do voo definitivo, ou
+  vai aparecer "costura" visível na fase `HEART_MERGE → SKY_CROSSFADE`.
+- **Asset `public/casal-voando.mp4`** — ainda não existe em `public/`.
+  Em `Downloads/` há candidatos: `casalvoando.gif` (3.9 MB), 2 MP4s gerados
+  (`The_two_characters_fly_together...mp4` 486 KB e `flying_like_a_superman...mp4`
+  287 KB). Decidir qual vira o arquivo final, comprimir se >2 MB com
+  `ffmpeg -i input.mp4 -vcodec libx264 -crf 28 -preset slow -movflags +faststart output.mp4`.
+- **`leticia_transparente.gif`** em `Downloads/` — versão transparente do
+  `pingpong.gif` da Letícia. Quando substituir em `public/landing/`, passar
+  `brideBlendMode="normal"` para `<FallingScene>` (remove o
+  `mix-blend-mode: multiply` que está mascarando o fundo bege opaco).
+
+---
+
 ## 2026-05-10 — Landing com GIFs animados dos personagens
 
 ### Mudado

@@ -15,7 +15,42 @@ Dashboard de QA built-in em `/admin/qa` com:
 - Relatório copiável (Markdown) com resumo pass/fail/skip
 - Modelo Prisma `QATestRun` com campo `results Json`
 
-### Última sprint — Landing com GIFs animados dos personagens (2026-05-10)
+### Última sprint — Arquitetura de transição da landing (2026-05-15)
+
+3 componentes novos em `src/components/landing/`, **ainda não integrados** em `src/app/page.tsx` — o `ProtoScene` atual segue ativo até a integração final.
+
+1. **`HeartFlightTransition.tsx`** — container/máquina de estados de 7 fases (`IDLE → UNION_PAUSE → HEART_BIRTH → HEART_GROWTH → HEART_MERGE → SKY_CROSSFADE → FLYING`) que orquestra a passagem entre uma cena de queda e uma cena de voo. Coração SVG cresce/explode no centro durante a transição, cobrindo o cut. Respeita `prefers-reduced-motion`. Pré-monta a `flyingScene` em `opacity:0` desde o início pra warm-up do `<video>`. Veio direto do briefing do usuário (Downloads/HeartFlightTransition.tsx); ESLint disable da regra `react-hooks/set-state-in-effect` adicionado no topo porque a máquina de estados precisa sincronizar `trigger` externo → `setPhase` (caso correto da regra).
+
+2. **`FallingScene.tsx`** — Letícia + José em lados opostos, ambos draggáveis via `framer-motion` (`<motion.div drag />`). Loop de `requestAnimationFrame` calcula distância euclidiana entre os centros dos `getBoundingClientRect()`; quando < 80px, dispara `onHandsUnited` uma única vez. Altura inicial aleatória (25–45%). Props pra trocar `src` dos GIFs e desligar o `mix-blend-mode: multiply` quando subir a versão transparente.
+
+3. **`FlyingScene.tsx`** — `<video>` com `autoPlay muted playsInline preload="auto"` (`playsInline` é crítico em iOS). `.load() + .play()` no mount pra warm-up. **Loop ping-pong** (forward → reverse → forward) implementado em JS via manipulação de `currentTime` em rAF — evita `playbackRate < 0` que não funciona em Safari. Pode ser desligado com `pingPong={false}` se o asset já vier com ping-pong embutido no MP4.
+
+**Pendências antes de integrar em `src/app/page.tsx`:**
+
+1. **Cor exata do céu** do MP4 final do voo → atualizar `COLORS.heartEnd` e `COLORS.skyTarget` em `HeartFlightTransition.tsx` (pixel-picker em frame central). Atualmente `#FFD4B8` placeholder.
+2. **Asset `public/casal-voando.mp4`** — escolher e copiar de `Downloads/` (candidatos: `casalvoando.gif` 3.9 MB, `The_two_characters_fly_together*.mp4` 486 KB, `flying_like_a_superman*.mp4` 287 KB). Briefing pede MP4 < 2 MB.
+3. **Versão transparente do `pingpong.gif`** — `Downloads/leticia_transparente.gif`. Quando substituir em `public/landing/`, passar `brideBlendMode="normal"` no `<FallingScene>`.
+
+Ver `docs/tech-debt.md` → item "Integrar a nova arquitetura de transição (HeartFlightTransition)" pra exemplo de uso completo.
+
+---
+
+### Sprint anterior — Cenário final da landing (2026-05-14)
+
+Integração de assets visuais finais no `ProtoScene.tsx`, ainda como cena monolítica (anterior à refatoração de 2026-05-15):
+
+- **Background `ceu.png`** (céu pôr do sol + cidade + oceano com ondas) substituindo gradiente CSS e SVG inline de mar/horizonte.
+- **Sol cartoon** (`sol.png`, ~340px) com animação "respirar" via Web Animations API, posicionado no canto superior direito atrás de todas as nuvens.
+- **4 nuvens** (`nuvem1–4.png`) com parallax horizontal contínuo (vx variado, ~30–60s travessia). Limitadas aos 3/4 superiores da cena. Estado-aware: sobem durante `falling`, andam na horizontal durante `flying`.
+- **Pan vertical do background** durante a queda (de `center 0%` até `center 100%`) revelando a cidade conforme caem.
+- **Splash de água + fade-out dos bonecos** no `fail()` (countdown zerou sem união): 14 gotinhas grandes + 8 spray, animações via Web Animations API.
+- **Banner "🚧 Protótipo · arte final em produção" removido**.
+
+**Commits:** `1241ae1`, `fecbc4b`, `22729c7`, `79a4ba2`, `7be5c02`, `3b4cc62`, `5b110f9`, `ddb3201`.
+
+---
+
+### Sprint anterior — Landing com GIFs animados dos personagens (2026-05-10)
 
 Substituição parcial do `ProtoScene` (cena interativa "una o casal" da landing) pelos GIFs reais dos personagens, mantendo o banner "🚧 Protótipo · arte final em produção" até a arte definitiva chegar.
 
