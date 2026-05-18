@@ -256,6 +256,7 @@ export function ProtoScene() {
   const cloud2Ref = useRef<HTMLImageElement>(null);
   const cloud3Ref = useRef<HTMLImageElement>(null);
   const pressStartRef = useRef<HTMLSpanElement>(null);
+  const dignoRef = useRef<HTMLSpanElement>(null);
 
   const [state, setState] = useState<SceneState>('falling');
   const [timeLeft, setTimeLeft] = useState(15);
@@ -641,16 +642,35 @@ export function ProtoScene() {
   }, []);
 
   // ========== PRESS START BLINK ==========
-  // Blink clássico arcade no "PRESS START" — step-end (sem fade) pra dar
-  // a sensação de pisca duro de cartucho NES. Só roda quando o botão
-  // já está visível (showButton=true).
+  // Blink clássico arcade: ON 500ms, OFF 500ms, sem fade. step-end em cada
+  // keyframe mantém o valor até o próximo, criando o snap duro de cartucho
+  // NES. Só roda quando o botão já está visível (showButton=true).
   useEffect(() => {
     if (!showButton) return;
     const el = pressStartRef.current;
     if (!el) return;
     const anim = el.animate(
-      [{ opacity: 1 }, { opacity: 1, offset: 0.5 }, { opacity: 0, offset: 0.5 }, { opacity: 0 }],
-      { duration: 1000, iterations: Infinity, easing: 'steps(1, end)' }
+      [
+        { opacity: 1, easing: 'step-end' },
+        { opacity: 0, easing: 'step-end' },
+        { opacity: 1 },
+      ],
+      { duration: 1000, iterations: Infinity }
+    );
+    return () => anim.cancel();
+  }, [showButton]);
+
+  // ========== VOCÊ É DIGNO — CINTILAÇÃO ==========
+  // Cintilação soft (ease-in-out, fade entre 1 e 0.6) — diferente do blink
+  // duro do PRESS START. Dá sensação de brilho oscilante de CRT, sem o
+  // snap on/off arcade.
+  useEffect(() => {
+    if (!showButton) return;
+    const el = dignoRef.current;
+    if (!el) return;
+    const anim = el.animate(
+      [{ opacity: 1 }, { opacity: 0.6 }, { opacity: 1 }],
+      { duration: 1600, iterations: Infinity, easing: 'ease-in-out' }
     );
     return () => anim.cancel();
   }, [showButton]);
@@ -1006,12 +1026,26 @@ export function ProtoScene() {
           imageRendering: 'pixelated',
         }}
       >
-        <span style={{ fontSize: '14px', letterSpacing: '1px' }}>
+        <span
+          ref={dignoRef}
+          style={{
+            fontSize: '14px',
+            letterSpacing: '1px',
+            whiteSpace: 'nowrap',
+          }}
+        >
           VOCÊ É DIGNO
         </span>
         <span
           ref={pressStartRef}
-          style={{ fontSize: '10px', letterSpacing: '2px', color: '#ffd700' }}
+          style={{
+            fontSize: '12px',
+            letterSpacing: '3px',
+            whiteSpace: 'nowrap',
+            color: '#ffd700',
+            textShadow:
+              '0 0 8px rgba(255, 215, 0, 0.9), 0 0 16px rgba(255, 215, 0, 0.5), 2px 2px 0 #000',
+          }}
         >
           PRESS START
         </span>
