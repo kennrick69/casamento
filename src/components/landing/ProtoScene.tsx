@@ -61,7 +61,7 @@ function PixelHeart({
       style={{
         position: 'absolute',
         left: '50%',
-        top: '393px',
+        top: '290px',
         width: 60,
         height: 52,
         pointerEvents: 'none',
@@ -140,7 +140,7 @@ function PixelParticle({ particle }: { particle: Particle }) {
       style={{
         position: 'absolute',
         left: '50%',
-        top: '393px',
+        top: '290px',
         width: 8,
         height: 8,
         background: particle.color,
@@ -343,7 +343,10 @@ export function ProtoScene() {
     setState('flying');
     stateRef.current = 'flying';
 
-    const centerY = 280;
+    // centerY=178 coloca o wrapper (altura 225) com centro em y=290.5,
+    // ou seja, no meio vertical do canvas 580. Antes era 280, o que
+    // empurrava os bonecos pra metade inferior da tela no abraço.
+    const centerY = 178;
     // Abraçados: cada boneco se aproxima 25px do centro a partir do lado-a-lado,
     // criando sobreposição visual de ~50px (40% da largura). Combinação ainda
     // centrada no canvas 380 (centro em 190).
