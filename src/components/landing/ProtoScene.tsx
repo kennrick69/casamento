@@ -61,7 +61,7 @@ function PixelHeart({
       style={{
         position: 'absolute',
         left: '50%',
-        top: '280px',
+        top: '393px',
         width: 60,
         height: 52,
         pointerEvents: 'none',
@@ -140,7 +140,7 @@ function PixelParticle({ particle }: { particle: Particle }) {
       style={{
         position: 'absolute',
         left: '50%',
-        top: '280px',
+        top: '393px',
         width: 8,
         height: 8,
         background: particle.color,
@@ -898,7 +898,7 @@ export function ProtoScene() {
             pointerEvents: 'none',
             mixBlendMode: 'multiply',
             userSelect: 'none',
-            transform: 'scaleX(-1)',
+            transform: 'scale(0.8) scaleX(-1)',
           }}
         />
       </div>
@@ -934,6 +934,7 @@ export function ProtoScene() {
             pointerEvents: 'none',
             mixBlendMode: 'multiply',
             userSelect: 'none',
+            transform: 'scale(0.8)',
           }}
         />
       </div>
