@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { FlyingScene } from './FlyingScene';
 
 type SceneState = 'falling' | 'flying' | 'failed';
 
@@ -853,28 +854,25 @@ export function ProtoScene() {
         UNA O CASAL
       </div>
 
-      {/* Casal voando — substitui os 2 GIFs após a transição do coração.
-          Fica oculto até o CROSSFADE; fade-in junto com o sumiço dos
-          bonecos. Cenário (céu/sol/nuvens) permanece intacto. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/landing/casalvoando.gif"
-        alt="Casal voando"
-        draggable={false}
+      {/* Casal voando — canvas com ping-pong real via gifuct-js. O componente
+          sempre renderiza no DOM (fetch + decode disparam no mount = warm-up),
+          mas o wrapper fica em opacity 0 até o SNAP, garantindo zero delay
+          no momento da transição. Cenário (céu/sol/nuvens) permanece intacto. */}
+      <div
+        aria-hidden
         style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
           width: '204px',
-          height: 'auto',
-          objectFit: 'contain',
           pointerEvents: 'none',
-          userSelect: 'none',
           zIndex: 5,
           opacity: heartPhase === 'SNAP' ? 1 : 0,
         }}
-      />
+      >
+        <FlyingScene src="/landing/casalvoando.gif" pingPong />
+      </div>
 
       {/* Noiva — GIF animado da Letícia. Fica à DIREITA da cena, espelhada
           horizontalmente para encarar o José que vem da esquerda. */}
