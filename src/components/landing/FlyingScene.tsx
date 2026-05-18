@@ -12,6 +12,13 @@
  * componente esteja com opacity 0 no pai. Quando o pai revela o canvas
  * (SNAP no ProtoScene), os frames já estão pré-renderizados.
  *
+ * Anti-halo:
+ *  - clearRect antes de cada drawImage no tick (pixels do frame anterior
+ *    em áreas transparentes do novo frame não acumulam)
+ *  - Threshold de alpha no pre-compose (alpha binário, sem semi-transp)
+ *  - Canvas em pixels físicos (DPR-aware) com scaling via drawImage interno
+ *    (browser usa pre-multiplied alpha → sem halo de CSS scaling)
+ *
  * Uso:
  *   <FlyingScene src="/landing/casalvoando.gif" pingPong />
  */
@@ -46,8 +53,6 @@ export function FlyingScene({ src, pingPong = true }: Props) {
 
       const w = gif.lsd.width;
       const h = gif.lsd.height;
-      canvas.width = w;
-      canvas.height = h;
 
       // Pré-composição: para cada frame do GIF, aplicar disposal do anterior
       // + desenhar patch atual num buffer full-size, e snapshotar o resultado.
@@ -91,13 +96,23 @@ export function FlyingScene({ src, pingPong = true }: Props) {
           restoreSnapshot = fullCtx.getImageData(0, 0, w, h);
         }
 
+        // Threshold de alpha: GIFs nativos têm alpha binário (0 ou 255), mas
+        // qualquer semi-transparência residual da decodificação vira borda
+        // visível ao escalar/blend. Força alpha estritamente binário.
         tempCanvas.width = frame.dims.width;
         tempCanvas.height = frame.dims.height;
         const patchData = tempCtx.createImageData(
           frame.dims.width,
           frame.dims.height
         );
-        patchData.data.set(frame.patch);
+        const src = frame.patch;
+        const dst = patchData.data;
+        for (let p = 0; p < src.length; p += 4) {
+          dst[p] = src[p];
+          dst[p + 1] = src[p + 1];
+          dst[p + 2] = src[p + 2];
+          dst[p + 3] = src[p + 3] >= 128 ? 255 : 0;
+        }
         tempCtx.putImageData(patchData, 0, 0);
         fullCtx.drawImage(tempCanvas, frame.dims.left, frame.dims.top);
 
@@ -111,6 +126,24 @@ export function FlyingScene({ src, pingPong = true }: Props) {
 
       if (cancelled) return;
 
+      // Canvas display em pixels físicos (DPR-aware), com scaling via drawImage
+      // interno em vez de CSS-scaling do canvas attribute. Isso evita o halo
+      // que aparece quando o browser interpola bilinearmente pixels de borda
+      // (alpha 255) contra pixels vazios (alpha 0) durante o CSS resize.
+      await new Promise((r) => requestAnimationFrame(r));
+      if (cancelled) return;
+
+      const cssWidth = canvas.clientWidth || 204;
+      const aspectRatio = h / w;
+      const cssHeight = cssWidth * aspectRatio;
+      canvas.style.height = `${cssHeight}px`;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(cssWidth * dpr);
+      canvas.height = Math.round(cssHeight * dpr);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.globalCompositeOperation = 'source-over';
+
       // Loop de render com ping-pong: avança idx até o último, inverte
       // direção, avança até o primeiro, inverte de novo. Respeita o delay
       // de cada frame (gifuct-js retorna em ms).
@@ -118,7 +151,12 @@ export function FlyingScene({ src, pingPong = true }: Props) {
       let direction: 1 | -1 = 1;
       let last = performance.now();
 
-      ctx.drawImage(composed[0], 0, 0);
+      const paint = (n: number) => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(composed[n], 0, 0, w, h, 0, 0, canvas.width, canvas.height);
+      };
+
+      paint(0);
 
       const tick = (now: number) => {
         if (cancelled) return;
@@ -136,7 +174,7 @@ export function FlyingScene({ src, pingPong = true }: Props) {
           } else if (idx >= composed.length) {
             idx = 0;
           }
-          ctx.drawImage(composed[idx], 0, 0);
+          paint(idx);
         }
         rafId = requestAnimationFrame(tick);
       };
@@ -157,7 +195,6 @@ export function FlyingScene({ src, pingPong = true }: Props) {
       aria-hidden="true"
       style={{
         width: '100%',
-        height: 'auto',
         display: 'block',
         pointerEvents: 'none',
         userSelect: 'none',
