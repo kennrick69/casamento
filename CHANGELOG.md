@@ -1,5 +1,24 @@
 # Changelog
 
+## [ProtoScene — polish + FlyingScene canvas com ping-pong + botão arcade] — 2026-05-17
+
+### Added
+- **`FlyingScene.tsx` reescrito**: canvas + `requestAnimationFrame` com **ping-pong real**. Decodifica o GIF via `gifuct-js` no mount (warm-up), pré-compõe frames respeitando `disposalType`, roda forward→reverse→forward com delays originais. Substitui `<img>` simples que só fazia loop forward. Dep nova: `gifuct-js@^2.1.2`.
+- **Botão arcade no ProtoScene**: substitui "Você é digno deste convite ✨" por par "VOCÊ É DIGNO / PRESS START" em **Press Start 2P** (next/font/google). "VOCÊ É DIGNO" cintila soft (opacity 1↔0.6, ease-in-out 1.6s). "PRESS START" dourado com glow duplo (text-shadow 8px + 16px halo amarelo + sombra dura preta) e **blink duro arcade** (step-end por keyframe, ON 500ms / OFF 500ms — snap NES sem fade).
+
+### Fixed
+- **SNAP instantâneo na transição do coração**: bonecos da queda permaneciam ~500ms visíveis sobre o `casalvoando.gif` no SNAP por causa do `transition: opacity 0.5s` nos wrappers + DOM order (bonecos depois com mesmo zIndex). Fix: `transition` condicional — fade só permanece no caminho `fail()` (`heartPhase === 'IDLE'`), durante a transição é `opacity 0s`.
+- **Bonecos abraçam no meio do canvas**: `unite()` levava os personagens a `top: 280px` (centro vertical do wrapper em y=392.5) → empurrava o abraço pra metade inferior. Fix: `centerY = 178` (centro do wrapper em y=290, meio exato do canvas 580). `PixelHeart` e `PixelParticle` acompanham (`top: 290px`).
+- **Queda residual após `unite()`**: o `if (state !== 'falling') return` do useEffect FALLING ficava no escopo externo. Após `setState('flying')`, o cleanup só rodava no rerender (~50-100ms de delay) — 1-2 ticks de `y += 0.6` ainda disparavam, empurrando bonecos pra baixo. Fix: guard `if (stateRef.current !== 'falling') return` dentro do callback do setInterval (síncrono).
+- **Halo azul no FlyingScene canvas**: 4 fixes defensivos — (1) `clearRect` antes de cada `drawImage` no tick (pixels do frame anterior em áreas transparentes do novo frame não acumulam mais), (2) canvas em pixels físicos (DPR-aware) com scaling via `drawImage` interno (evita interpolação CSS bilinear que produz alpha intermediário contra pixels vazios → halo do céu atrás), (3) threshold alpha ≥128→255, <128→0 no pre-compose (kill semi-transparência residual), (4) `globalCompositeOperation = 'source-over'` explícito.
+
+### Changed
+- **Personagens (bride/groom) -20%**: `transform: scale(0.8)` no `<img>` interno dos wrappers (wrapper continua 125×225 → preserva drag/clamps/splash/posições do `unite()`/threshold do `checkUnion()`). `objectFit: contain` mantém centro visual.
+- **`casalvoando.gif` -32% no total**: 300px → 255px (-15%) → 204px (-20% adicional pra proporcionar com os bonecos -20%).
+- **Animação do `unite()`**: transition `0.8s ease-out` → `0.2s ease-out` e `await wait(800)` → `200` (aproximação mais ágil antes do coração nascer).
+
+---
+
 ## [ProtoScene — pixel art heart transition] — 2026-05-15
 
 ### Changed

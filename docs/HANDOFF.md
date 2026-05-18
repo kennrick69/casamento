@@ -7,7 +7,41 @@
 
 ## Estado atual do projeto
 
-### Última sprint — ProtoScene pixel art heart (2026-05-15)
+### Última sprint — Polish ProtoScene + ping-pong real + botão arcade (2026-05-17)
+
+Iteração longa de refinamento da landing pixel art. Tudo em produção via Railway.
+
+**Fixes geométricos no `ProtoScene.tsx`:**
+- `unite()` levava bonecos a `top: 280` → centro do wrapper em y=392.5 (metade inferior). Mudado para `centerY = 178` → centro em y=290 (meio exato do canvas 580). `PixelHeart` e `PixelParticle` em `top: 290` acompanham.
+- Bonecos da queda permaneciam visíveis ~500ms sobre o `casalvoando.gif` no SNAP por causa do `transition: opacity 0.5s` nos wrappers. Fix: `transition` condicional (`heartPhase === 'IDLE' ? 'opacity 0.5s ease-out' : 'opacity 0s'`). SNAP instantâneo agora.
+- Queda residual após `unite()`: guard `stateRef.current !== 'falling'` adicionado DENTRO do callback do `setInterval` da fase FALLING. Sem isso, 1-2 ticks de `y += 0.6` disparavam antes do React rerender + cleanup, sobrescrevendo o `style.top` que o `unite()` acabou de animar. Resolve o "desce um pouco no momento da união" reportado.
+- Bonecos (bride/groom) reduzidos 20% via `scale(0.8)` no `<img>` interno (wrapper 125×225 preservado → drag/clamps/splash não mudam).
+- `casalvoando.gif` reduzido para 204px (-32% no total: 300→255→204).
+- Transição do `unite()` de 800ms → 200ms (e `wait(800)` → `wait(200)`).
+
+**`FlyingScene.tsx` reescrito do zero — canvas + ping-pong real:**
+- GIFs nativos só fazem loop forward. Pra ter ping-pong (forward→reverse→forward), o componente agora decodifica o GIF via `gifuct-js`, pré-compõe cada frame respeitando `disposalType` (0/1/2/3) e roda em `requestAnimationFrame` com os delays originais.
+- **Warm-up:** o componente fica sempre no DOM como filho do wrapper `opacity:0` do `ProtoScene`. fetch + decode disparam no mount, em paralelo com a queda dos personagens. Quando o SNAP chega (~2-3s depois), os 54 frames já estão pré-renderizados em canvases in-memory — zero delay na transição.
+- **4 fixes defensivos contra halo:** (1) `clearRect` antes de cada `drawImage` (pixels do frame anterior em áreas transparentes do novo frame não acumulam), (2) canvas em pixels físicos (DPR-aware) com scaling via `drawImage` interno (evita halo de bilinear CSS-scale do canvas), (3) threshold alpha ≥128→255, <128→0 no pre-compose (kill semi-transparência residual), (4) `globalCompositeOperation = 'source-over'` explícito.
+- Dep nova: `gifuct-js@^2.1.2` (~25KB). Memória: ~12-30MB (frames pré-renderizados).
+- `FlyingScene` deixa de ser componente idle no repo — passa a ser **importado pelo `ProtoScene`**.
+
+**Botão arcade "VOCÊ É DIGNO / PRESS START":**
+- Substitui "Você é digno deste convite ✨" (serif, pílula creme).
+- Fonte **Press Start 2P** (next/font/google) carregada no `layout.tsx` junto das outras (Inter, Cormorant, etc.). Variable `--font-press-start`.
+- "VOCÊ É DIGNO" — 14px, `whiteSpace: nowrap`, **cintilação soft** (opacity 1↔0.6, ease-in-out 1.6s — brilho CRT).
+- "PRESS START" — 12px, letterSpacing 3px, dourado `#ffd700`, **glow duplo** via text-shadow (8px + 16px halo amarelo + sombra dura preta 2x2), **blink duro arcade** (step-end por keyframe, ON 500ms / OFF 500ms — snap NES sem fade).
+
+**Pendências remanescentes (ver `docs/tech-debt.md`):**
+1. Versões transparentes dos GIFs `pingpong.gif` e `josepingpong.gif` (`Downloads/leticia_transparente.gif` já pronto)
+2. Cor exata do céu em `HEART_COLORS.end` (placeholder `#FFD4B8`)
+3. Limpeza opcional de `HeartFlightTransition.tsx` e `FallingScene.tsx` (idle no repo — `FlyingScene` agora é usado em produção)
+
+**Commits dessa sprint:** `2ee8918`, `771d69d`, `265cde7`, `4854fb8`, `d4057be`, `6fbcc44`, `c6006ac`, `9c0ddb4`, `a8a489d`.
+
+---
+
+### Sprint anterior — ProtoScene pixel art heart (2026-05-15)
 
 Migração da estética do coração no `ProtoScene.tsx` da v1 (SVG suave + crossfade) para o padrão da HeartFlightTransition v2 (pixel art 16-bit). **Todo o comportamento de drag, detecção de proximidade e threshold de união foi preservado integralmente.**
 

@@ -117,21 +117,21 @@ Documentação viva. Atualizar ao criar dívida nova ou pagar dívida existente.
 
 ## 🟡 MÉDIA — Pendências da transição do coração (ProtoScene)
 
-**Status:** transição pixel art em produção desde 2026-05-15 (HeartFlightTransition v2 pattern). Coração 16-bit, 5 paletas power-up, SNAP instantâneo com partículas. Cenário (céu/sol/nuvens) preservado.
+**Status:** transição pixel art em produção desde 2026-05-15 (HeartFlightTransition v2 pattern). Coração 16-bit, 5 paletas power-up, SNAP instantâneo com partículas. Cenário (céu/sol/nuvens) preservado. Polish completo em 2026-05-17 (ver `docs/HANDOFF.md`): SNAP geometricamente alinhado, queda travada no `unite()`, bonecos -20%, casalvoando -32%, ping-pong real via canvas, botão arcade "VOCÊ É DIGNO / PRESS START".
 
 **Componentes idle no repo (não importados por nada):**
 - `src/components/landing/HeartFlightTransition.tsx` — v2 pixel art (atualizado em 2026-05-15). Mantido como referência para futura arquitetura de cena separada.
 - `src/components/landing/FallingScene.tsx` — versão com `framer-motion`. Mantido como referência.
-- `src/components/landing/FlyingScene.tsx` — `<img>` puro. Mantido como referência.
+
+**Componentes em uso:**
+- `src/components/landing/FlyingScene.tsx` — **EM PRODUÇÃO desde 2026-05-17** (commit `6fbcc44`). Reescrito do zero: canvas + `requestAnimationFrame` decodificando GIF via `gifuct-js` com ping-pong real (forward→reverse→forward). Dep: `gifuct-js@^2.1.2`. Importado pelo `ProtoScene.tsx`.
 
 **Pendências:**
 
-1. **Ping-pong do `casalvoando.gif`** — arquivo atual loopa em forward só, dá um "salto" cada vez que reinicia. Regenerar em vai-e-volta:
-   - [ezgif.com](https://ezgif.com) → "Effects → Reverse" → concatenar forward + reverse, OU
-   - ffmpeg: `ffmpeg -i casalvoando.gif -filter_complex "[0]reverse[r];[0][r]concat=n=2:v=1:a=0" casalvoando-pp.gif`
-   - Substituir `public/landing/casalvoando.gif` quando pronto.
+1. ✅ ~~**Ping-pong do `casalvoando.gif`**~~ — **resolvido em 2026-05-17** via FlyingScene canvas-based em vez de regerar o asset. O componente trata ping-pong em JS, então qualquer GIF futuro funciona sem reprocessamento.
 2. **Versão transparente do `pingpong.gif`** — `Downloads/leticia_transparente.gif` pronto. Quando substituir em `public/landing/pingpong.gif`, remover `mixBlendMode: 'multiply'` da `<img>` interna do `brideRef` no `ProtoScene.tsx`. O José ainda fica com `multiply` até também ganhar versão transparente.
-3. **Limpeza opcional dos 3 componentes idle** — `HeartFlightTransition.tsx`, `FallingScene.tsx`, `FlyingScene.tsx` podem ser deletados se a abordagem inline definitiva ficar.
+3. **Cor exata do céu em `HEART_COLORS.end`** — placeholder `#FFD4B8`. Atualizar pro hex do pixel central de um frame do `casalvoando.gif` se quiser que o coração "case" perfeito com o céu do GIF no fim da fase MERGE.
+4. **Limpeza opcional dos 2 componentes idle remanescentes** — `HeartFlightTransition.tsx` e `FallingScene.tsx` podem ser deletados (não importados por nada). `FlyingScene.tsx` NÃO é mais idle — está em uso.
 
 ---
 
