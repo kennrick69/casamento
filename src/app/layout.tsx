@@ -7,6 +7,7 @@ import {
   Lora,
   Caveat,
   DM_Serif_Display,
+  Press_Start_2P,
 } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
@@ -31,6 +32,12 @@ const lora = Lora({ variable: "--font-lora", subsets: ["latin"], display: "swap"
 const caveat = Caveat({ variable: "--font-caveat", subsets: ["latin"], display: "swap" });
 const dmSerif = DM_Serif_Display({
   variable: "--font-dm-serif",
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+});
+const pressStart = Press_Start_2P({
+  variable: "--font-press-start",
   subsets: ["latin"],
   weight: "400",
   display: "swap",
@@ -82,6 +89,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         lora.variable,
         caveat.variable,
         dmSerif.variable,
+        pressStart.variable,
         "h-full antialiased",
       ].join(" ")}
     >

@@ -255,6 +255,7 @@ export function ProtoScene() {
   const cloud1Ref = useRef<HTMLImageElement>(null);
   const cloud2Ref = useRef<HTMLImageElement>(null);
   const cloud3Ref = useRef<HTMLImageElement>(null);
+  const pressStartRef = useRef<HTMLSpanElement>(null);
 
   const [state, setState] = useState<SceneState>('falling');
   const [timeLeft, setTimeLeft] = useState(15);
@@ -639,6 +640,21 @@ export function ProtoScene() {
     return () => { cancelledRef.current = true; };
   }, []);
 
+  // ========== PRESS START BLINK ==========
+  // Blink clássico arcade no "PRESS START" — step-end (sem fade) pra dar
+  // a sensação de pisca duro de cartucho NES. Só roda quando o botão
+  // já está visível (showButton=true).
+  useEffect(() => {
+    if (!showButton) return;
+    const el = pressStartRef.current;
+    if (!el) return;
+    const anim = el.animate(
+      [{ opacity: 1 }, { opacity: 1, offset: 0.5 }, { opacity: 0, offset: 0.5 }, { opacity: 0 }],
+      { duration: 1000, iterations: Infinity, easing: 'steps(1, end)' }
+    );
+    return () => anim.cancel();
+  }, [showButton]);
+
   // ========== RESET ==========
   function reset() {
     setState('falling');
@@ -962,7 +978,9 @@ export function ProtoScene() {
       {brideFell && <Splash x={brideFell.x} y={brideFell.y} />}
       {groomFell && <Splash x={groomFell.x} y={groomFell.y} />}
 
-      {/* Botão "Você é digno" */}
+      {/* Botão "VOCÊ É DIGNO / PRESS START" — estética arcade Nintendo.
+          Press_Start_2P (next/font/google) na linha de baixo + blink
+          via Web Animations API (steps(1,end) = pisca duro, sem fade). */}
       <button
         onClick={handleEnterClick}
         style={{
@@ -970,23 +988,33 @@ export function ProtoScene() {
           bottom: '40px',
           left: '50%',
           transform: 'translateX(-50%)',
-          padding: '14px 28px',
-          background: 'rgba(255,248,220,0.95)',
-          color: '#5d3a1a',
-          border: '2px solid #f9d896',
-          borderRadius: '999px',
-          fontFamily: 'serif',
-          fontSize: '14px',
-          fontWeight: 500,
+          padding: '14px 24px',
+          background: 'transparent',
+          color: '#fff8dc',
+          border: 'none',
+          fontFamily: 'var(--font-press-start), monospace',
           cursor: 'pointer',
           opacity: showButton ? 1 : 0,
           transition: 'opacity 1s ease-in',
           zIndex: 10,
-          boxShadow: '0 0 20px rgba(255,220,150,0.6)',
+          textShadow: '2px 2px 0 #000, 0 0 12px rgba(0,0,0,0.6)',
           pointerEvents: showButton ? 'auto' : 'none',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '10px',
+          imageRendering: 'pixelated',
         }}
       >
-        Você é digno deste convite ✨
+        <span style={{ fontSize: '14px', letterSpacing: '1px' }}>
+          VOCÊ É DIGNO
+        </span>
+        <span
+          ref={pressStartRef}
+          style={{ fontSize: '10px', letterSpacing: '2px', color: '#ffd700' }}
+        >
+          PRESS START
+        </span>
       </button>
 
       {/* Overlay de fail */}
