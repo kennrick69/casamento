@@ -857,7 +857,7 @@ export function ProtoScene() {
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '255px',
+          width: '204px',
           height: 'auto',
           objectFit: 'contain',
           pointerEvents: 'none',
