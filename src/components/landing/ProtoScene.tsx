@@ -354,13 +354,13 @@ export function ProtoScene() {
     groomPos.current = { x: 90, y: centerY };
 
     if (brideRef.current) {
-      brideRef.current.style.transition = 'all 0.8s ease-out';
+      brideRef.current.style.transition = 'all 0.2s ease-out';
       brideRef.current.style.left = '165px';
       brideRef.current.style.right = 'auto';
       brideRef.current.style.top = centerY + 'px';
     }
     if (groomRef.current) {
-      groomRef.current.style.transition = 'all 0.8s ease-out';
+      groomRef.current.style.transition = 'all 0.2s ease-out';
       groomRef.current.style.left = '90px';
       groomRef.current.style.right = 'auto';
       groomRef.current.style.top = centerY + 'px';
@@ -375,8 +375,8 @@ export function ProtoScene() {
       new Promise<void>((resolve) => setTimeout(resolve, ms));
 
     const run = async () => {
-      // Aguarda bonecos chegarem ao centro
-      await wait(800);
+      // Aguarda bonecos chegarem ao centro (sincronizado com a transition CSS)
+      await wait(200);
       if (cancelledRef.current) return;
 
       // BIRTH — 3 steps discretos
@@ -542,6 +542,12 @@ export function ProtoScene() {
   useEffect(() => {
     if (state !== 'falling') return;
     const interval = setInterval(() => {
+      // unite() seta stateRef.current = 'flying' sincronicamente. Esse guard
+      // dentro do callback para a queda imediatamente, sem esperar o cleanup
+      // do effect (que só roda após o React rerender, ~50-100ms de delay).
+      // Sem isso, 1-2 ticks de y += 0.6 sobrescreviam o style.top que o unite()
+      // acabou de animar, empurrando os bonecos pra baixo do centro.
+      if (stateRef.current !== 'falling') return;
       bridePos.current.y += 0.6;
       groomPos.current.y += 0.6;
       if (bridePos.current.y > 450) bridePos.current.y = 450;
