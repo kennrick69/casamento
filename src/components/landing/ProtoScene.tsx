@@ -857,7 +857,7 @@ export function ProtoScene() {
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '300px',
+          width: '255px',
           height: 'auto',
           objectFit: 'contain',
           pointerEvents: 'none',
@@ -882,7 +882,8 @@ export function ProtoScene() {
           zIndex: 5,
           opacity:
             brideFell || heartPhase === 'SNAP' ? 0 : 1,
-          transition: 'opacity 0.5s ease-out',
+          transition:
+            heartPhase === 'IDLE' ? 'opacity 0.5s ease-out' : 'opacity 0s',
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -917,7 +918,8 @@ export function ProtoScene() {
           zIndex: 5,
           opacity:
             groomFell || heartPhase === 'SNAP' ? 0 : 1,
-          transition: 'opacity 0.5s ease-out',
+          transition:
+            heartPhase === 'IDLE' ? 'opacity 0.5s ease-out' : 'opacity 0s',
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
