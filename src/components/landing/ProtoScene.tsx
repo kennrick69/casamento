@@ -4,6 +4,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FlyingScene } from './FlyingScene';
 
+// Slug do evento do casal que a raiz (joseeleticia.com) abre ao dar PRESS START.
+// Configurável por env no deploy; cai no piloto (joseeleticia) quando ausente.
+// NÃO leva mais para /admin — o painel dos noivos continua só em /admin.
+const PRIMARY_EVENT_SLUG =
+  process.env.NEXT_PUBLIC_PRIMARY_EVENT_SLUG || 'joseeleticia';
+
 type SceneState = 'falling' | 'flying' | 'failed';
 
 type HeartPhase = 'IDLE' | 'BIRTH' | 'BEAT' | 'POWER_UP' | 'SNAP';
@@ -729,8 +735,11 @@ export function ProtoScene() {
   const router = useRouter();
 
   // ========== HANDLER DO BOTÃO PRINCIPAL ==========
+  // PRESS START leva o CONVIDADO para a experiência do evento (/{slug}),
+  // nunca para o login do painel. O [slug] decide entre experiência
+  // clássica e gamificada conforme o tipo escolhido pelos noivos.
   function handleEnterClick() {
-    router.push('/admin');
+    router.push(`/${PRIMARY_EVENT_SLUG}`);
   }
 
   return (
