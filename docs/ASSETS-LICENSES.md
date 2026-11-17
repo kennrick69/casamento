@@ -43,6 +43,21 @@ bluecarrot16 · JaidynReiman · Benjamin K. Smith (BenCreating) · Evert · Eliz
 
 ---
 
+## 1.1 Obras derivadas customizadas (`assets-src/personagens/custom/`)
+
+Peças que o JOs pediu para eu criar a partir do LPC. Ficam em `assets-src/custom/` (fora do git) e **herdam a licença + créditos do asset original** (share-alike). Entram no `public/` e na tela de Créditos como qualquer outro asset.
+
+### Véu de noiva — `custom/veil/` (criado em 2026-11-17)
+- **O que é:** camada nova `veil`, branco translúcido (~65% de opacidade), silhueta derivada do cabelo **LPC `hair/xlong`**. Mesmas animações e frames 64×64 (walk, idle, sit, emote, run, jump), nas camadas `bg` (atrás do corpo) e `fg` (na frente), para combinar com a tiara (`hat_formal_tiara`).
+- **Processo:** RGB → branco; alpha → 65% do original. Script: `scratchpad/make_veil.py` (determinístico, re-executável).
+- **Asset original:** `hair/xlong/adult/{bg,fg}/*` do pacote LPC.
+- **Autores (herdados):** Nila122 (original), JaidynReiman (limpeza/resplit/jump-run-sit).
+- **Licenças (herdadas, share-alike):** OGA-BY 3.0, CC-BY-SA 3.0, GPL 2.0, GPL 3.0.
+- **Links:** https://opengameart.org/content/lpc-expanded-xlong-hair · https://opengameart.org/content/lpc-clothes-and-hair
+- **Crédito na tela de Créditos:** "Véu de noiva — obra derivada do cabelo LPC *xlong* de Nila122 e JaidynReiman (OGA-BY 3.0 / CC-BY-SA 3.0 / GPL)."
+
+---
+
 ## 2. Áudio (pendente)
 Músicas e efeitos 8-bit (S7): usar material **livre de direitos** ou **gerado por IA com licença comercial**; registrar aqui (autor, link, licença) antes de subir qualquer arquivo para `public/`.
 
@@ -50,6 +65,6 @@ Músicas e efeitos 8-bit (S7): usar material **livre de direitos** ou **gerado p
 
 ## 3. Peças que FALTAM no pacote (JOs providencia)
 Ver detalhe em [`future-features/modo-gamificado.md`](./future-features/modo-gamificado.md) §12. Resumo:
-- **Véu de noiva** — não existe no LPC (nenhum arquivo `veil`). Peça icônica da noiva.
+- **Véu de noiva** — ~~não existe no LPC~~ **criado** como obra derivada do cabelo `xlong` (ver §1.1). Aguardando aprovação do preview.
 - **Gown de noiva dedicado** — composição `dress_bodice` + `legs_skirt_belle` (saia de baile) em branco + `hat_formal_tiara` cobre bem; um vestido de noiva específico seria "nice to have", não bloqueante.
 - (Smoking com gravata-borboleta do padrinho **já é possível** com `torso_jacket_frock` + `vest` + `longsleeve_formal` + `legs_formal` + `neck_bowtie` + `hat_formal_tophat`.)
