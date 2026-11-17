@@ -116,6 +116,7 @@ Abertura "Una o Casal" (ProtoScene, SEM som)
 - **Noivos (completa):** vários tipos de cabelo (liso, ondulado, cacheado, coque...), muitas cores, roupas exclusivas.
 - **BRANCO é exclusivo da noiva.** Nenhum convidado escolhe roupa branca (validação no servidor).
 - Sprites montáveis por camadas: corpo/pele + cabelo + roupa.
+- **Arte (decisão tomada):** pacote **LPC** fornecido pelo JOs em `assets-src/personagens/lpc/` (não procurar/baixar outros). Camadas paper-doll 64×64 com animações walk/idle/sit/emote/run/jump. Os `sheet_definitions/` + `palette_definitions/` (JSON do gerador oficial) definem camadas, ordem (z) e cores — **base direta do criador em camadas (S3)**. Peças de casamento já disponíveis: smoking (`torso_jacket_frock` + `vest` + `longsleeve_formal` + `legs_formal` + `neck_bowtie` + `hat_formal_tophat`), vestido/gown (`dress_bodice` + `legs_skirt_belle` + `hat_formal_tiara`), sapato social (`feet_shoes_*`), corpo de criança (boneco menor). Licenças/créditos em [`../ASSETS-LICENSES.md`](../ASSETS-LICENSES.md) — exige **tela de Créditos** no jogo.
 
 ### 4.5 Papéis especiais com código (sistema GENÉRICO)
 - No cadastro do personagem: "Sou madrinha" / "Sou padrinho" → pede **código**.
@@ -347,7 +348,7 @@ model EventReminder {
 5. **Salão:** `Venue3D` é a fonte canônica do layout; Phaser renderiza em 2D. Evoluir o editor existente, não duplicar.
 6. **Pontos/QR:** reusar `PointEvent`/`GuestPoints`/`Mission`/`CheckinCode`. Cada QR com `active` + `points`.
 7. **LGPD:** só primeiro nome e só com opt-in (`showNameOnTable`); nunca nome completo/CPF. Reusar `DataAccessLog`.
-8. **Arte/áudio:** pacotes **gratuitos com licença de uso comercial** (Kenney CC0, OpenGameArt, itch.io free; áudio livre de direitos ou IA com licença comercial). **Registrar cada item em `docs/ASSETS-LICENSES.md`** (nome, autor, link, licença). Pacote pago/baixar manualmente → listar no relatório para o JOs providenciar.
+8. **Arte dos personagens (decisão tomada): pacote LPC** em `assets-src/personagens/lpc/` (fornecido pelo JOs, commit fixado `0414067`). **Não procurar nem baixar outros pacotes de personagens.** `assets-src/` é fonte, fica **fora do git** (`.git/info/exclude`) e **não é commitada**; copiar/processar para `public/` **só** os arquivos que o jogo usar. O criador de camadas (S3) é dirigido pelos `sheet_definitions/`/`palette_definitions/`. Cada arquivo usado → registrar autores+licença+link em `docs/ASSETS-LICENSES.md` (dados do `CREDITS.csv`) + **tela de Créditos** obrigatória (licenças OGA-BY/CC-BY/CC-BY-SA/GPL/CC0 — comerciais, mas exigem crédito; share-alike recai sobre a arte, não sobre o código). Áudio (S7): livre de direitos ou IA com licença comercial, mesmo registro. Peça paga/manual → listar no relatório.
 9. **Mobile/PWA:** só web (link/QR, "adicionar à tela inicial"). `manifest.json` já existe; avaliar service worker em S7. Sem loja de apps.
 10. **Produção:** tudo atrás do gate; branch `feat/modo-gamificado`; só merge estável na `main`. **Migrations só após banco de dev separado combinado.**
 
@@ -360,7 +361,7 @@ model EventReminder {
 | **S0** | Documento de visão + fix PRESS START | — | PRESS START vai p/ `/[slug]`; clássico intacto |
 | **S1** | `experienceType` + campos de config do evento (schema + migration) no banco de dev | `Event.features/customization` | Default `CLASSIC`; eventos atuais inalterados |
 | **S2** | Identidade: cadastro, passkey (WebAuthn), código por celular, acompanhantes, claim de boneco, visitantes | `Guest`, `GuestCompanion`, acesso sem senha | Rotas do jogo só sob `GAMIFIED` |
-| **S3** | Criador de personagem em camadas + papéis com código | `WeddingPartyMember` (ref) | — |
+| **S3** | Criador de personagem em camadas + papéis com código | LPC `sheet_definitions`/`palette_definitions`; `WeddingPartyMember` (ref) | copiar p/ `public/` só o usado; registrar créditos |
 | **S4** | Tela de título + mapa de fases + framework de fase + fase Recepção (RSVP) | RSVP | RSVP clássico continua funcionando |
 | **S5** | Demais fases | conteúdo existente de cada feature | — |
 | **S6** | Editor do salão (evoluir) + cena do salão com NPCs, mesas e bonecos vivos | `Venue3D`, `SeatingTable` | Plano de mesas clássico intacto |
@@ -377,5 +378,5 @@ model EventReminder {
 
 1. **Banco de desenvolvimento separado (bloqueia S1).** Não existe `.env`/`.env.local` no checkout e as migrations alteram o Postgres de produção do Railway. Preciso de um Postgres de dev (sugestão: segundo Postgres no Railway, ou Neon, ou Docker local) e o `DATABASE_URL` dele antes de qualquer `prisma migrate dev`/`db push`. **Confirmado: não rodo nenhum comando Prisma que altere banco até combinarmos.**
 2. **Deploy de branch:** confirmar no painel do Railway se há ambiente de preview/PR ou se só a `main` faz deploy (ver §13).
-3. **Assets pagos:** se algum pacote de pixel art/áudio exigir compra ou download manual, listo no relatório para o JOs providenciar.
+3. **Peças de personagem que faltam no LPC** (JOs providencia): **véu de noiva** (não existe no pacote — peça icônica da noiva) e, opcionalmente, um **vestido de noiva dedicado** (o gown é componível com `dress_bodice` + `legs_skirt_belle` branco + tiara, então não é bloqueante). Smoking do padrinho e tiara já estão cobertos. Áudio (músicas/efeitos) ainda a providenciar em S7.
 4. **WhatsApp API:** avaliar e documentar o custo da API oficial antes de implementar lembrete automático por WhatsApp.
