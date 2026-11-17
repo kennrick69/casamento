@@ -49,12 +49,23 @@ Peças que o JOs pediu para eu criar a partir do LPC. Ficam em `assets-src/custo
 
 ### Véu de noiva — `custom/veil/` (criado em 2026-11-17)
 - **O que é:** camada nova `veil`, branco translúcido (~65% de opacidade), silhueta derivada do cabelo **LPC `hair/xlong`**. Mesmas animações e frames 64×64 (walk, idle, sit, emote, run, jump), nas camadas `bg` (atrás do corpo) e `fg` (na frente), para combinar com a tiara (`hat_formal_tiara`).
-- **Processo:** RGB → branco; alpha → 65% do original. Script: `scratchpad/make_veil.py` (determinístico, re-executável).
+- **Processo:** RGB → branco; alpha → 65% do original. **Correção de queda (v2):** o véu sai do alto da cabeça e cai para TRÁS — o `fg` tem a região da cabeça/rosto apagada por direção (vista de costas intacta; frente vai toda pro `bg`; laterais mantêm só as pontas sobre os ombros), o resto fica no `bg`. Script re-executável: `scratchpad/bride.py`.
 - **Asset original:** `hair/xlong/adult/{bg,fg}/*` do pacote LPC.
 - **Autores (herdados):** Nila122 (original), JaidynReiman (limpeza/resplit/jump-run-sit).
 - **Licenças (herdadas, share-alike):** OGA-BY 3.0, CC-BY-SA 3.0, GPL 2.0, GPL 3.0.
 - **Links:** https://opengameart.org/content/lpc-expanded-xlong-hair · https://opengameart.org/content/lpc-clothes-and-hair
 - **Crédito na tela de Créditos:** "Véu de noiva — obra derivada do cabelo LPC *xlong* de Nila122 e JaidynReiman (OGA-BY 3.0 / CC-BY-SA 3.0 / GPL)."
+
+### Saia de noiva branca — `custom/skirt_belle_white/` (criado em 2026-11-17)
+- **O que é:** versão **branca** da saia **LPC `legs/skirts/belle/thin`** (original bege/cinza), para a noiva. Preserva as dobras (recolor por luminância → rampa branca `[205..255]`, alpha intacto). Animações: idle, walk, emote (as que o pacote belle tem).
+- **Processo:** luminância normalizada por frame → cinza branco; script `scratchpad/bride.py` (determinístico).
+- **Asset original:** `legs/skirts/belle/thin/*` do pacote LPC.
+- **Autores (herdados):** bluecarrot16, Matthew Krohn (makrohn), Lanea Zimmerman (Sharm).
+- **Licenças (herdadas, share-alike):** OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0.
+- **Links:** https://opengameart.org/content/lpc-dress-in-combat-poses · http://opengameart.org/content/lpc-clothing-updates · https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles
+- **Crédito na tela de Créditos:** "Saia de noiva — obra derivada da saia LPC *belle* de bluecarrot16, Matthew Krohn e Lanea Zimmerman (OGA-BY 3.0 / CC-BY-SA 3.0 / GPL)."
+
+> **Preview da noiva completa:** `custom/veil/preview-noiva-gerado.png` (corpo + cabeça + olhos + vestido/bodice branco + saia belle branca + cabelo long + tiara + véu), 4 direções em fundo claro e escuro. Os assets LPC usados no preview (body, head, eyes, dress/bodice `white`, hair `long`, tiara) entram na tabela de "arquivos usados" quando forem para `public/` no S3.
 
 ---
 
