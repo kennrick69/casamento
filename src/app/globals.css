@@ -164,10 +164,14 @@ html[data-contrast="high"] {
    Redefine os tokens shadcn + fontes num wrapper, então os componentes do
    painel herdam o visual. O admin clássico (sem o wrapper) não muda em nada.
    Arte/paleta próprias e genéricas — sem marca de terceiros. */
-.game-skin { font-family: var(--skin-body); }
+.game-skin { font-family: var(--skin-body); background: var(--background); color: var(--foreground); }
 .game-skin :is(h1, h2, h3), .game-skin button, .game-skin [role="button"] {
   font-family: var(--skin-head);
 }
+/* Em TODAS as páginas do admin GAMIFIED, superfícies bg-background (cards,
+   cabeçalho) viram a cor de CARD do skin — nunca o fundo (que ficava azul no
+   8-Bit). O wrapper .game-skin pinta o fundo do skin acima. */
+.game-skin .bg-background { background: var(--card) !important; }
 
 /* Perfil: Conto de Fadas (padrão) — azul-pó, prata, dourado, elegante */
 .game-skin[data-game-skin="fairytale"] {
@@ -176,9 +180,9 @@ html[data-contrast="high"] {
   --background: #dbe8fa; --foreground: #2a3358;
   --card: #ffffff; --card-foreground: #2a3358;
   --popover: #ffffff; --popover-foreground: #2a3358;
-  --primary: #6a8fd8; --primary-foreground: #fff7d8;
+  --primary: #3f63b8; --primary-foreground: #fff7d8;
   --secondary: #e6edfa; --secondary-foreground: #2a3358;
-  --muted: #e6edfa; --muted-foreground: #6a7496;
+  --muted: #e6edfa; --muted-foreground: #46506e;
   --accent: #b88a2a; --accent-foreground: #ffffff;
   --border: #c3d0e8; --input: #c3d0e8; --ring: #6a8fd8;
   --radius: 1rem;
@@ -312,7 +316,7 @@ html[data-contrast="high"] {
   background: var(--secondary);
 }
 .game-skin[data-game-skin="metal"] nav a,
-.game-skin[data-game-skin="pixel"] nav a { font-size: 0.58rem; letter-spacing: 0.5px; }
+.game-skin[data-game-skin="pixel"] nav a { font-size: 0.5rem; letter-spacing: 0; }
 .game-skin nav a:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--skin-hard); }
 
 /* Abas em GRADE uniforme (cara de menu de jogo): colunas iguais, alinhadas dos
@@ -328,8 +332,10 @@ html[data-contrast="high"] {
 }
 .game-skin nav a {
   justify-content: center; text-align: center; min-width: 0; margin: 0;
-  overflow: hidden; text-overflow: ellipsis;
+  white-space: normal; line-height: 1.25; word-break: normal; overflow-wrap: break-word;
+  hyphens: none; padding-top: 8px; padding-bottom: 8px;
 }
+.game-skin[data-game-skin="fairytale"] nav a { font-size: 0.72rem; letter-spacing: 0.4px; }
 /* Aba ativa: contraste garantido em todos os skins (texto sobre --primary) */
 .game-skin nav a[aria-current="page"] {
   background: var(--primary);
@@ -357,3 +363,29 @@ html[data-contrast="high"] {
 }
 .game-skin[data-game-skin="metal"] .game-countdown .game-countdown-num { color: var(--accent) !important; }
 .game-skin[data-game-skin="fairytale"] .game-countdown .game-countdown-num { font-family: var(--skin-body); }
+
+/* Linhas da "Atividade recente" no estilo do card (não o fundo do skin) */
+.game-skin .game-row {
+  background: var(--card) !important;
+  color: var(--card-foreground);
+  border-color: var(--border) !important;
+}
+
+/* Conto de Fadas: detalhe decorativo discreto no topo (fio dourado duplo) */
+.game-skin[data-game-skin="fairytale"] header {
+  border-top: 3px solid var(--accent);
+  box-shadow: inset 0 5px 0 -3px #ffffff, 0 1px 0 var(--accent);
+}
+
+/* Cabeçalho: controles (ex.: "Sair") legíveis — fonte do corpo, não a pixel */
+.game-skin header button,
+.game-skin header a[data-slot="button"] {
+  font-family: var(--skin-body);
+  font-size: 0.9rem;
+  letter-spacing: normal;
+  background: transparent;
+  color: var(--card-foreground);
+  border: 2px solid var(--border);
+  padding: 4px 10px;
+  box-shadow: none;
+}

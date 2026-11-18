@@ -3,6 +3,7 @@ import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { getCurrentGuest } from "@/lib/auth/guest";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { Trophy, Medal, Check, Sparkles } from "lucide-react";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -14,7 +15,7 @@ const MOTIVATIONAL: { min: number; max: number; msg: string }[] = [
   { min: 1, max: 49, msg: "Bom começo! Continue engajando." },
   { min: 50, max: 149, msg: "Você está crescendo no ranking!" },
   { min: 150, max: 299, msg: "Impressionante! Você é um dos favoritos." },
-  { min: 300, max: Infinity, msg: "Uau! Você está arrasando na gincana 🏆" },
+  { min: 300, max: Infinity, msg: "Uau! Você está arrasando na gincana!" },
 ];
 
 function getMotivational(points: number): string {
@@ -99,9 +100,8 @@ export default async function GincanaPage({ params, searchParams }: Props) {
               <p className="text-xs text-[var(--theme-secondary)]">Sua posição</p>
               <p className="text-3xl font-bold">
                 {guestRank ? `${guestRank}º` : "—"}
-                {guestRank === 1 && " 🏆"}
-                {guestRank === 2 && " 🥈"}
-                {guestRank === 3 && " 🥉"}
+                {guestRank === 1 && <Trophy className="inline size-6 ml-1.5 -mt-1" style={{ color: "var(--theme-accent)" }} aria-hidden />}
+                {(guestRank === 2 || guestRank === 3) && <Medal className="inline size-6 ml-1.5 -mt-1" style={{ color: "var(--theme-secondary)" }} aria-hidden />}
               </p>
             </div>
           </div>
@@ -136,17 +136,24 @@ export default async function GincanaPage({ params, searchParams }: Props) {
         )}
         {ranking.map((entry, i) => {
           const isMe = guest && entry.guestId === guest.id;
-          const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
+          const medalIcon =
+            i === 0 ? <Trophy className="size-4 mx-auto" style={{ color: "var(--theme-accent)" }} aria-hidden /> :
+            i <= 2 ? <Medal className="size-4 mx-auto" style={{ color: "var(--theme-secondary)" }} aria-hidden /> :
+            null;
           return (
             <div
               key={entry.guestId}
               className={`flex items-center gap-3 rounded-[var(--theme-radius)] px-3 py-2 border ${isMe ? "border-[var(--theme-primary)] bg-[var(--theme-muted)]" : "border-[var(--theme-border)]"}`}
             >
               <span className="text-base font-bold w-7 text-center text-[var(--theme-secondary)] shrink-0">
-                {medal ?? i + 1}
+                {medalIcon ?? i + 1}
               </span>
               <span className="flex-1 text-sm font-medium truncate">
-                {isMe ? "Você ✨" : entry.guest.name}
+                {isMe ? (
+                  <>Você <Sparkles className="inline size-3.5 -mt-0.5" style={{ color: "var(--theme-accent)" }} aria-hidden /></>
+                ) : (
+                  entry.guest.name
+                )}
               </span>
               <span className="text-sm font-bold shrink-0" style={{ color: "var(--theme-primary)" }}>
                 {entry.totalPoints} pts
@@ -188,7 +195,7 @@ export default async function GincanaPage({ params, searchParams }: Props) {
                 </p>
               </div>
               <div className="flex items-center gap-2 ml-4 shrink-0">
-                {isComplete && <span className="text-sm">✓</span>}
+                {isComplete && <Check className="size-4" style={{ color: "var(--theme-primary)" }} aria-hidden />}
                 <span className="text-sm font-bold" style={{ color: "var(--theme-accent)" }}>
                   +{m.points} pts
                 </span>
