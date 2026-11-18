@@ -11,11 +11,13 @@ export function GamifiedPlaceholder({
   ceremonyDate,
   timezone,
   rsvpHref,
+  jogoHref,
 }: {
   coupleNames: string;
   ceremonyDate: Date;
   timezone: string;
   rsvpHref: string;
+  jogoHref: string;
 }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 py-16 text-center gap-6">
@@ -50,12 +52,20 @@ export function GamifiedPlaceholder({
         <Countdown targetDate={ceremonyDate} timezone={timezone} />
       </div>
 
-      <Link
-        href={rsvpHref}
-        className={buttonVariants({ className: "h-12 px-6 text-base font-semibold justify-center" })}
-      >
-        Confirmar presença
-      </Link>
+      <div className="flex flex-col gap-2 w-full max-w-sm">
+        <Link
+          href={jogoHref}
+          className={buttonVariants({ className: "h-12 px-6 text-base font-semibold justify-center" })}
+        >
+          Entrar no jogo (beta)
+        </Link>
+        <Link
+          href={rsvpHref}
+          className={buttonVariants({ variant: "outline", className: "h-12 px-6 text-base font-semibold justify-center" })}
+        >
+          Confirmar presença
+        </Link>
+      </div>
     </div>
   );
 }

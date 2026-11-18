@@ -85,6 +85,7 @@ export default async function EventPage({
         ceremonyDate={event.ceremonyDate}
         timezone={event.timezone}
         rsvpHref={`/${slug}/rsvp${k ? `?k=${k}` : ""}`}
+        jogoHref={`/${slug}/jogo`}
       />
     );
   }

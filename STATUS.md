@@ -3,7 +3,7 @@
 Branch de trabalho: `feat/modo-gamificado` (criado a partir da `main`).
 Regra de ouro: nada que funciona hoje pode quebrar; tudo do jogo fica atrás de `Event.experienceType`; só o que está estável vai para a `main`, e **o SQL de toda migration é mostrado antes de qualquer merge**.
 
-Última atualização: 2026-11-17.
+Última atualização: 2026-11-18.
 
 ---
 
@@ -13,7 +13,14 @@ Regra de ouro: nada que funciona hoje pode quebrar; tudo do jogo fica atrás de 
 |---|---|---|
 | S0 | Visão, docs, fix do PRESS START | ✅ feito |
 | S1 | Gate de experiência (CLASSIC × GAMIFIED) + placeholder | ✅ feito (no branch, não na main) |
-| S2+ | Jogo RPG (Phaser), personagem, salão, missões | ⏳ a fazer |
+| S2 | Identidade: cadastro, passkey (WebAuthn), visitante, claim de boneco, acompanhantes | ✅ feito (no branch, não na main) |
+| S3+ | Criador de personagem (LPC), jogo RPG (Phaser), salão, missões | ⏳ a fazer |
+
+### S2 — entregue neste branch
+- Migration aditiva `20261118142707_add_game_identity`: `Guest.isVisitor/playerName/characterClaimedAt` + tabela `GuestCredential` (passkeys). Zero rename/drop.
+- Passkey WebAuthn (`@simplewebauthn` v14) + rota gated `/[slug]/jogo` (cadastro, login, visitante, claim). Acompanhantes reusam `GuestCompanion`.
+- "Código por celular" reusa o magic link por e-mail (SMS/WhatsApp é pendência de custo §12.4).
+- Como testar no celular: `RELATORIO-MODO-GAMIFICADO.md`.
 
 ### S1 — entregue neste branch
 - Enum `ExperienceType { CLASSIC, GAMIFIED }` + `Event.experienceType` default **CLASSIC** (migration aditiva `20261118020228_add_experience_type`).

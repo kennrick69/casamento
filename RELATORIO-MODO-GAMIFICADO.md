@@ -1,7 +1,71 @@
 # Relatório — Modo Gamificado
 
 Branch: `feat/modo-gamificado` · Nada é mergeado na `main` sem aprovação do SQL de migration.
-Última atualização: 2026-11-17.
+Última atualização: 2026-11-18.
+
+---
+
+## Sprint S2 — Identidade do jogador (cadastro, passkey, visitante, claim)
+
+**Objetivo:** dar ao convidado uma identidade dentro do jogo, reaproveitando o
+`Guest` e a sessão da experiência clássica. Nada do site clássico muda.
+
+### O que entrou
+
+1. **Migration (aditiva)** `20261118142707_add_game_identity` — SQL completo mais abaixo. Só `ADD COLUMN` (com default seguro) + `CREATE TABLE`/índices/FK. Nenhum rename/drop; eventos e convidados atuais inalterados.
+   - `Guest.isVisitor` (bool, default false), `Guest.playerName` (texto, nulo), `Guest.characterClaimedAt` (timestamp, nulo).
+   - Nova tabela **`GuestCredential`** — passkeys WebAuthn (chave pública COSE + contador anti-clonagem). Nenhum dado biométrico sai do aparelho.
+2. **Passkey WebAuthn** (`@simplewebauthn/server@14` + `@simplewebauthn/browser@14`): login sem senha e à prova de phishing. Desafio guardado em cookie httpOnly de uso único (sem tabela extra). RP ID = host do app.
+3. **Rota `/[slug]/jogo`** (só sob `GAMIFIED`; evento clássico é redirecionado para `/[slug]`). Tela de identidade com: entrar com passkey, entrar com e-mail (reusa o magic link de `/recuperar`), entrar como visitante, e — já identificado — criar passkey e reivindicar o boneco.
+4. **Visitante:** quem não está na lista entra como `Guest` com `isVisitor=true` (e-mail sintético `@visitante.voem.invalid`, nunca real — mantém o `NOT NULL` do schema sem relaxar nada).
+5. **Claim de boneco:** marca `characterClaimedAt` + grava `playerName` (LGPD: só 1º nome, opt-in). A **aparência** do boneco (camadas LPC) é o criador do **S3**.
+6. **Acompanhantes:** reaproveitados do `GuestCompanion` já existente (criados no RSVP). Sem schema novo.
+
+### Decisão: "código por celular"
+O projeto ainda **não tem SMS/WhatsApp** (o custo da API oficial é pendência §12.4 do doc). Em vez de inventar uma integração, o acesso sem senha do S2 reusa o **magic link por e-mail** já testado (`/[slug]/recuperar`). Quando o WhatsApp for aprovado, vira só mais um canal do mesmo fluxo.
+
+### Arquivos
+- `prisma/schema.prisma` — 3 campos em `Guest` + model `GuestCredential`.
+- `prisma/migrations/20261118142707_add_game_identity/` — migration.
+- `src/lib/game/identity.ts` — helpers de identidade (visitante, claim, 1º nome).
+- `src/lib/game/webauthn.ts` — WebAuthn (opções + verificação, cookie de desafio).
+- `src/app/(public)/[slug]/jogo/{page.tsx,actions.ts,jogo-identity-client.tsx}` — rota gated.
+- `src/components/guest/gamified-placeholder.tsx` + `.../[slug]/page.tsx` — botão "Entrar no jogo (beta)".
+- `package.json` — deps SimpleWebAuthn.
+
+### Verificações
+- Migration aplicada no **voem-dev** (`migrate deploy`); client Prisma regenerado no Windows.
+- `tsc --noEmit` → ✅ **0 erros** no projeto (client regenerado zerou os erros falsos de Prisma).
+- `eslint` nos arquivos do S2 → ✅ limpo.
+- `node scripts/check-server-actions.mjs` → ✅ todos os exports async.
+- `vitest` / `build` / Playwright: **não** rodados nesta sessão (vitest não tem binário linux no checkout WSL; build+e2e cobertos pelo CI/pre-push). Rodar no Windows/CI antes do merge.
+- Runtime do passkey **não** é verificável sem aparelho real (precisa de HTTPS + biometria) → ver "Como testar no celular".
+
+---
+
+## Como testar no celular (S2)
+
+> **Pré-requisito do passkey:** WebAuthn exige **contexto seguro** = HTTPS **ou** `http://localhost`. O celular não acessa o `localhost` do PC, então há dois caminhos:
+
+### Caminho A — HTTPS público (recomendado para testar no celular)
+1. Suba o app num host HTTPS que o celular alcance (deploy de preview no Railway, ou um túnel tipo Cloudflare/ngrok apontando para o `next start` local). O RP ID vira o host desse HTTPS.
+2. `NEXT_PUBLIC_APP_URL` = essa URL HTTPS (lembrar: `NEXT_PUBLIC_*` é inlinado → **rebuildar** após mudar). **Não** precisa da flag `ALLOW_LOCALHOST_APP_URL` aqui (não é localhost).
+3. No evento de teste, marque **Gamificada** em `/admin/eventos/[id]/configuracoes` (ou SQL no dev: `UPDATE "Event" SET "experienceType"='GAMIFIED' WHERE slug='demo';`).
+4. No celular, abra `https://<host>/demo` → botão **"Entrar no jogo (beta)"** → `/demo/jogo`.
+5. Fluxos a conferir:
+   - **Visitante:** digite um nome → "Entrar como visitante" → deve identificar e mostrar "Olá, <nome>! (visitante)".
+   - **Passkey (cadastro):** identifique-se primeiro (visitante ou e-mail) → "Criar passkey neste aparelho" → o celular pede Face ID/digital → "[OK] Passkey criado".
+   - **Passkey (login):** saia (apague o cookie) → "Entrar com passkey" → Face ID/digital → entra sem e-mail.
+   - **Claim:** com sessão, digite o 1º nome → "Reivindicar meu boneco" → "[OK] Boneco reivindicado".
+   - **E-mail:** "Entrar com e-mail" → leva para `/recuperar` (magic link no e-mail do convite).
+
+### Caminho B — só no PC (localhost, sem celular)
+1. `.env.local`: `ALLOW_LOCALHOST_APP_URL=true` + `NEXT_PUBLIC_APP_URL=http://localhost:3000` (rebuild). No start aparece o aviso `[startup] ATENÇÃO: localhost liberado — só para dev`.
+2. `cmd.exe /c "cd /d G:\Projetos\casamento && pnpm build:local && pnpm exec next start"`.
+3. Abra `http://localhost:3000/demo/jogo` no próprio PC (Chrome/Edge com Windows Hello, ou um passkey de software) e rode os mesmos fluxos.
+
+### Não-regressão (clássico)
+- `/casamento-exemplo` e `/demo` (CLASSIC) → site clássico idêntico; `/demo/jogo` num evento CLASSIC → **redireciona** para `/demo` (jogo não aparece).
 
 ---
 
