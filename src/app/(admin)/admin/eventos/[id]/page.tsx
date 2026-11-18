@@ -7,6 +7,8 @@ import { requireOrganizer } from "@/lib/authorization";
 import { EventNav } from "@/components/admin/event-nav";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { buttonVariants } from "@/components/ui/button";
+import { Users, Camera, Gift, Shield, AlertTriangle, ClipboardList, Music, Lock, Settings, User as UserIcon } from "lucide-react";
+import { GameStatIcon } from "@/components/admin/game-stat-icon";
 import Link from "next/link";
 import { format, formatDistanceToNow, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -142,10 +144,10 @@ export default async function EventDashboardPage({
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-6">
-          <StatCard label="Confirmados" value={confirmedGuests} sub={`${totalWithCompanions} c/ acomp.`} color="green" />
-          <StatCard label="Recusados" value={declinedGuests} color="red" />
-          <StatCard label="Pendentes" value={pendingGuests} />
-          <StatCard label="Fotos" value={totalPhotos} />
+          <StatCard kind="confirmados" label="Confirmados" value={confirmedGuests} sub={`${totalWithCompanions} c/ acomp.`} color="green" />
+          <StatCard kind="recusados" label="Recusados" value={declinedGuests} color="red" />
+          <StatCard kind="pendentes" label="Pendentes" value={pendingGuests} />
+          <StatCard kind="fotos" label="Fotos" value={totalPhotos} />
         </div>
 
         {/* Info cards */}
@@ -177,9 +179,9 @@ export default async function EventDashboardPage({
               {pendingReports > 0 && (
                 <Link
                   href={`/admin/eventos/${id}/moderacao`}
-                  className="text-xs text-red-600 hover:underline font-medium"
+                  className="text-xs text-red-600 hover:underline font-medium inline-flex items-center gap-1"
                 >
-                  ⚠ {pendingReports} denúncia{pendingReports !== 1 ? "s" : ""}
+                  <AlertTriangle className="size-3.5" aria-hidden /> {pendingReports} denúncia{pendingReports !== 1 ? "s" : ""}
                 </Link>
               )}
             </div>
@@ -203,7 +205,7 @@ export default async function EventDashboardPage({
                 >
                   {item.type === "guest" ? (
                     <>
-                      <span className="text-base">👤</span>
+                      <UserIcon className="size-4 text-muted-foreground shrink-0" aria-hidden />
                       <span className="flex-1 truncate">
                         <span className="font-medium">{item.name}</span>{" "}
                         <span className={`text-xs ${
@@ -223,7 +225,7 @@ export default async function EventDashboardPage({
                     </>
                   ) : (
                     <>
-                      <span className="text-base">📷</span>
+                      <Camera className="size-4 text-muted-foreground shrink-0" aria-hidden />
                       <span className="flex-1 text-muted-foreground">Nova foto enviada</span>
                     </>
                   )}
@@ -243,21 +245,21 @@ export default async function EventDashboardPage({
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { href: `/admin/eventos/${id}/convidados`, label: "Convidados", icon: "👥" },
-              { href: `/admin/eventos/${id}/mural`, label: "Mural", icon: "📷" },
-              { href: `/admin/eventos/${id}/presentes`, label: "Presentes", icon: "🎁" },
-              { href: `/admin/eventos/${id}/moderacao`, label: "Moderação", icon: pendingReports > 0 ? "⚠" : "🛡" },
-              { href: `/admin/eventos/${id}/roteiro`, label: "Roteiro", icon: "📋" },
-              { href: `/admin/eventos/${id}/playlist`, label: "Playlist", icon: "🎵" },
-              { href: `/admin/eventos/${id}/lgpd`, label: "LGPD", icon: "🔒" },
-              { href: `/admin/eventos/${id}/configuracoes`, label: "Config.", icon: "⚙" },
+              { href: `/admin/eventos/${id}/convidados`, label: "Convidados", Icon: Users },
+              { href: `/admin/eventos/${id}/mural`, label: "Mural", Icon: Camera },
+              { href: `/admin/eventos/${id}/presentes`, label: "Presentes", Icon: Gift },
+              { href: `/admin/eventos/${id}/moderacao`, label: "Moderação", Icon: pendingReports > 0 ? AlertTriangle : Shield },
+              { href: `/admin/eventos/${id}/roteiro`, label: "Roteiro", Icon: ClipboardList },
+              { href: `/admin/eventos/${id}/playlist`, label: "Playlist", Icon: Music },
+              { href: `/admin/eventos/${id}/lgpd`, label: "LGPD", Icon: Lock },
+              { href: `/admin/eventos/${id}/configuracoes`, label: "Config.", Icon: Settings },
             ].map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="flex flex-col items-center gap-1.5 text-sm px-3 py-3 rounded-lg border border-border bg-background hover:bg-muted transition-colors"
+                className="game-panel flex flex-col items-center gap-1.5 text-sm px-3 py-3 rounded-lg border border-border bg-background hover:bg-muted transition-colors"
               >
-                <span className="text-xl">{link.icon}</span>
+                <link.Icon className="size-6 text-foreground/80" aria-hidden />
                 <span className="text-xs text-muted-foreground">{link.label}</span>
               </Link>
             ))}
@@ -269,20 +271,23 @@ export default async function EventDashboardPage({
 }
 
 function StatCard({
+  kind,
   label,
   value,
   sub,
   color,
 }: {
+  kind: "confirmados" | "recusados" | "pendentes" | "fotos";
   label: string;
   value: number;
   sub?: string;
   color?: "green" | "red";
 }) {
   return (
-    <div className="bg-background rounded-xl border border-border px-4 py-3">
-      <p className="text-xs text-muted-foreground mb-1">{label}</p>
-      <p className={`text-3xl font-bold tabular-nums leading-none mb-0.5 ${
+    <div className="game-panel game-stat bg-background rounded-xl border border-border px-4 py-3">
+      <GameStatIcon kind={kind} />
+      <p className="game-stat-label text-xs text-muted-foreground mb-1">{label}</p>
+      <p className={`game-stat-num text-3xl font-bold tabular-nums leading-none mb-0.5 ${
         color === "green" ? "text-green-700" : color === "red" ? "text-red-600" : "text-foreground"
       }`}>
         {value}
@@ -294,7 +299,7 @@ function StatCard({
 
 function InfoCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-background rounded-xl border border-border px-4 py-4">
+    <div className="game-panel bg-background rounded-xl border border-border px-4 py-4">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{title}</p>
       {children}
     </div>

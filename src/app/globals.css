@@ -182,6 +182,7 @@ html[data-contrast="high"] {
   --accent: #b88a2a; --accent-foreground: #ffffff;
   --border: #c3d0e8; --input: #c3d0e8; --ring: #6a8fd8;
   --radius: 1rem;
+  --skin-bevel-lt: #ffffff; --skin-bevel-dk: #c3d0e8; --skin-hard: #2a3a6a26;
 }
 .game-skin[data-game-skin="fairytale"] { font-size: 1.05rem; }
 
@@ -198,6 +199,7 @@ html[data-contrast="high"] {
   --accent: #ffbf2e; --accent-foreground: #120d09;
   --border: #5a3a1a; --input: #5a3a1a; --ring: #ffbf2e;
   --radius: 0px;
+  --skin-bevel-lt: #9c6a3a; --skin-bevel-dk: #1a0f06; --skin-hard: #070402;
 }
 
 /* Perfil: 8-Bit — céu azul, blocos coloridos, pixel */
@@ -213,6 +215,7 @@ html[data-contrast="high"] {
   --accent: #f8b800; --accent-foreground: #5a3a00;
   --border: #d9a63a; --input: #d9a63a; --ring: #e52521;
   --radius: 0.6rem;
+  --skin-bevel-lt: #ffffff; --skin-bevel-dk: #b06a1a; --skin-hard: #00000033;
 }
 
 /* Press Start 2P é largo: reduz títulos/botões p/ não estourar, e permite quebra */
@@ -226,3 +229,85 @@ html[data-contrast="high"] {
 .game-skin[data-game-skin="pixel"] [role="button"] {
   font-size: 0.62rem; letter-spacing: 0.5px; line-height: 1.5;
 }
+
+/* ── Fidelidade dos skins (porte da prévia aprovada) ───────────────────────── */
+/* Fundo/ambientação por skin */
+.game-skin[data-game-skin="metal"] {
+  background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+}
+.game-skin[data-game-skin="pixel"] {
+  background-image:
+    radial-gradient(circle at 14% 20%, rgba(255,255,255,.95) 0 20px, transparent 21px),
+    radial-gradient(circle at 20% 22%, rgba(255,255,255,.95) 0 14px, transparent 15px),
+    radial-gradient(circle at 85% 15%, rgba(255,255,255,.9) 0 18px, transparent 19px);
+  background-repeat: no-repeat;
+}
+.game-skin[data-game-skin="fairytale"] {
+  background-image:
+    radial-gradient(circle at 18% 16%, rgba(255,255,255,.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 78% 26%, rgba(255,255,255,.85) 0 2px, transparent 3px),
+    radial-gradient(circle at 60% 10%, rgba(255,255,255,.7) 0 1.5px, transparent 2.5px),
+    radial-gradient(1200px 500px at 50% -10%, rgba(255,255,255,.55), transparent 60%);
+  background-attachment: fixed;
+}
+
+/* Botões: chanfro 3D + afundar ao clicar (bordas pela luz/sombra do skin) */
+.game-skin button,
+.game-skin a[data-slot="button"],
+.game-skin .game-btn {
+  border-style: solid; border-width: 3px;
+  border-color: var(--skin-bevel-lt) var(--skin-bevel-dk) var(--skin-bevel-dk) var(--skin-bevel-lt);
+  box-shadow: 3px 3px 0 var(--skin-hard);
+}
+.game-skin button:active,
+.game-skin a[data-slot="button"]:active,
+.game-skin .game-btn:active {
+  border-color: var(--skin-bevel-dk) var(--skin-bevel-lt) var(--skin-bevel-lt) var(--skin-bevel-dk);
+  transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--skin-hard);
+}
+
+/* Cards como moldura de painel */
+.game-skin .game-panel {
+  border-style: solid; border-width: 4px;
+  border-color: var(--skin-bevel-lt) var(--skin-bevel-dk) var(--skin-bevel-dk) var(--skin-bevel-lt);
+  box-shadow: 4px 4px 0 var(--skin-hard);
+}
+.game-skin[data-game-skin="fairytale"] .game-panel {
+  border-width: 2px; border-color: var(--accent);
+  box-shadow: 0 6px 16px rgba(42,58,106,.16);
+}
+
+/* HUD: contador grande + ícone próprio do skin */
+.game-skin .game-stat { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.game-skin .game-stat-label { font-family: var(--skin-head); font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted-foreground); }
+.game-skin[data-game-skin="fairytale"] .game-stat-label { font-family: var(--skin-head); font-size: 0.8rem; letter-spacing: 2px; }
+.game-skin .game-stat-num {
+  font-family: var(--skin-head); font-size: 2.6rem; line-height: 1; font-variant-numeric: tabular-nums;
+  text-shadow: 2px 2px 0 var(--skin-hard);
+}
+.game-skin[data-game-skin="metal"] .game-stat-num { text-shadow: 0 0 6px currentColor, 2px 2px 0 var(--skin-hard); }
+.game-skin[data-game-skin="fairytale"] .game-stat-num { font-family: var(--skin-body); font-weight: 700; font-size: 3rem; text-shadow: 1px 1px 0 rgba(255,255,255,.7); }
+.game-skin .game-stat-ico { width: 30px; height: 30px; }
+.game-skin[data-game-skin="metal"] .game-stat-ico,
+.game-skin[data-game-skin="pixel"] .game-stat-ico { image-rendering: pixelated; }
+
+/* Ícones próprios do skin: mostra o do skin ativo, esconde os outros.
+   (Fora de .game-skin, nenhum aparece — o clássico usa o ícone lucide.) */
+.sk-ico { display: none; }
+.game-skin[data-game-skin="metal"] .sk-ico.sk-metal,
+.game-skin[data-game-skin="pixel"] .sk-ico.sk-pixel,
+.game-skin[data-game-skin="fairytale"] .sk-ico.sk-fairy { display: block; }
+/* O ícone lucide (fallback) some dentro de um skin */
+.game-skin .sk-fallback { display: none; }
+
+/* Abas do EventNav como blocos chanfrados */
+.game-skin nav a {
+  font-family: var(--skin-head);
+  border: 3px solid;
+  border-color: var(--skin-bevel-lt) var(--skin-bevel-dk) var(--skin-bevel-dk) var(--skin-bevel-lt);
+  box-shadow: 2px 2px 0 var(--skin-hard);
+  background: var(--secondary);
+}
+.game-skin[data-game-skin="metal"] nav a,
+.game-skin[data-game-skin="pixel"] nav a { font-size: 0.58rem; letter-spacing: 0.5px; }
+.game-skin nav a:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--skin-hard); }
