@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
+import { X } from "lucide-react";
 
 const EMOJIS = ["❤️", "😂", "🥹", "🎉"] as const;
 
@@ -129,11 +130,11 @@ function PhotoModal({
       onTouchEnd={handleTouchEnd}
     >
       <button
-        className="absolute top-4 right-4 text-white/70 hover:text-white text-2xl leading-none"
+        className="absolute top-4 right-4 text-white/70 hover:text-white leading-none"
         onClick={onClose}
         aria-label="Fechar"
       >
-        ✕
+        <X className="size-6" aria-hidden />
       </button>
       {index > 0 && (
         <button

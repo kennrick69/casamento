@@ -87,7 +87,7 @@ export default async function ModeracaoPage({ params }: Props) {
             </p>
 
             {pendingReports.length === 0 && (
-              <p className="text-sm text-muted-foreground py-4">Nenhuma denúncia pendente. ✓</p>
+              <p className="text-sm text-muted-foreground py-4">Nenhuma denúncia pendente.</p>
             )}
 
             {pendingReports.map((report) => (
@@ -140,7 +140,7 @@ export default async function ModeracaoPage({ params }: Props) {
               {pendingPhotos.length} foto{pendingPhotos.length !== 1 ? "s" : ""} aguardando aprovação
             </p>
             {pendingPhotos.length === 0 && (
-              <p className="text-sm text-muted-foreground py-4">Nenhuma foto pendente. ✓</p>
+              <p className="text-sm text-muted-foreground py-4">Nenhuma foto pendente.</p>
             )}
             {pendingPhotos.map((photo) => (
               <MuralActions
@@ -157,7 +157,7 @@ export default async function ModeracaoPage({ params }: Props) {
               {pendingSongs.length} música{pendingSongs.length !== 1 ? "s" : ""} aguardando aprovação
             </p>
             {pendingSongs.length === 0 && (
-              <p className="text-sm text-muted-foreground py-4">Nenhuma música pendente. ✓</p>
+              <p className="text-sm text-muted-foreground py-4">Nenhuma música pendente.</p>
             )}
             {pendingSongs.map((song) => (
               <PlaylistActions key={song.id} song={song} eventId={eventId} />
@@ -170,7 +170,7 @@ export default async function ModeracaoPage({ params }: Props) {
               {bannedGuests.length} convidado{bannedGuests.length !== 1 ? "s" : ""} banido{bannedGuests.length !== 1 ? "s" : ""}
             </p>
             {bannedGuests.length === 0 && (
-              <p className="text-sm text-muted-foreground py-4">Nenhum convidado banido. ✓</p>
+              <p className="text-sm text-muted-foreground py-4">Nenhum convidado banido.</p>
             )}
             {bannedGuests.map((g) => (
               <BannedGuestActions key={g.id} guest={g} eventId={eventId} />

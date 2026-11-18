@@ -6,6 +6,7 @@ import { submitRsvp } from "@/app/(public)/[slug]/rsvp/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FileText, Star } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Mail } from "lucide-react";
@@ -209,7 +210,7 @@ export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormPr
     >
       {draftRestored && (
         <div className="rounded-[var(--theme-radius)] border border-[var(--theme-accent)]/40 bg-[var(--theme-muted)] px-3 py-2 text-xs text-[var(--theme-secondary)] flex items-center justify-between gap-2">
-          <span>📝 Rascunho do que você já tinha digitado.</span>
+          <span className="inline-flex items-center gap-1.5"><FileText className="size-3.5 shrink-0" aria-hidden /> Rascunho do que você já tinha digitado.</span>
           <button
             type="button"
             onClick={() => {
@@ -232,7 +233,7 @@ export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormPr
             setStatus("CONFIRMED");
             queueMicrotask(persistDraft);
           }}
-          label="✓  Vou ao casamento!"
+          label="Vou ao casamento!"
         />
         <ToggleButton
           active={status === "DECLINED"}
@@ -240,13 +241,13 @@ export function RsvpForm({ slug, k, initialData, rsvpEarlyDeadline }: RsvpFormPr
             setStatus("DECLINED");
             queueMicrotask(persistDraft);
           }}
-          label="✗  Não poderei ir"
+          label="Não poderei ir"
         />
       </div>
 
       {isEarly && status === "CONFIRMED" && (
         <p className="text-xs text-[var(--theme-accent)] font-medium bg-[var(--theme-muted)] rounded-[var(--theme-radius)] px-3 py-2">
-          ⭐ Confirmação antecipada — você ganhará pontos bônus na gincana!
+          <Star className="inline size-3.5 -mt-0.5 mr-1" aria-hidden />Confirmação antecipada — você ganhará pontos bônus na gincana!
         </p>
       )}
 

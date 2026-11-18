@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { requireOrganizer } from "@/lib/authorization";
+import { MapPin } from "lucide-react";
 import { EventNav } from "@/components/admin/event-nav";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { Input } from "@/components/ui/input";
@@ -98,7 +99,7 @@ export default async function RoteiroAdminPage({
                     <p className="text-sm text-muted-foreground">{item.description}</p>
                   )}
                   {item.location && (
-                    <p className="text-xs text-muted-foreground">📍 {item.location}</p>
+                    <p className="text-xs text-muted-foreground inline-flex items-center gap-1"><MapPin className="size-3 shrink-0" aria-hidden /> {item.location}</p>
                   )}
                 </div>
                 <form action={deleteJourneyItem}>

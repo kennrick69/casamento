@@ -3,6 +3,7 @@ import { validateEventAccess } from "@/lib/auth/guest";
 import { prisma } from "@/lib/db";
 import { AddSongForm } from "./add-song-form";
 import { VoteButton } from "./vote-button";
+import { Music } from "lucide-react";
 import { safeHref } from "@/lib/utils/safe-href";
 import Image from "next/image";
 import type { Metadata } from "next";
@@ -99,8 +100,8 @@ export default async function PlaylistPage({
               {s.albumArtUrl ? (
                 <Image src={s.albumArtUrl} alt={s.trackName} width={44} height={44} className="rounded shrink-0"/>
               ) : (
-                <div className="w-11 h-11 rounded bg-[var(--theme-muted)] shrink-0 flex items-center justify-center text-xl">
-                  🎵
+                <div className="w-11 h-11 rounded bg-[var(--theme-muted)] shrink-0 flex items-center justify-center">
+                  <Music className="size-5 text-[var(--theme-secondary)]" aria-hidden />
                 </div>
               )}
               <div className="flex-1 min-w-0">

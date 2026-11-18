@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { validateEventAccess } from "@/lib/auth/guest";
 import { prisma } from "@/lib/db";
-import { Calendar } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Roteiro" };
@@ -66,7 +66,7 @@ export default async function RoteirocPage({
                 )}
                 {item.location && (
                   <p className="text-xs text-[var(--theme-secondary)] mt-0.5">
-                    📍 {item.location}
+<MapPin className="inline size-3 mr-1 -mt-0.5" aria-hidden />{item.location}
                   </p>
                 )}
               </div>

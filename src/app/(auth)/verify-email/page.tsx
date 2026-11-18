@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { MailCheck } from "lucide-react";
 import { ResendButton } from "./resend-button";
 import type { Metadata } from "next";
 
@@ -23,7 +24,7 @@ export default async function VerifyEmailPage({ searchParams }: Props) {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-border/40 p-8 text-center space-y-5">
-          <div className="text-4xl">📬</div>
+          <MailCheck className="size-9 mx-auto" aria-hidden />
 
           <div className="space-y-1">
             <h1 className="text-xl font-semibold">Confirme seu e-mail</h1>

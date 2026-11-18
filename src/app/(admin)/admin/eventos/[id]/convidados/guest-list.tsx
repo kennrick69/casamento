@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useRef } from "react";
 import { toast } from "sonner";
+import { Utensils } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { GuestActions } from "./guest-actions";
@@ -337,7 +338,7 @@ export function GuestList({ guests, eventId, whatsappContext }: Props) {
                   )}
                   {guest.dietaryRestrictions && (
                     <span className="text-xs text-muted-foreground">
-                      🍽 {guest.dietaryRestrictions}
+<Utensils className="inline size-3 mr-1 -mt-0.5" aria-hidden />{guest.dietaryRestrictions}
                     </span>
                   )}
                   <span className="text-xs text-muted-foreground">

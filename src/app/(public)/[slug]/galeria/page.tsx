@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Camera } from "lucide-react";
 import { validateEventAccess } from "@/lib/auth/guest";
 import { prisma } from "@/lib/db";
 import { storage } from "@/lib/storage";
@@ -44,7 +45,7 @@ export default async function GaleriaPage({
 
       {photosWithUrls.length === 0 ? (
         <div className="text-center py-16 flex flex-col items-center gap-3">
-          <p className="text-4xl">📷</p>
+          <Camera className="size-9 mx-auto text-[var(--theme-secondary)]" aria-hidden />
           <p className="text-sm text-[var(--theme-secondary)]">
             As fotos do casal serão publicadas em breve.
           </p>

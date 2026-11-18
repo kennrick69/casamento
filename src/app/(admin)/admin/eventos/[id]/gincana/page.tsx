@@ -1,6 +1,7 @@
 import { getAppUrl } from "@/lib/app-url";
 import { prisma } from "@/lib/db";
 import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
+import { Trophy, Medal, X } from "lucide-react";
 import { requireOrganizer } from "@/lib/authorization";
 import { notFound } from "next/navigation";
 import { EventNav } from "@/components/admin/event-nav";
@@ -60,7 +61,7 @@ export default async function GincanaAdminPage({ params }: Props) {
                 <tbody>
                   {ranking.map((entry, i) => (
                     <tr key={entry.guestId} className="border-t">
-                      <td className="px-4 py-2 text-muted-foreground font-mono">{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}</td>
+                      <td className="px-4 py-2 text-muted-foreground font-mono">{i === 0 ? <Trophy className="size-4 text-amber-500" aria-hidden /> : i <= 2 ? <Medal className="size-4 text-muted-foreground" aria-hidden /> : i + 1}</td>
                       <td className="px-4 py-2">{entry.guest.name}</td>
                       <td className="px-4 py-2 text-right font-bold">{entry.totalPoints}</td>
                     </tr>
@@ -98,7 +99,7 @@ export default async function GincanaAdminPage({ params }: Props) {
                     <form action={deleteMission}>
                       <input type="hidden" name="eventId" value={eventId} />
                       <input type="hidden" name="missionId" value={m.id} />
-                      <button type="submit" className="text-xs px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50">✕</button>
+                      <button type="submit" className="text-xs px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50" aria-label="Remover"><X className="size-3.5" aria-hidden /></button>
                     </form>
                   )}
                 </div>

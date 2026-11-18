@@ -37,7 +37,7 @@ export function Countdown({ targetDate, timezone }: CountdownProps) {
   if (time.passed) {
     return (
       <p className="text-[var(--theme-secondary)] text-sm">
-        O grande dia chegou! 🎉
+        O grande dia chegou!
       </p>
     );
   }

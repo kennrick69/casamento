@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { MailCheck } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
@@ -48,7 +49,7 @@ export function ForgotForm() {
   if (submitted) {
     return (
       <div className="text-center space-y-4">
-        <div className="text-4xl">📬</div>
+        <MailCheck className="size-9 mx-auto" aria-hidden />
         <p className="text-sm text-muted-foreground">
           Se esse e-mail estiver cadastrado, você receberá um link de redefinição em breve.
           Verifique também a pasta de spam.

@@ -9,6 +9,7 @@ import {
   browserSupportsWebAuthn,
 } from "@simplewebauthn/browser";
 import { buttonVariants } from "@/components/ui/button";
+import { Gamepad2, Construction } from "lucide-react";
 import {
   enterAsVisitor,
   identifyByNamePhone,
@@ -142,7 +143,7 @@ export function JogoIdentityClient({
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 py-16 gap-6 text-center">
       <div className="flex flex-col gap-1">
-        <p className="text-4xl" aria-hidden>🎮</p>
+        <Gamepad2 className="size-10 mx-auto text-[var(--theme-primary)]" aria-hidden />
         <h1
           className="text-2xl font-semibold text-[var(--theme-foreground)]"
           style={{ fontFamily: "var(--theme-font-heading)" }}
@@ -297,7 +298,7 @@ export function JogoIdentityClient({
           )}
 
           <p className="text-xs text-[var(--theme-secondary)] max-w-sm">
-            🚧 O mundo do jogo (tela de título, fases, salão) chega nos próximos
+            <Construction className="inline size-4 -mt-0.5 mr-1" aria-hidden /> O mundo do jogo (tela de título, fases, salão) chega nos próximos
             sprints. Sua identidade e seu boneco já ficam guardados.
           </p>
         </>

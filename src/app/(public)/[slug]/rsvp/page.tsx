@@ -48,7 +48,7 @@ export default async function RsvpPage({
             : t("title")}
         </h1>
         <p className="text-sm text-[var(--theme-secondary)]">
-          {event.coupleNames} aguardam você ✨
+          {event.coupleNames} aguardam você
         </p>
       </div>
 

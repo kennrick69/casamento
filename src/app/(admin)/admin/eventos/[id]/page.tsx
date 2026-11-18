@@ -7,7 +7,7 @@ import { requireOrganizer } from "@/lib/authorization";
 import { EventNav } from "@/components/admin/event-nav";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { buttonVariants } from "@/components/ui/button";
-import { Users, Camera, Gift, Shield, AlertTriangle, ClipboardList, Music, Lock, Settings, User as UserIcon } from "lucide-react";
+import { Users, Camera, Gift, Shield, AlertTriangle, ClipboardList, Music, Lock, Settings, User as UserIcon, PartyPopper } from "lucide-react";
 import { GameStatIcon } from "@/components/admin/game-stat-icon";
 import Link from "next/link";
 import { format, formatDistanceToNow, differenceInCalendarDays } from "date-fns";
@@ -86,7 +86,7 @@ export default async function EventDashboardPage({
     daysLeft > 0
       ? `${daysLeft} dia${daysLeft !== 1 ? "s" : ""} para o grande dia`
       : daysLeft === 0
-      ? "Hoje é o grande dia! 🎉"
+      ? "Hoje é o grande dia!"
       : `Celebrado há ${Math.abs(daysLeft)} dia${Math.abs(daysLeft) !== 1 ? "s" : ""}`;
 
   // Recent activity: merge guests + photos sorted by date
@@ -132,7 +132,7 @@ export default async function EventDashboardPage({
             : "bg-muted border border-border"
         }`}>
           <p className={`game-countdown-num text-3xl font-bold tabular-nums ${daysLeft <= 0 ? "text-foreground" : ""}`}>
-            {daysLeft > 0 ? daysLeft : daysLeft === 0 ? "🎉" : Math.abs(daysLeft)}
+            {daysLeft > 0 ? daysLeft : daysLeft === 0 ? <PartyPopper className="inline size-8" aria-hidden /> : Math.abs(daysLeft)}
           </p>
           <p className={`text-sm mt-1 ${daysLeft > 0 ? "text-white/70" : daysLeft === 0 ? "text-white/70" : "text-muted-foreground"}`}>
             {countdownText}
@@ -201,7 +201,7 @@ export default async function EventDashboardPage({
               {activity.map((item) => (
                 <div
                   key={`${item.type}-${item.id}`}
-                  className="flex items-center gap-3 px-4 py-2.5 bg-background border border-border rounded-lg text-sm"
+                  className="game-row flex items-center gap-3 px-4 py-2.5 bg-background border border-border rounded-lg text-sm"
                 >
                   {item.type === "guest" ? (
                     <>
