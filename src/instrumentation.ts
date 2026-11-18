@@ -1,9 +1,20 @@
 export async function register() {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
-  if (!appUrl || appUrl.includes("localhost") || appUrl.includes("127.0.0.1")) {
+  const isLocal = appUrl.includes("localhost") || appUrl.includes("127.0.0.1");
+  // Opt-in APENAS de dev (fail-closed): passkey/WebAuthn exige contexto seguro
+  // (HTTPS ou http://localhost). A flag libera localhost localmente; NUNCA é
+  // definida no Railway, então produção continua bloqueando localhost.
+  const allowLocal = process.env.ALLOW_LOCALHOST_APP_URL === "true";
+  if (!appUrl || (isLocal && !allowLocal)) {
     throw new Error(
       `[startup] NEXT_PUBLIC_APP_URL inválida ou ausente: "${appUrl}". ` +
         "Configure a variável no Railway antes de fazer deploy."
+    );
+  }
+  if (isLocal && allowLocal) {
+    console.warn(
+      "[startup] ATENÇÃO: localhost liberado — só para dev (ALLOW_LOCALHOST_APP_URL=true). " +
+        "NUNCA defina essa flag no Railway/produção."
     );
   }
 
