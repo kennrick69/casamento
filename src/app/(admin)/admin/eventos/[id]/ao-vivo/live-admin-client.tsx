@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Radio, Trash2 } from "lucide-react";
+import { Radio, Trash2, Heart, Wine, Music, Camera, Cake } from "lucide-react";
 
 const QUICK_EVENTS = [
-  { type: "ceremony", title: "Cerimônia começou", emoji: "💒" },
-  { type: "toast", title: "Primeiro brinde", emoji: "🥂" },
-  { type: "music", title: "Música dos noivos", emoji: "🎵" },
-  { type: "photo", title: "Foto do casal", emoji: "📸" },
-  { type: "update", title: "Corte do bolo", emoji: "🎂" },
+  { type: "ceremony", title: "Cerimônia começou", Icon: Heart },
+  { type: "toast", title: "Primeiro brinde", Icon: Wine },
+  { type: "music", title: "Música dos noivos", Icon: Music },
+  { type: "photo", title: "Foto do casal", Icon: Camera },
+  { type: "update", title: "Corte do bolo", Icon: Cake },
 ];
 
 interface LiveEventItem {
@@ -75,7 +75,7 @@ export function LiveAdminClient({ eventId, initialEvents }: Props) {
               disabled={isPending}
               className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm font-medium hover:bg-muted disabled:opacity-50 transition-colors"
             >
-              <span>{ev.emoji}</span>
+              <ev.Icon className="size-4" aria-hidden />
               {ev.title}
             </button>
           ))}

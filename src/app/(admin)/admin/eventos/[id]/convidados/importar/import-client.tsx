@@ -133,7 +133,7 @@ export function ImportClient({ eventId }: ImportClientProps) {
                     <td className="px-2 py-1.5 text-muted-foreground">{row.email}</td>
                     <td className="px-2 py-1.5 text-muted-foreground">{row.telefone || "—"}</td>
                     <td className="px-2 py-1.5">{row.acompanhantes}</td>
-                    <td className="px-2 py-1.5"><span className="text-green-700 font-medium">✓ OK</span></td>
+                    <td className="px-2 py-1.5"><span className="text-green-700 font-medium">OK</span></td>
                   </tr>
                 ))}
                 {parseErrors.slice(0, 5).map((err) => (

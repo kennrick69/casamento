@@ -159,7 +159,7 @@ export function WizardLocationForm({ eventId, defaultValues }: Props) {
       <div className="flex items-center justify-between gap-3">
         {draftStatus !== "idle" ? (
           <span className="text-xs text-muted-foreground">
-            {draftStatus === "saving" ? "Salvando…" : "✓ Salvo"}
+            {draftStatus === "saving" ? "Salvando…" : "Salvo"}
           </span>
         ) : (
           <span />

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Image from "next/image";
+import { Check, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { approvePhoto, removePhoto, batchApprovePhotos, batchRemovePhotos } from "./actions";
 
@@ -97,7 +98,7 @@ export function MuralAdminClient({
             disabled={isBatchPending}
             className="text-xs px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-60"
           >
-            ✓ Aprovar todas pendentes ({pendingCount})
+            Aprovar todas pendentes ({pendingCount})
           </button>
         )}
         {selected.size > 0 && (
@@ -184,7 +185,7 @@ function PhotoCard({
         <Image src={src} alt={photo.guest.name} fill className="object-cover" unoptimized />
         {isSelected && (
           <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-            <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">✓</span>
+            <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center"><Check className="size-4" aria-hidden /></span>
           </div>
         )}
         {!photo.approvedByCouple && (
@@ -194,7 +195,7 @@ function PhotoCard({
         )}
         {totalReactions > 0 && (
           <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full leading-none">
-            {totalReactions} ❤
+            <Heart className="inline size-3.5 -mt-0.5" aria-hidden /> {totalReactions}
           </div>
         )}
       </div>

@@ -65,7 +65,7 @@ export default async function ContaPage({ searchParams }: Props) {
                 className="h-11 flex-1 rounded-md border border-input bg-muted px-3 text-sm cursor-not-allowed text-muted-foreground"
               />
               {user.emailVerified ? (
-                <span className="text-xs text-green-600 whitespace-nowrap">✓ verificado</span>
+                <span className="text-xs text-green-600 whitespace-nowrap">verificado</span>
               ) : (
                 <Link href="/verify-email" className="text-xs text-amber-600 whitespace-nowrap underline underline-offset-2">
                   verificar

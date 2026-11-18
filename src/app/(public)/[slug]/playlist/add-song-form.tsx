@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect, useRef } from "react";
 import { addSong } from "./actions";
 import Image from "next/image";
+import { X } from "lucide-react";
 
 interface SpotifyTrack {
   id: string;
@@ -144,7 +145,7 @@ export function AddSongForm({ slug, myCount, limit }: { slug: string; myCount: n
                 <p className="text-sm font-medium truncate">{selected.name}</p>
                 <p className="text-xs text-[var(--theme-secondary)] truncate">{selected.artists}</p>
               </div>
-              <button type="button" onClick={() => { setSelected(null); setQuery(""); }} className="text-xs text-[var(--theme-secondary)] shrink-0">✕</button>
+              <button type="button" onClick={() => { setSelected(null); setQuery(""); }} className="text-xs text-[var(--theme-secondary)] shrink-0" aria-label="Limpar"><X className="size-3.5" aria-hidden /></button>
             </div>
           ) : (
             <>

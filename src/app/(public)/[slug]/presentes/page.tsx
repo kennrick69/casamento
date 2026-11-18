@@ -122,7 +122,7 @@ export default async function PresentesPage({
                 </div>
 
                 {gift.fulfilled ? (
-                  <p className="text-xs text-[var(--theme-secondary)]">Já presenteado ✓</p>
+                  <p className="text-xs text-[var(--theme-secondary)]">Já presenteado</p>
                 ) : myDonation ? (
                   <DonationStatusBadge status={myDonation.status} />
                 ) : isReservedByOther ? (
@@ -172,8 +172,8 @@ function DonationStatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; color: string }> = {
     DECLARED: { label: "Promessa registrada", color: "text-blue-600 bg-blue-50" },
     PROOF_UPLOADED: { label: "Comprovante enviado — aguardando aprovação", color: "text-amber-700 bg-amber-50" },
-    APPROVED: { label: "Confirmado pelo casal ✓", color: "text-green-700 bg-green-50" },
-    PAID: { label: "Pagamento confirmado ✓", color: "text-green-700 bg-green-50" },
+    APPROVED: { label: "Confirmado pelo casal", color: "text-green-700 bg-green-50" },
+    PAID: { label: "Pagamento confirmado", color: "text-green-700 bg-green-50" },
     REJECTED: { label: "Rejeitado", color: "text-destructive bg-destructive/10" },
   };
   const { label, color } = map[status] ?? { label: status, color: "text-muted-foreground" };

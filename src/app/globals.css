@@ -158,3 +158,234 @@ html[data-contrast="high"] {
 .animate-progress-bar {
   animation: progress-bar linear forwards;
 }
+
+/* ── Modo Gamificado · skins do painel (só sob [data-game-skin]) ──────────────
+   Aplicado pelo layout do admin do evento quando experienceType = GAMIFIED.
+   Redefine os tokens shadcn + fontes num wrapper, então os componentes do
+   painel herdam o visual. O admin clássico (sem o wrapper) não muda em nada.
+   Arte/paleta próprias e genéricas — sem marca de terceiros. */
+.game-skin { font-family: var(--skin-body); background: var(--background); color: var(--foreground); }
+.game-skin :is(h1, h2, h3), .game-skin button, .game-skin [role="button"] {
+  font-family: var(--skin-head);
+}
+/* Em TODAS as páginas do admin GAMIFIED, superfícies bg-background (cards,
+   cabeçalho) viram a cor de CARD do skin — nunca o fundo (que ficava azul no
+   8-Bit). O wrapper .game-skin pinta o fundo do skin acima. */
+.game-skin .bg-background { background: var(--card) !important; }
+
+/* Perfil: Conto de Fadas (padrão) — azul-pó, prata, dourado, elegante */
+.game-skin[data-game-skin="fairytale"] {
+  --skin-head: var(--font-dm-serif), serif;
+  --skin-body: var(--font-cormorant), Georgia, serif;
+  --background: #dbe8fa; --foreground: #2a3358;
+  --card: #ffffff; --card-foreground: #2a3358;
+  --popover: #ffffff; --popover-foreground: #2a3358;
+  --primary: #3f63b8; --primary-foreground: #fff7d8;
+  --secondary: #e6edfa; --secondary-foreground: #2a3358;
+  --muted: #e6edfa; --muted-foreground: #46506e;
+  --accent: #b88a2a; --accent-foreground: #ffffff;
+  --border: #c3d0e8; --input: #c3d0e8; --ring: #6a8fd8;
+  --radius: 1rem;
+  --skin-bevel-lt: #ffffff; --skin-bevel-dk: #c3d0e8; --skin-hard: #2a3a6a26;
+}
+.game-skin[data-game-skin="fairytale"] { font-size: 1.05rem; }
+
+/* Perfil: Metal — metal escuro, ferrugem/sangue, pixel */
+.game-skin[data-game-skin="metal"] {
+  --skin-head: var(--font-press-start), ui-monospace, monospace;
+  --skin-body: ui-monospace, "Courier New", monospace;
+  --background: #120d09; --foreground: #e8d8b0;
+  --card: #2a1d12; --card-foreground: #e8d8b0;
+  --popover: #2a1d12; --popover-foreground: #e8d8b0;
+  --primary: #c81e1e; --primary-foreground: #f4e4c0;
+  --secondary: #3a2817; --secondary-foreground: #e8d8b0;
+  --muted: #241206; --muted-foreground: #a3906a;
+  --accent: #ffbf2e; --accent-foreground: #120d09;
+  --border: #5a3a1a; --input: #5a3a1a; --ring: #ffbf2e;
+  --radius: 0px;
+  --skin-bevel-lt: #9c6a3a; --skin-bevel-dk: #1a0f06; --skin-hard: #070402;
+}
+
+/* Perfil: 8-Bit — céu azul, blocos coloridos, pixel */
+.game-skin[data-game-skin="pixel"] {
+  --skin-head: var(--font-press-start), ui-monospace, monospace;
+  --skin-body: var(--font-inter), system-ui, sans-serif;
+  --background: #5c94fc; --foreground: #2a2320;
+  --card: #fff7e6; --card-foreground: #2a2320;
+  --popover: #fff7e6; --popover-foreground: #2a2320;
+  --primary: #e52521; --primary-foreground: #ffffff;
+  --secondary: #ffe3a0; --secondary-foreground: #5a3a00;
+  --muted: #ffe9b8; --muted-foreground: #7a6a58;
+  --accent: #f8b800; --accent-foreground: #5a3a00;
+  --border: #d9a63a; --input: #d9a63a; --ring: #e52521;
+  --radius: 0.6rem;
+  --skin-bevel-lt: #ffffff; --skin-bevel-dk: #b06a1a; --skin-hard: #00000033;
+}
+
+/* Press Start 2P é largo: reduz títulos/botões p/ não estourar, e permite quebra */
+.game-skin[data-game-skin="metal"] :is(h1, h2),
+.game-skin[data-game-skin="pixel"] :is(h1, h2) {
+  font-size: 0.95rem; line-height: 1.6; letter-spacing: 0.5px; text-wrap: balance;
+}
+.game-skin[data-game-skin="metal"] button,
+.game-skin[data-game-skin="pixel"] button,
+.game-skin[data-game-skin="metal"] [role="button"],
+.game-skin[data-game-skin="pixel"] [role="button"] {
+  font-size: 0.62rem; letter-spacing: 0.5px; line-height: 1.5;
+}
+
+/* ── Fidelidade dos skins (porte da prévia aprovada) ───────────────────────── */
+/* Fundo/ambientação por skin */
+.game-skin[data-game-skin="metal"] {
+  background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+}
+.game-skin[data-game-skin="pixel"] {
+  --cloud: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='96'%20height='52'%20viewBox='0%200%2024%2013'%3E%3Cg%20fill='%23ffffff'%3E%3Crect%20x='6'%20y='4'%20width='12'%20height='5'/%3E%3Crect%20x='3'%20y='7'%20width='18'%20height='3'/%3E%3Crect%20x='9'%20y='2'%20width='6'%20height='2'/%3E%3Crect%20x='14'%20y='3'%20width='5'%20height='2'/%3E%3C/g%3E%3C/svg%3E");
+  background-image: var(--cloud), var(--cloud), var(--cloud);
+  background-position: 10% 72px, 70% 40px, 90% 120px;
+  background-size: 96px auto, 72px auto, 60px auto;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+.game-skin[data-game-skin="fairytale"] {
+  background-image:
+    radial-gradient(circle at 18% 16%, rgba(255,255,255,.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 78% 26%, rgba(255,255,255,.85) 0 2px, transparent 3px),
+    radial-gradient(circle at 60% 10%, rgba(255,255,255,.7) 0 1.5px, transparent 2.5px),
+    radial-gradient(1200px 500px at 50% -10%, rgba(255,255,255,.55), transparent 60%);
+  background-attachment: fixed;
+}
+
+/* Botões: chanfro 3D + afundar ao clicar (bordas pela luz/sombra do skin) */
+.game-skin button,
+.game-skin a[data-slot="button"],
+.game-skin .game-btn {
+  border-style: solid; border-width: 3px;
+  border-color: var(--skin-bevel-lt) var(--skin-bevel-dk) var(--skin-bevel-dk) var(--skin-bevel-lt);
+  box-shadow: 3px 3px 0 var(--skin-hard);
+}
+.game-skin button:active,
+.game-skin a[data-slot="button"]:active,
+.game-skin .game-btn:active {
+  border-color: var(--skin-bevel-dk) var(--skin-bevel-lt) var(--skin-bevel-lt) var(--skin-bevel-dk);
+  transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--skin-hard);
+}
+
+/* Cards como moldura de painel — sempre na cor de CARD (não na do fundo) */
+.game-skin .game-panel {
+  background: var(--card) !important;
+  color: var(--card-foreground);
+  border-style: solid; border-width: 4px;
+  border-color: var(--skin-bevel-lt) var(--skin-bevel-dk) var(--skin-bevel-dk) var(--skin-bevel-lt);
+  box-shadow: 4px 4px 0 var(--skin-hard);
+}
+.game-skin[data-game-skin="fairytale"] .game-panel {
+  border-width: 2px; border-color: var(--accent);
+  box-shadow: 0 6px 16px rgba(42,58,106,.16);
+}
+
+/* HUD: contador grande + ícone próprio do skin */
+.game-skin .game-stat { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.game-skin .game-stat-label { font-family: var(--skin-head); font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted-foreground); }
+.game-skin[data-game-skin="fairytale"] .game-stat-label { font-family: var(--skin-head); font-size: 0.8rem; letter-spacing: 2px; }
+.game-skin .game-stat-num {
+  font-family: var(--skin-head); font-size: 2.6rem; line-height: 1; font-variant-numeric: tabular-nums;
+  text-shadow: 2px 2px 0 var(--skin-hard);
+}
+.game-skin[data-game-skin="metal"] .game-stat-num { text-shadow: 0 0 6px currentColor, 2px 2px 0 var(--skin-hard); }
+.game-skin[data-game-skin="fairytale"] .game-stat-num { font-family: var(--skin-body); font-weight: 700; font-size: 3rem; text-shadow: 1px 1px 0 rgba(255,255,255,.7); }
+.game-skin .game-stat-ico { width: 30px; height: 30px; }
+.game-skin[data-game-skin="metal"] .game-stat-ico,
+.game-skin[data-game-skin="pixel"] .game-stat-ico { image-rendering: pixelated; }
+
+/* Ícones próprios do skin: mostra o do skin ativo, esconde os outros.
+   (Fora de .game-skin, nenhum aparece — o clássico usa o ícone lucide.) */
+.sk-ico { display: none; }
+.game-skin[data-game-skin="metal"] .sk-ico.sk-metal,
+.game-skin[data-game-skin="pixel"] .sk-ico.sk-pixel,
+.game-skin[data-game-skin="fairytale"] .sk-ico.sk-fairy { display: block; }
+/* O ícone lucide (fallback) some dentro de um skin */
+.game-skin .sk-fallback { display: none; }
+
+/* Abas do EventNav como blocos chanfrados */
+.game-skin nav a {
+  font-family: var(--skin-head);
+  border: 3px solid;
+  border-color: var(--skin-bevel-lt) var(--skin-bevel-dk) var(--skin-bevel-dk) var(--skin-bevel-lt);
+  box-shadow: 2px 2px 0 var(--skin-hard);
+  background: var(--secondary);
+}
+.game-skin[data-game-skin="metal"] nav a,
+.game-skin[data-game-skin="pixel"] nav a { font-size: 0.5rem; letter-spacing: 0; }
+.game-skin nav a:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--skin-hard); }
+
+/* Abas em GRADE uniforme (cara de menu de jogo): colunas iguais, alinhadas dos
+   dois lados — resolve o efeito "degrau" do flex-wrap. Só nos skins. */
+.game-skin nav {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  border-bottom: 0;
+}
+@media (min-width: 640px) {
+  .game-skin nav { grid-template-columns: repeat(6, 1fr); }
+}
+.game-skin nav a {
+  justify-content: center; text-align: center; min-width: 0; margin: 0;
+  white-space: normal; line-height: 1.25; word-break: normal; overflow-wrap: break-word;
+  hyphens: none; padding-top: 8px; padding-bottom: 8px;
+}
+.game-skin[data-game-skin="fairytale"] nav a { font-size: 0.72rem; letter-spacing: 0.4px; }
+/* Aba ativa: contraste garantido em todos os skins (texto sobre --primary) */
+.game-skin nav a[aria-current="page"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* Selos/pills seguindo o skin, com contraste */
+.game-skin .game-pill {
+  background: var(--secondary) !important;
+  color: var(--card-foreground) !important;
+  border: 2px solid var(--skin-bevel-dk);
+  border-radius: calc(var(--radius) / 2);
+}
+
+/* Faixa da contagem regressiva vira painel do skin (mata o degradê/texto branco) */
+.game-skin .game-countdown {
+  background: var(--card) !important;
+  background-image: none !important;
+}
+.game-skin .game-countdown,
+.game-skin .game-countdown * { color: var(--card-foreground) !important; }
+.game-skin .game-countdown .game-countdown-num {
+  font-family: var(--skin-head);
+  text-shadow: 2px 2px 0 var(--skin-hard);
+}
+.game-skin[data-game-skin="metal"] .game-countdown .game-countdown-num { color: var(--accent) !important; }
+.game-skin[data-game-skin="fairytale"] .game-countdown .game-countdown-num { font-family: var(--skin-body); }
+
+/* Linhas da "Atividade recente" no estilo do card (não o fundo do skin) */
+.game-skin .game-row {
+  background: var(--card) !important;
+  color: var(--card-foreground);
+  border-color: var(--border) !important;
+}
+
+/* Conto de Fadas: detalhe decorativo discreto no topo (fio dourado duplo) */
+.game-skin[data-game-skin="fairytale"] header {
+  border-top: 3px solid var(--accent);
+  box-shadow: inset 0 5px 0 -3px #ffffff, 0 1px 0 var(--accent);
+}
+
+/* Cabeçalho: controles (ex.: "Sair") legíveis — fonte do corpo, não a pixel */
+.game-skin header button,
+.game-skin header a[data-slot="button"] {
+  font-family: var(--skin-body);
+  font-size: 0.9rem;
+  letter-spacing: normal;
+  background: transparent;
+  color: var(--card-foreground);
+  border: 2px solid var(--border);
+  padding: 4px 10px;
+  box-shadow: none;
+}

@@ -1,7 +1,7 @@
 import { getAppUrl } from "@/lib/app-url";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle, XCircle, ChevronRight, MapPin, Shirt, Gift, Camera, Music, Heart, Calendar } from "lucide-react";
+import { CheckCircle, XCircle, ChevronRight, MapPin, Shirt, Gift, Camera, Music, Heart, Calendar, Lock } from "lucide-react";
 import { ShareSection } from "@/components/guest/share-section";
 import { validateEventAccess } from "@/lib/auth/guest";
 import { formatEventDate } from "@/lib/timezone";
@@ -417,7 +417,7 @@ function ConfirmedBanner({ name, slug, gamification }: { name: string; slug: str
     <section className="rounded-[var(--theme-radius)] border border-green-200 bg-green-50 p-4 flex flex-col gap-3">
       <div className="flex items-center gap-2 text-green-700">
         <CheckCircle size={20} className="shrink-0" />
-        <p className="font-medium">Olá, {firstName}! Presença confirmada ✓</p>
+        <p className="font-medium">Olá, {firstName}! Presença confirmada</p>
       </div>
       <div className="flex flex-col gap-2">
         <QuickLink href={`/${slug}/roteiro`} label="Ver roteiro do dia" />
@@ -477,7 +477,7 @@ function QuickLink({ href, label }: { href: string; label: string }) {
 function InvalidTokenScreen({ slug }: { slug: string }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center gap-4">
-      <p className="text-4xl">🔒</p>
+      <Lock className="size-9 mx-auto text-[var(--theme-secondary)]" aria-hidden />
       <h1 className="text-xl font-semibold">Link inválido ou expirado</h1>
       <p className="text-sm text-[var(--theme-secondary)] max-w-xs">
         Use o link do seu convite ou{" "}

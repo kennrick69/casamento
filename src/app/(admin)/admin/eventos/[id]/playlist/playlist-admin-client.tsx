@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import Image from "next/image";
+import { Music } from "lucide-react";
 import { toast } from "sonner";
 import { updateSongStatus, removeSuggestion } from "./actions";
 import type { PlaylistSongStatus } from "@prisma/client";
@@ -56,7 +57,7 @@ function SongRow({ song, eventId }: { song: Song; eventId: string }) {
       {song.albumArtUrl ? (
         <Image src={song.albumArtUrl} alt={song.trackName} width={44} height={44} className="rounded shrink-0 mt-0.5"/>
       ) : (
-        <div className="w-11 h-11 rounded bg-muted shrink-0 flex items-center justify-center text-lg">🎵</div>
+        <div className="w-11 h-11 rounded bg-muted shrink-0 flex items-center justify-center"><Music className="size-5 text-muted-foreground" aria-hidden /></div>
       )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">

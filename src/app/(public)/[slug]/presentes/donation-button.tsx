@@ -102,7 +102,7 @@ export function DonationButton({ giftId, slug, mode, amount, reserved }: Props) 
     <div className="flex flex-col gap-1.5">
       {done || localReserved ? (
         <p className="text-xs text-blue-700 bg-blue-50 px-2 py-1 rounded-full">
-          Promessa registrada ✓
+          Promessa registrada
         </p>
       ) : (
         <button

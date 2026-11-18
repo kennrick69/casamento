@@ -181,7 +181,7 @@ export function AgradecimentosClient({ eventId, coupleNames, guests }: Props) {
 
       {filtered.length === 0 && (
         <p className="text-sm text-muted-foreground py-4 text-center">
-          {filter === "pending" ? "Nenhum agradecimento pendente. 🎉" : "Nenhum agradecimento enviado ainda."}
+          {filter === "pending" ? "Nenhum agradecimento pendente." : "Nenhum agradecimento enviado ainda."}
         </p>
       )}
     </div>

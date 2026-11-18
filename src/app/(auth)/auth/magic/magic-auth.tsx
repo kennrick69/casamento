@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, startTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { KeyRound } from "lucide-react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 
@@ -37,7 +38,7 @@ export function MagicAuth() {
       <div className="w-full max-w-sm text-center space-y-4">
         {status === "loading" ? (
           <>
-            <div className="text-4xl">🔐</div>
+            <KeyRound className="size-9 mx-auto" aria-hidden />
             <h1 className="text-xl font-semibold">Entrando na sua conta...</h1>
             <p className="text-sm text-muted-foreground">
               Aguarde um instante enquanto validamos seu link.

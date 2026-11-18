@@ -1,16 +1,21 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Radio } from "lucide-react";
+import { Radio, Heart, Wine, Music, Camera, Sparkles, Megaphone, type LucideIcon } from "lucide-react";
 
-const TYPE_EMOJI: Record<string, string> = {
-  ceremony: "💒",
-  toast: "🥂",
-  music: "🎵",
-  photo: "📸",
-  update: "✨",
-  custom: "📢",
+const TYPE_ICON: Record<string, LucideIcon> = {
+  ceremony: Heart,
+  toast: Wine,
+  music: Music,
+  photo: Camera,
+  update: Sparkles,
+  custom: Megaphone,
 };
+
+function TypeIcon({ type }: { type: string }) {
+  const Icon = TYPE_ICON[type] ?? Sparkles;
+  return <Icon className="size-6 shrink-0 mt-0.5 text-[var(--theme-primary)]" aria-hidden />;
+}
 
 interface LiveEventItem {
   id: string;
@@ -101,7 +106,7 @@ export function AoVivoClient({ eventId, initialEvents, pusherKey, pusherCluster,
               }`}
             >
               <div className="flex items-start gap-3">
-                <span className="text-2xl shrink-0 mt-0.5">{TYPE_EMOJI[ev.type] ?? "✨"}</span>
+                <TypeIcon type={ev.type} />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-base leading-snug">{ev.title}</p>
                   {ev.body && <p className="text-sm text-[var(--theme-secondary)] mt-0.5">{ev.body}</p>}

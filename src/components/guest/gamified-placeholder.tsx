@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Gamepad2, Construction } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Countdown } from "@/components/guest/countdown";
 import { formatEventDate } from "@/lib/timezone";
@@ -21,9 +22,7 @@ export function GamifiedPlaceholder({
 }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 py-16 text-center gap-6">
-      <p className="text-5xl" aria-hidden>
-        🎮
-      </p>
+      <Gamepad2 className="size-12 text-[var(--theme-primary)]" aria-hidden />
       <div className="flex flex-col gap-2">
         <h1
           className="text-2xl font-semibold text-[var(--theme-foreground)]"
@@ -40,7 +39,7 @@ export function GamifiedPlaceholder({
         className="rounded-[var(--theme-radius)] border border-[var(--theme-border)] bg-[var(--theme-muted)] px-5 py-4 flex flex-col gap-3 max-w-sm w-full"
       >
         <span className="inline-flex items-center justify-center gap-2 text-xs uppercase tracking-wider text-[var(--theme-secondary)]">
-          🚧 Em construção
+          <Construction className="size-4" aria-hidden /> Em construção
         </span>
         <p className="text-sm text-[var(--theme-secondary)]">
           Em breve você vai poder explorar o nosso casamento como um joguinho. Enquanto isso, já

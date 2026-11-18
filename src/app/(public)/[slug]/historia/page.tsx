@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Mail } from "lucide-react";
 import { validateEventAccess } from "@/lib/auth/guest";
 import { prisma } from "@/lib/db";
 import { storage } from "@/lib/storage";
@@ -43,7 +44,7 @@ export default async function HistoriaPage({
 
       {items.length === 0 ? (
         <div className="text-center py-16 flex flex-col items-center gap-3">
-          <p className="text-4xl">💌</p>
+          <Mail className="size-9 mx-auto text-[var(--theme-secondary)]" aria-hidden />
           <p className="text-sm text-[var(--theme-secondary)]">
             A história do casal será publicada em breve.
           </p>

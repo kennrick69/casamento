@@ -12,14 +12,18 @@ import {
   updateEventBasic,
   updateEventFeatures,
   updateEventExperience,
+  updateEventGameSkin,
 } from "./actions";
 import { WizardBasicForm } from "./wizard-basic-form";
 import { WizardLocationForm } from "./wizard-location-form";
 import { WizardThemeForm } from "./wizard-theme-form";
 import { WizardPublishForm } from "./wizard-publish-form";
+import { DangerZone } from "./danger-zone";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Configurações" };
+
+const PRIMARY_SLUG = process.env.NEXT_PUBLIC_PRIMARY_EVENT_SLUG || "joseeleticia";
 
 const STEPS = ["Dados básicos", "Local", "Tema visual", "Publicar"];
 
@@ -128,6 +132,11 @@ export default async function ConfiguracoesPage({
             </div>
             <ExperienceForm event={event} />
             <FeaturesForm event={event} />
+            <DangerZone
+              eventId={id}
+              coupleNames={event.coupleNames}
+              isPrimary={event.slug === PRIMARY_SLUG}
+            />
           </>
         )}
 
@@ -398,9 +407,14 @@ function LocationForm({
 function ExperienceForm({
   event,
 }: {
-  event: { id: string; experienceType: "CLASSIC" | "GAMIFIED" };
+  event: { id: string; experienceType: "CLASSIC" | "GAMIFIED"; gameSkin: "METAL" | "PIXEL" | "FAIRYTALE" };
 }) {
   const current = event.experienceType;
+  const skins = [
+    { value: "FAIRYTALE" as const, label: "Conto de Fadas", desc: "Azul-pó, prata e dourado — elegante." },
+    { value: "PIXEL" as const, label: "8-Bit", desc: "Céu azul e blocos coloridos — divertido." },
+    { value: "METAL" as const, label: "Metal", desc: "Metal escuro e pixel — intenso." },
+  ];
   const options = [
     {
       value: "CLASSIC" as const,
@@ -455,7 +469,39 @@ function ExperienceForm({
         </Button>
       </form>
       {current === "GAMIFIED" && (
-        <div className="mt-5 pt-5 border-t border-border">
+        <div className="mt-5 pt-5 border-t border-border flex flex-col gap-4">
+          <div>
+            <h3 className="text-sm font-semibold mb-1">Skin do painel</h3>
+            <p className="text-xs text-muted-foreground mb-3">
+              A cara do seu painel no modo jogo. Não muda nada para o convidado.
+            </p>
+            <form action={updateEventGameSkin} className="flex flex-col gap-3">
+              <input type="hidden" name="eventId" value={event.id} />
+              <div className="flex flex-col gap-2">
+                {skins.map(({ value, label, desc }) => (
+                  <label
+                    key={value}
+                    className="flex items-start gap-3 cursor-pointer rounded-lg border border-border p-3 hover:bg-muted/40"
+                  >
+                    <input
+                      type="radio"
+                      name="gameSkin"
+                      value={value}
+                      defaultChecked={event.gameSkin === value}
+                      className="mt-1 size-4"
+                    />
+                    <span className="flex flex-col">
+                      <span className="text-sm font-medium">{label}</span>
+                      <span className="text-xs text-muted-foreground">{desc}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <Button type="submit" className="h-11">
+                Salvar skin
+              </Button>
+            </form>
+          </div>
           <Link
             href={`/admin/eventos/${event.id}/acessos-jogo`}
             className="text-sm underline text-foreground"

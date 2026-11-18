@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, CalendarDays, MapPin, Gift, Camera, Music, Heart, type LucideIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
@@ -37,7 +37,7 @@ export default async function RsvpSuccessPage({
               className="text-2xl font-semibold"
               style={{ fontFamily: "var(--theme-font-heading)" }}
             >
-              Presença confirmada! 🎉
+              Presença confirmada!
             </h1>
             <p className="text-sm text-[var(--theme-secondary)]">
               Mal podemos esperar para celebrar com você.
@@ -67,16 +67,16 @@ export default async function RsvpSuccessPage({
             <p className="text-xs font-medium text-[var(--theme-secondary)] uppercase tracking-wider">
               Próximos passos
             </p>
-            <NextStep href={`/${slug}/roteiro`} label="Ver roteiro do dia" emoji="🗓" />
-            <NextStep href={`/${slug}/locais`} label="Como chegar" emoji="📍" />
-            <NextStep href={`/${slug}/presentes`} label="Lista de presentes" emoji="🎁" />
-            <NextStep href={`/${slug}/galeria`} label="Galeria do casal" emoji="📸" />
-            <NextStep href={`/${slug}/playlist`} label="Sugerir música para a festa" emoji="🎵" />
+            <NextStep href={`/${slug}/roteiro`} label="Ver roteiro do dia" Icon={CalendarDays} />
+            <NextStep href={`/${slug}/locais`} label="Como chegar" Icon={MapPin} />
+            <NextStep href={`/${slug}/presentes`} label="Lista de presentes" Icon={Gift} />
+            <NextStep href={`/${slug}/galeria`} label="Galeria do casal" Icon={Camera} />
+            <NextStep href={`/${slug}/playlist`} label="Sugerir música para a festa" Icon={Music} />
           </div>
         </>
       ) : (
         <>
-          <p className="text-5xl">💙</p>
+          <Heart className="size-12 mx-auto text-[var(--theme-primary)]" aria-hidden />
           <div className="flex flex-col gap-2">
             <h1
               className="text-2xl font-semibold"
@@ -100,7 +100,7 @@ export default async function RsvpSuccessPage({
   );
 }
 
-function NextStep({ href, label, emoji }: { href: string; label: string; emoji: string }) {
+function NextStep({ href, label, Icon }: { href: string; label: string; Icon: LucideIcon }) {
   return (
     <Link
       href={href}
@@ -109,7 +109,7 @@ function NextStep({ href, label, emoji }: { href: string; label: string; emoji: 
         className: "w-full h-12 justify-start gap-3 text-sm",
       })}
     >
-      <span className="text-base">{emoji}</span>
+      <Icon className="size-5 shrink-0" aria-hidden />
       {label}
     </Link>
   );

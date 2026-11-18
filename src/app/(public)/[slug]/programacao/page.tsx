@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { validateEventAccess } from "@/lib/auth/guest";
 import { prisma } from "@/lib/db";
-import { Calendar } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 import { NotificationButton } from "./notification-button";
 import type { Metadata } from "next";
 
@@ -75,7 +75,7 @@ export default async function ProgramacaoPage({
                   <p className="text-sm text-[var(--theme-secondary)]">{item.description}</p>
                 )}
                 {item.location && (
-                  <p className="text-xs text-[var(--theme-secondary)] mt-0.5">📍 {item.location}</p>
+                  <p className="text-xs text-[var(--theme-secondary)] mt-0.5 inline-flex items-center gap-1"><MapPin className="size-3 shrink-0" aria-hidden /> {item.location}</p>
                 )}
               </div>
             </li>

@@ -6,7 +6,7 @@ import { SignOutButton } from "./sign-out-button";
 export function AdminHeader({
   title,
   subtitle,
-  backHref = "/admin",
+  backHref = "/admin?todos=1",
   eventId,
 }: {
   title: string;

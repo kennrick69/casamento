@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Gift } from "lucide-react";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 
@@ -26,7 +27,7 @@ export default async function PresenteSucessoPage({ params, searchParams }: Prop
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center gap-6">
-      <div className="text-5xl">🎁</div>
+      <Gift className="size-12 mx-auto text-[var(--theme-primary)]" aria-hidden />
       <h1 className="text-2xl font-semibold" style={{ fontFamily: "var(--theme-font-heading)" }}>
         {donation?.status === "PAID" ? "Pagamento confirmado!" : "Pedido recebido!"}
       </h1>

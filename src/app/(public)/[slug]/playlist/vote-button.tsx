@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { Heart } from "lucide-react";
 import { toggleVote } from "./actions";
 
 export function VoteButton({
@@ -37,8 +38,8 @@ export function VoteButton({
         disabled ? "opacity-40 cursor-default" : isPending ? "opacity-50 cursor-wait" : "cursor-pointer"
       }`}
     >
-      <span className={`text-lg ${voted ? "text-[var(--theme-accent)]" : "text-[var(--theme-secondary)]"}`}>
-        ♥
+      <span className={`${voted ? "text-[var(--theme-accent)]" : "text-[var(--theme-secondary)]"}`}>
+        <Heart className="size-5" fill={voted ? "currentColor" : "none"} aria-hidden />
       </span>
       <span className="text-xs tabular-nums">{votes}</span>
     </button>

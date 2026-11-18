@@ -5,13 +5,23 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { SignOutButton } from "@/components/admin/sign-out-button";
+import { unarchiveEvent } from "@/app/(admin)/admin/eventos/[id]/configuracoes/actions";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Heart, RotateCcw } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Meus eventos" };
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ todos?: string; arquivados?: string }>;
+}) {
+  const sp = await searchParams;
+  const showList = sp.todos === "1";
+  const showArchived = sp.arquivados === "1";
+
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
@@ -24,6 +34,14 @@ export default async function AdminPage() {
   if (user && !user.onboardingCompleted) redirect("/admin/onboarding");
 
   const organizers = await getOrganizerEvents(session.user.id);
+  const active = organizers.filter(({ event }) => event.status !== "ARCHIVED");
+  const archived = organizers.filter(({ event }) => event.status === "ARCHIVED");
+
+  // Login abre direto no evento quando há um único evento ativo (a não ser que
+  // o usuário peça explicitamente a lista com ?todos=1).
+  if (!showList && active.length === 1) {
+    redirect(`/admin/eventos/${active[0]!.event.id}`);
+  }
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -58,9 +76,9 @@ export default async function AdminPage() {
           </Link>
         </div>
 
-        {organizers.length === 0 ? (
+        {active.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
-            <p className="text-4xl mb-4">💍</p>
+            <Heart className="size-10 mx-auto mb-4 text-muted-foreground" aria-hidden />
             <p className="font-medium mb-2">Nenhum evento ainda</p>
             <p className="text-sm mb-6">Crie seu primeiro evento e compartilhe com os convidados.</p>
             <Link href="/admin/eventos/novo" className={buttonVariants()}>
@@ -69,7 +87,7 @@ export default async function AdminPage() {
           </div>
         ) : (
           <ul className="flex flex-col gap-3">
-            {organizers.map(({ event }) => (
+            {active.map(({ event }) => (
               <li key={event.id}>
                 <Link
                   href={`/admin/eventos/${event.id}`}
@@ -104,6 +122,51 @@ export default async function AdminPage() {
               </li>
             ))}
           </ul>
+        )}
+
+        {archived.length > 0 && (
+          <div className="mt-8">
+            {!showArchived ? (
+              <Link
+                href="/admin?todos=1&arquivados=1"
+                className="text-sm text-muted-foreground underline hover:text-foreground"
+              >
+                Mostrar arquivados ({archived.length})
+              </Link>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-muted-foreground">Arquivados</h3>
+                  <Link href="/admin?todos=1" className="text-xs text-muted-foreground underline hover:text-foreground">
+                    Ocultar
+                  </Link>
+                </div>
+                <ul className="flex flex-col gap-2">
+                  {archived.map(({ event }) => (
+                    <li
+                      key={event.id}
+                      className="flex items-center justify-between bg-muted/40 rounded-lg border border-border px-5 py-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-medium text-muted-foreground truncate">{event.coupleNames}</p>
+                        <p className="text-xs text-muted-foreground font-mono">/{event.slug}</p>
+                      </div>
+                      <form action={unarchiveEvent}>
+                        <input type="hidden" name="eventId" value={event.id} />
+                        <button
+                          type="submit"
+                          className={buttonVariants({ variant: "outline", size: "sm" })}
+                        >
+                          <RotateCcw className="size-3.5 mr-1" aria-hidden />
+                          Recuperar
+                        </button>
+                      </form>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
         )}
       </main>
     </div>

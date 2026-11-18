@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Lock } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { hashToken } from "@/lib/auth/token";
 import { ResetForm } from "./reset-form";
@@ -65,7 +66,7 @@ function InvalidLink({ reason }: { reason: "missing" | "used" | "expired" }) {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-border/40 p-8 text-center space-y-5">
-          <div className="text-4xl">🔒</div>
+          <Lock className="size-9 mx-auto" aria-hidden />
           <div>
             <h1 className="text-xl font-semibold">Link inválido</h1>
             <p className="text-sm text-muted-foreground mt-2">{msg}</p>

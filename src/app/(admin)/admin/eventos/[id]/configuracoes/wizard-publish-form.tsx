@@ -126,13 +126,13 @@ export function WizardPublishForm({ eventId, slug, defaultValues, hasDonations }
       <div className="flex items-center justify-between gap-3">
         {draftStatus !== "idle" ? (
           <span className="text-xs text-muted-foreground">
-            {draftStatus === "saving" ? "Salvando…" : "✓ Salvo"}
+            {draftStatus === "saving" ? "Salvando…" : "Salvo"}
           </span>
         ) : (
           <span />
         )}
         <Button type="submit" className="h-11" disabled={isPending}>
-          {isPending ? "Publicando…" : "Publicar evento 🎉"}
+          {isPending ? "Publicando…" : "Publicar evento"}
         </Button>
       </div>
     </form>

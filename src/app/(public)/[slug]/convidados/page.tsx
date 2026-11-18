@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Users } from "lucide-react";
 import { validateEventAccess } from "@/lib/auth/guest";
 import { prisma } from "@/lib/db";
 import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
@@ -25,7 +26,7 @@ export default async function ConvidadosPage({
   if (!guest || guest.rsvpStatus !== "CONFIRMED") {
     return (
       <div className="px-4 py-12 max-w-lg mx-auto text-center">
-        <p className="text-2xl mb-3">👥</p>
+        <Users className="size-7 mx-auto mb-3 text-[var(--theme-secondary)]" aria-hidden />
         <p className="text-sm text-[var(--theme-secondary)]">
           Esta página está disponível após confirmar presença.
         </p>

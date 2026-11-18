@@ -187,6 +187,19 @@ const ExperienceSchema = z.object({
   experienceType: z.enum(["CLASSIC", "GAMIFIED"]),
 });
 
+const GameSkinSchema = z.object({
+  eventId: z.string(),
+  gameSkin: z.enum(["METAL", "PIXEL", "FAIRYTALE"]),
+});
+
+const ArchiveSchema = z.object({
+  eventId: z.string(),
+  confirmName: z.string(),
+});
+
+// Evento "piloto" que o PRESS START abre — nunca pode ser arquivado/sumir.
+const PRIMARY_SLUG = process.env.NEXT_PUBLIC_PRIMARY_EVENT_SLUG || "joseeleticia";
+
 export async function updateEventExperience(formData: FormData): Promise<void> {
   const parsed = ExperienceSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) return;
@@ -209,6 +222,68 @@ export async function updateEventExperience(formData: FormData): Promise<void> {
   // Página pública do convidado — para a troca CLASSIC/GAMIFIED aparecer na
   // hora mesmo com cache de rota.
   revalidatePath(`/${updated.slug}`);
+}
+
+// Modo Gamificado — skin do painel (Metal / 8-Bit / Conto de Fadas). Só tem
+// efeito quando o evento é GAMIFIED; não toca na experiência clássica.
+export async function updateEventGameSkin(formData: FormData): Promise<void> {
+  const parsed = GameSkinSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return;
+
+  const { eventId, gameSkin } = parsed.data;
+  try {
+    await withOrganizer(eventId);
+  } catch {
+    return;
+  }
+
+  await prisma.event.update({
+    where: { id: eventId },
+    data: { gameSkin },
+    select: { id: true },
+  });
+  revalidatePath(`/admin/eventos/${eventId}/configuracoes`);
+  revalidatePath(`/admin/eventos/${eventId}`);
+}
+
+// Zona de perigo — "excluir" um evento = SOFT DELETE (status ARCHIVED). Nunca
+// apaga do banco. Exige digitar o nome do casal (dupla checagem no servidor) e
+// é bloqueado para o evento piloto (joseeleticia). Some da lista; recuperável.
+export async function archiveEvent(formData: FormData): Promise<void> {
+  const parsed = ArchiveSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return;
+  const { eventId, confirmName } = parsed.data;
+  try {
+    await withOrganizer(eventId);
+  } catch {
+    return;
+  }
+  const ev = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { slug: true, coupleNames: true },
+  });
+  if (!ev) return;
+  if (ev.slug === PRIMARY_SLUG) return; // piloto não pode ser arquivado
+  const norm = (s: string) => s.trim().toLowerCase();
+  if (norm(confirmName) !== norm(ev.coupleNames)) return; // confirmação não bate
+
+  await prisma.event.update({ where: { id: eventId }, data: { status: "ARCHIVED" } });
+  revalidatePath("/admin");
+  revalidatePath(`/${ev.slug}`);
+  redirect("/admin?todos=1");
+}
+
+// Recupera um evento arquivado (volta como rascunho; o casal republica).
+export async function unarchiveEvent(formData: FormData): Promise<void> {
+  const eventId = String(formData.get("eventId") || "");
+  if (!eventId) return;
+  try {
+    await withOrganizer(eventId);
+  } catch {
+    return;
+  }
+  await prisma.event.update({ where: { id: eventId }, data: { status: "DRAFT" } });
+  revalidatePath("/admin");
 }
 
 // ── Variantes de rascunho (sem redirect — usadas pelo auto-save onBlur) ───
