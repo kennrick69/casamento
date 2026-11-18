@@ -158,3 +158,71 @@ html[data-contrast="high"] {
 .animate-progress-bar {
   animation: progress-bar linear forwards;
 }
+
+/* ── Modo Gamificado · skins do painel (só sob [data-game-skin]) ──────────────
+   Aplicado pelo layout do admin do evento quando experienceType = GAMIFIED.
+   Redefine os tokens shadcn + fontes num wrapper, então os componentes do
+   painel herdam o visual. O admin clássico (sem o wrapper) não muda em nada.
+   Arte/paleta próprias e genéricas — sem marca de terceiros. */
+.game-skin { font-family: var(--skin-body); }
+.game-skin :is(h1, h2, h3), .game-skin button, .game-skin [role="button"] {
+  font-family: var(--skin-head);
+}
+
+/* Perfil: Conto de Fadas (padrão) — azul-pó, prata, dourado, elegante */
+.game-skin[data-game-skin="fairytale"] {
+  --skin-head: var(--font-dm-serif), serif;
+  --skin-body: var(--font-cormorant), Georgia, serif;
+  --background: #dbe8fa; --foreground: #2a3358;
+  --card: #ffffff; --card-foreground: #2a3358;
+  --popover: #ffffff; --popover-foreground: #2a3358;
+  --primary: #6a8fd8; --primary-foreground: #fff7d8;
+  --secondary: #e6edfa; --secondary-foreground: #2a3358;
+  --muted: #e6edfa; --muted-foreground: #6a7496;
+  --accent: #b88a2a; --accent-foreground: #ffffff;
+  --border: #c3d0e8; --input: #c3d0e8; --ring: #6a8fd8;
+  --radius: 1rem;
+}
+.game-skin[data-game-skin="fairytale"] { font-size: 1.05rem; }
+
+/* Perfil: Metal — metal escuro, ferrugem/sangue, pixel */
+.game-skin[data-game-skin="metal"] {
+  --skin-head: var(--font-press-start), ui-monospace, monospace;
+  --skin-body: ui-monospace, "Courier New", monospace;
+  --background: #120d09; --foreground: #e8d8b0;
+  --card: #2a1d12; --card-foreground: #e8d8b0;
+  --popover: #2a1d12; --popover-foreground: #e8d8b0;
+  --primary: #c81e1e; --primary-foreground: #f4e4c0;
+  --secondary: #3a2817; --secondary-foreground: #e8d8b0;
+  --muted: #241206; --muted-foreground: #a3906a;
+  --accent: #ffbf2e; --accent-foreground: #120d09;
+  --border: #5a3a1a; --input: #5a3a1a; --ring: #ffbf2e;
+  --radius: 0px;
+}
+
+/* Perfil: 8-Bit — céu azul, blocos coloridos, pixel */
+.game-skin[data-game-skin="pixel"] {
+  --skin-head: var(--font-press-start), ui-monospace, monospace;
+  --skin-body: var(--font-inter), system-ui, sans-serif;
+  --background: #5c94fc; --foreground: #2a2320;
+  --card: #fff7e6; --card-foreground: #2a2320;
+  --popover: #fff7e6; --popover-foreground: #2a2320;
+  --primary: #e52521; --primary-foreground: #ffffff;
+  --secondary: #ffe3a0; --secondary-foreground: #5a3a00;
+  --muted: #ffe9b8; --muted-foreground: #7a6a58;
+  --accent: #f8b800; --accent-foreground: #5a3a00;
+  --border: #d9a63a; --input: #d9a63a; --ring: #e52521;
+  --radius: 0.6rem;
+}
+
+/* Press Start 2P é largo: reduz títulos/botões p/ não estourar, e permite quebra */
+.game-skin[data-game-skin="metal"] :is(h1, h2),
+.game-skin[data-game-skin="pixel"] :is(h1, h2) {
+  font-size: 0.95rem; line-height: 1.6; letter-spacing: 0.5px; text-wrap: balance;
+}
+.game-skin[data-game-skin="metal"] button,
+.game-skin[data-game-skin="pixel"] button,
+.game-skin[data-game-skin="metal"] [role="button"],
+.game-skin[data-game-skin="pixel"] [role="button"] {
+  font-size: 0.62rem; letter-spacing: 0.5px; line-height: 1.5;
+}

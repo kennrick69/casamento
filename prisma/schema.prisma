@@ -168,6 +168,7 @@ model Event {
   themeId               String
   status                EventStatus    @default(DRAFT)
   experienceType        ExperienceType @default(CLASSIC)
+  gameSkin              GameSkin       @default(FAIRYTALE)
   features              Json
   donationMode          DonationMode   @default(TRUST)
   pixKey                String?
@@ -225,6 +226,16 @@ enum EventStatus {
 enum ExperienceType {
   CLASSIC
   GAMIFIED
+}
+
+// Skin do painel dos noivos quando o evento é GAMIFIED (selecionável nas
+// Configurações). Arte própria/genérica, sem marca de terceiros.
+// METAL = metal escuro; PIXEL = 8-bit colorido; FAIRYTALE = conto de fadas.
+// Default FAIRYTALE. Não afeta a experiência clássica.
+enum GameSkin {
+  METAL
+  PIXEL
+  FAIRYTALE
 }
 
 enum DonationMode {

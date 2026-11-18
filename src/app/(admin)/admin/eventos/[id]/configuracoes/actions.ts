@@ -187,6 +187,11 @@ const ExperienceSchema = z.object({
   experienceType: z.enum(["CLASSIC", "GAMIFIED"]),
 });
 
+const GameSkinSchema = z.object({
+  eventId: z.string(),
+  gameSkin: z.enum(["METAL", "PIXEL", "FAIRYTALE"]),
+});
+
 export async function updateEventExperience(formData: FormData): Promise<void> {
   const parsed = ExperienceSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) return;
@@ -209,6 +214,28 @@ export async function updateEventExperience(formData: FormData): Promise<void> {
   // Página pública do convidado — para a troca CLASSIC/GAMIFIED aparecer na
   // hora mesmo com cache de rota.
   revalidatePath(`/${updated.slug}`);
+}
+
+// Modo Gamificado — skin do painel (Metal / 8-Bit / Conto de Fadas). Só tem
+// efeito quando o evento é GAMIFIED; não toca na experiência clássica.
+export async function updateEventGameSkin(formData: FormData): Promise<void> {
+  const parsed = GameSkinSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return;
+
+  const { eventId, gameSkin } = parsed.data;
+  try {
+    await withOrganizer(eventId);
+  } catch {
+    return;
+  }
+
+  await prisma.event.update({
+    where: { id: eventId },
+    data: { gameSkin },
+    select: { id: true },
+  });
+  revalidatePath(`/admin/eventos/${eventId}/configuracoes`);
+  revalidatePath(`/admin/eventos/${eventId}`);
 }
 
 // ── Variantes de rascunho (sem redirect — usadas pelo auto-save onBlur) ───
