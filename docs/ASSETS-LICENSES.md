@@ -65,7 +65,16 @@ Peças que o JOs pediu para eu criar a partir do LPC. Ficam em `assets-src/custo
 - **Links:** https://opengameart.org/content/lpc-dress-in-combat-poses · http://opengameart.org/content/lpc-clothing-updates · https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles
 - **Crédito na tela de Créditos:** "Saia de noiva — obra derivada da saia LPC *belle* de bluecarrot16, Matthew Krohn e Lanea Zimmerman (OGA-BY 3.0 / CC-BY-SA 3.0 / GPL)."
 
-> **Preview da noiva completa:** `custom/veil/preview-noiva-gerado.png` (corpo + cabeça + olhos + vestido/bodice branco + saia belle branca + cabelo long + tiara + véu), 4 direções em fundo claro e escuro. Os assets LPC usados no preview (body, head, eyes, dress/bodice `white`, hair `long`, tiara) entram na tabela de "arquivos usados" quando forem para `public/` no S3.
+### Corpete de noiva branco — `custom/bodice_white/` (criado em 2026-11-17)
+- **O que é:** versão **branca** do corpete **LPC `dress/bodice/female`** (o `white.png` do pacote é creme/marfim). Recolor pela MESMA rampa de luminância da saia (`[205..255]`, alpha intacto), para o corpete e a saia ficarem no mesmo branco. Animações: idle, walk (as que o pacote bodice tem no subset do casamento).
+- **Processo:** luminância normalizada por frame → branco; script `scratchpad/bride.py` (determinístico, mesma função `to_white_lum` da saia).
+- **Asset original:** `dress/bodice/female/{idle,walk}/white.png` do pacote LPC.
+- **Autores (herdados):** bluecarrot16, Matthew Krohn (makrohn), Lanea Zimmerman (Sharm).
+- **Licenças (herdadas, share-alike):** OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0.
+- **Links:** https://opengameart.org/content/lpc-dress-in-combat-poses · http://opengameart.org/content/lpc-clothing-updates · https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles
+- **Crédito na tela de Créditos:** "Corpete de noiva — obra derivada do corpete LPC *bodice* de bluecarrot16, Matthew Krohn e Lanea Zimmerman (OGA-BY 3.0 / CC-BY-SA 3.0 / GPL)."
+
+> **Preview da noiva completa:** `custom/veil/preview-noiva-gerado.png` (corpo + cabeça + olhos + vestido/bodice branco + saia belle branca + cabelo long + tiara + véu), 4 direções em fundo claro e escuro. O corpete e a saia são os derivados brancos (§1.1); os demais assets LPC do preview (body, head, eyes, hair `long`, tiara) entram na tabela de "arquivos usados" quando forem para `public/` no S3.
 
 ---
 
