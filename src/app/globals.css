@@ -236,11 +236,12 @@ html[data-contrast="high"] {
   background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
 }
 .game-skin[data-game-skin="pixel"] {
-  background-image:
-    radial-gradient(circle at 14% 20%, rgba(255,255,255,.95) 0 20px, transparent 21px),
-    radial-gradient(circle at 20% 22%, rgba(255,255,255,.95) 0 14px, transparent 15px),
-    radial-gradient(circle at 85% 15%, rgba(255,255,255,.9) 0 18px, transparent 19px);
+  --cloud: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='96'%20height='52'%20viewBox='0%200%2024%2013'%3E%3Cg%20fill='%23ffffff'%3E%3Crect%20x='6'%20y='4'%20width='12'%20height='5'/%3E%3Crect%20x='3'%20y='7'%20width='18'%20height='3'/%3E%3Crect%20x='9'%20y='2'%20width='6'%20height='2'/%3E%3Crect%20x='14'%20y='3'%20width='5'%20height='2'/%3E%3C/g%3E%3C/svg%3E");
+  background-image: var(--cloud), var(--cloud), var(--cloud);
+  background-position: 10% 72px, 70% 40px, 90% 120px;
+  background-size: 96px auto, 72px auto, 60px auto;
   background-repeat: no-repeat;
+  image-rendering: pixelated;
 }
 .game-skin[data-game-skin="fairytale"] {
   background-image:
@@ -266,8 +267,10 @@ html[data-contrast="high"] {
   transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--skin-hard);
 }
 
-/* Cards como moldura de painel */
+/* Cards como moldura de painel — sempre na cor de CARD (não na do fundo) */
 .game-skin .game-panel {
+  background: var(--card) !important;
+  color: var(--card-foreground);
   border-style: solid; border-width: 4px;
   border-color: var(--skin-bevel-lt) var(--skin-bevel-dk) var(--skin-bevel-dk) var(--skin-bevel-lt);
   box-shadow: 4px 4px 0 var(--skin-hard);
@@ -311,3 +314,46 @@ html[data-contrast="high"] {
 .game-skin[data-game-skin="metal"] nav a,
 .game-skin[data-game-skin="pixel"] nav a { font-size: 0.58rem; letter-spacing: 0.5px; }
 .game-skin nav a:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--skin-hard); }
+
+/* Abas em GRADE uniforme (cara de menu de jogo): colunas iguais, alinhadas dos
+   dois lados — resolve o efeito "degrau" do flex-wrap. Só nos skins. */
+.game-skin nav {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  border-bottom: 0;
+}
+@media (min-width: 640px) {
+  .game-skin nav { grid-template-columns: repeat(6, 1fr); }
+}
+.game-skin nav a {
+  justify-content: center; text-align: center; min-width: 0; margin: 0;
+  overflow: hidden; text-overflow: ellipsis;
+}
+/* Aba ativa: contraste garantido em todos os skins (texto sobre --primary) */
+.game-skin nav a[aria-current="page"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* Selos/pills seguindo o skin, com contraste */
+.game-skin .game-pill {
+  background: var(--secondary) !important;
+  color: var(--card-foreground) !important;
+  border: 2px solid var(--skin-bevel-dk);
+  border-radius: calc(var(--radius) / 2);
+}
+
+/* Faixa da contagem regressiva vira painel do skin (mata o degradê/texto branco) */
+.game-skin .game-countdown {
+  background: var(--card) !important;
+  background-image: none !important;
+}
+.game-skin .game-countdown,
+.game-skin .game-countdown * { color: var(--card-foreground) !important; }
+.game-skin .game-countdown .game-countdown-num {
+  font-family: var(--skin-head);
+  text-shadow: 2px 2px 0 var(--skin-hard);
+}
+.game-skin[data-game-skin="metal"] .game-countdown .game-countdown-num { color: var(--accent) !important; }
+.game-skin[data-game-skin="fairytale"] .game-countdown .game-countdown-num { font-family: var(--skin-body); }

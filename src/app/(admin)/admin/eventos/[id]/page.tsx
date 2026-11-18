@@ -124,14 +124,14 @@ export default async function EventDashboardPage({
         )}
 
         {/* Countdown */}
-        <div className={`mb-6 rounded-xl px-5 py-4 text-center ${
+        <div className={`game-countdown game-panel mb-6 rounded-xl px-5 py-4 text-center ${
           daysLeft > 0
             ? "bg-gradient-to-r from-rose-900 to-slate-900 text-white"
             : daysLeft === 0
             ? "bg-green-900 text-white"
             : "bg-muted border border-border"
         }`}>
-          <p className={`text-3xl font-bold tabular-nums ${daysLeft <= 0 ? "text-foreground" : ""}`}>
+          <p className={`game-countdown-num text-3xl font-bold tabular-nums ${daysLeft <= 0 ? "text-foreground" : ""}`}>
             {daysLeft > 0 ? daysLeft : daysLeft === 0 ? "🎉" : Math.abs(daysLeft)}
           </p>
           <p className={`text-sm mt-1 ${daysLeft > 0 ? "text-white/70" : daysLeft === 0 ? "text-white/70" : "text-muted-foreground"}`}>
@@ -169,7 +169,7 @@ export default async function EventDashboardPage({
 
           <InfoCard title="Status do evento">
             <div className="flex items-center justify-between">
-              <span className={`text-sm px-2.5 py-0.5 rounded-full font-medium ${
+              <span className={`game-pill text-sm px-2.5 py-0.5 rounded-full font-medium ${
                 event.status === "PUBLISHED"
                   ? "bg-green-100 text-green-800"
                   : "bg-yellow-100 text-yellow-800"
