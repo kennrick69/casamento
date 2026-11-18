@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { requireOrganizer } from "@/lib/authorization";
 import { EventNav } from "@/components/admin/event-nav";
 import { AdminHeader } from "@/components/admin/admin-header";
@@ -26,7 +27,7 @@ export default async function MesasPage({ params }: { params: Promise<{ id: stri
         include: { assignments: true },
       },
       guests: {
-        where: { deletedAt: null, banned: false, rsvpStatus: { not: "DECLINED" } },
+        where: { deletedAt: null, banned: false, rsvpStatus: { not: "DECLINED" }, ...EXCLUDE_VISITORS },
         select: { id: true, name: true, email: true, plusOnes: true, rsvpStatus: true },
         orderBy: { name: "asc" },
       },

@@ -4,7 +4,7 @@ import { getAppUrl } from "@/lib/app-url";
 import { z } from "zod";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
-import { generateSessionToken, setGuestCookie, signRecoveryToken } from "@/lib/auth/guest";
+import { generateSessionToken, setGuestCookie, signRecoveryToken, getCurrentGuest } from "@/lib/auth/guest";
 import { checkRateLimit } from "@/lib/auth/rate-limit";
 import { awardPoints } from "@/lib/points";
 import { getMainLocation } from "@/lib/locations";
@@ -15,6 +15,8 @@ import {
   rsvpConfirmationText,
   rsvpDeclineHtml,
   rsvpDeclineText,
+  rsvpChangeAlertHtml,
+  rsvpChangeAlertText,
   recoveryHtml,
   recoveryText,
 } from "@/lib/email/templates";
@@ -131,12 +133,29 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
     where: { eventId_email: { eventId: event.id, email: emailAddr } },
   });
 
-  if (existing) {
-    if (!existing.deletedAt && !existing.banned) {
-      await sendRecoveryEmail(existing.sessionToken, emailAddr, event.title, event.coupleNames, slug);
-      return { ok: false, type: "RECOVERY_SENT", emailAddr };
-    }
+  // Convidado já identificado (dono da sessão via cookie) pode ATUALIZAR sua
+  // resposta in-place. Quem NÃO é o dono e tenta reusar um e-mail existente
+  // recebe um magic link (anti-hijack) em vez de sobrescrever a resposta de
+  // outra pessoa — comportamento de segurança preservado.
+  const currentGuest = await getCurrentGuest(slug);
+  const isOwnerUpdate =
+    !!existing && !existing.deletedAt && !existing.banned && currentGuest?.id === existing.id;
+
+  if (existing && !existing.deletedAt && !existing.banned && !isOwnerUpdate) {
+    await sendRecoveryEmail(existing.sessionToken, emailAddr, event.title, event.coupleNames, slug);
+    return { ok: false, type: "RECOVERY_SENT", emailAddr };
   }
+
+  // Estado anterior, para detectar cancelamento / mudança de acompanhantes e
+  // avisar o convidado por e-mail (salvaguarda da entrada por nome+celular).
+  const prevStatus = existing?.rsvpStatus ?? null;
+  const prevCompanions = isOwnerUpdate
+    ? await prisma.guestCompanion.findMany({
+        where: { guestId: existing!.id },
+        select: { name: true, type: true },
+        orderBy: { createdAt: "asc" },
+      })
+    : [];
 
   const sessionToken = generateSessionToken();
   const isEarly =
@@ -195,7 +214,10 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
     return upserted;
   });
 
-  if (rsvpStatus === "CONFIRMED") {
+  // Pontos só na PRIMEIRA confirmação (ou quando sai de PENDING/DECLINED para
+  // CONFIRMED). Sem isso, um convidado reconfirmando ganharia pontos de novo.
+  const newlyConfirmed = rsvpStatus === "CONFIRMED" && prevStatus !== "CONFIRMED";
+  if (newlyConfirmed) {
     void awardPoints(guest.id, event.id, "rsvp_confirmed");
     if (isEarly) void awardPoints(guest.id, event.id, "rsvp_early");
   }
@@ -215,7 +237,40 @@ export async function submitRsvp(formData: FormData): Promise<RsvpActionResult> 
     "X-Entity-Ref-ID": `rsvp-confirm-${slug}`,
   };
 
-  if (rsvpStatus === "CONFIRMED") {
+  // Acompanhantes mudaram? (compara o conjunto anterior com o novo)
+  const companionKey = (list: { name: string; type: string }[]) =>
+    list.map((cp) => `${cp.type}:${cp.name.trim().toLowerCase()}`).sort().join("|");
+  const companionsChanged = companionKey(prevCompanions) !== companionKey(companions);
+
+  if (isOwnerUpdate) {
+    // Atualização de um convidado já identificado: avisa por e-mail quando a
+    // mudança é sensível (cancelou presença ou mexeu nos acompanhantes). Se a
+    // identificação por nome+celular tiver sido de um impostor, o dono do
+    // e-mail descobre. Não reenvia a confirmação/decline padrão.
+    const cancelled = rsvpStatus === "DECLINED" && prevStatus !== "DECLINED";
+    const changeKind: "cancel" | "companions" | null = cancelled
+      ? "cancel"
+      : companionsChanged
+        ? "companions"
+        : null;
+    if (changeKind) {
+      const payload = {
+        name,
+        coupleNames: event.coupleNames,
+        eventTitle: event.title,
+        eventUrl,
+        kind: changeKind,
+      };
+      await email.send({
+        to: emailAddr,
+        subject: `Alteração na sua resposta — ${event.title}`,
+        idempotencyKey: `rsvp-change-${emailAddr}-${slug}-${changeKind}-${Date.now()}`,
+        headers: antiSpamHeaders,
+        html: rsvpChangeAlertHtml(payload),
+        text: rsvpChangeAlertText(payload),
+      });
+    }
+  } else if (rsvpStatus === "CONFIRMED") {
     await email.send({
       to: emailAddr,
       subject: `Presença confirmada — ${event.title}`,

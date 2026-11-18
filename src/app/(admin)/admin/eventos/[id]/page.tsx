@@ -2,6 +2,7 @@ import { getAppUrl } from "@/lib/app-url";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { requireOrganizer } from "@/lib/authorization";
 import { EventNav } from "@/components/admin/event-nav";
 import { AdminHeader } from "@/components/admin/admin-header";
@@ -46,14 +47,14 @@ export default async function EventDashboardPage({
     recentPhotos,
     confirmedWithPlusOnes,
   ] = await Promise.all([
-    prisma.guest.count({ where: { eventId: id, deletedAt: null } }),
-    prisma.guest.count({ where: { eventId: id, rsvpStatus: "CONFIRMED", deletedAt: null } }),
-    prisma.guest.count({ where: { eventId: id, rsvpStatus: "DECLINED", deletedAt: null } }),
-    prisma.guest.count({ where: { eventId: id, rsvpStatus: "PENDING", deletedAt: null } }),
+    prisma.guest.count({ where: { eventId: id, deletedAt: null, ...EXCLUDE_VISITORS } }),
+    prisma.guest.count({ where: { eventId: id, rsvpStatus: "CONFIRMED", deletedAt: null, ...EXCLUDE_VISITORS } }),
+    prisma.guest.count({ where: { eventId: id, rsvpStatus: "DECLINED", deletedAt: null, ...EXCLUDE_VISITORS } }),
+    prisma.guest.count({ where: { eventId: id, rsvpStatus: "PENDING", deletedAt: null, ...EXCLUDE_VISITORS } }),
     prisma.photo.count({ where: { eventId: id } }),
     prisma.report.count({ where: { eventId: id, status: "PENDING" } }),
     prisma.guest.findMany({
-      where: { eventId: id, deletedAt: null },
+      where: { eventId: id, deletedAt: null, ...EXCLUDE_VISITORS },
       orderBy: { createdAt: "desc" },
       take: 5,
       select: { id: true, name: true, rsvpStatus: true, createdAt: true },
@@ -65,7 +66,7 @@ export default async function EventDashboardPage({
       select: { id: true, createdAt: true },
     }),
     prisma.guest.aggregate({
-      where: { eventId: id, rsvpStatus: "CONFIRMED", deletedAt: null },
+      where: { eventId: id, rsvpStatus: "CONFIRMED", deletedAt: null, ...EXCLUDE_VISITORS },
       _sum: { plusOnes: true },
     }),
   ]);

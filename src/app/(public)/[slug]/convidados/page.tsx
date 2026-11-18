@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { validateEventAccess } from "@/lib/auth/guest";
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Convidados" };
@@ -39,6 +40,7 @@ export default async function ConvidadosPage({
       banned: false,
       rsvpStatus: "CONFIRMED",
       profilePublic: true,
+      ...EXCLUDE_VISITORS,
     },
     select: {
       id: true,

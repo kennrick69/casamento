@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { getCurrentGuest } from "@/lib/auth/guest";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -45,20 +46,20 @@ export default async function GincanaPage({ params, searchParams }: Props) {
       orderBy: { order: "asc" },
     }),
     prisma.guestPoints.findMany({
-      where: { eventId: event.id },
+      where: { eventId: event.id, guest: { is: EXCLUDE_VISITORS } },
       orderBy: { totalPoints: "desc" },
       take: rankingLimit,
       include: { guest: { select: { name: true } } },
     }),
     guest ? prisma.guestPoints.findUnique({ where: { guestId: guest.id } }) : null,
-    prisma.guestPoints.count({ where: { eventId: event.id } }),
+    prisma.guestPoints.count({ where: { eventId: event.id, guest: { is: EXCLUDE_VISITORS } } }),
   ]);
 
   const myPoints = guestPoints?.totalPoints ?? 0;
 
   const guestRank = guest
     ? (await prisma.guestPoints.count({
-        where: { eventId: event.id, totalPoints: { gt: myPoints } },
+        where: { eventId: event.id, totalPoints: { gt: myPoints }, guest: { is: EXCLUDE_VISITORS } },
       })) + 1
     : null;
 

@@ -7,6 +7,7 @@ import { validateEventAccess } from "@/lib/auth/guest";
 import { formatEventDate } from "@/lib/timezone";
 import { LandingHero } from "@/components/guest/landing-hero";
 import { Countdown } from "@/components/guest/countdown";
+import { GamifiedPlaceholder } from "@/components/guest/gamified-placeholder";
 import { buttonVariants } from "@/components/ui/button";
 import { LOCATION_TYPE_LABELS, LOCATION_TYPE_ICONS, generateMapsLink } from "@/lib/locations";
 import { prisma } from "@/lib/db";
@@ -74,6 +75,20 @@ export default async function EventPage({
   }
 
   const { event, guest } = result;
+
+  // Modo Gamificado (S1): o jogo chega nos próximos sprints. Por enquanto o
+  // convidado de um evento GAMIFIED vê um placeholder "em construção".
+  if (event.experienceType === "GAMIFIED") {
+    return (
+      <GamifiedPlaceholder
+        coupleNames={event.coupleNames}
+        ceremonyDate={event.ceremonyDate}
+        timezone={event.timezone}
+        rsvpHref={`/${slug}/rsvp${k ? `?k=${k}` : ""}`}
+        jogoHref={`/${slug}/jogo`}
+      />
+    );
+  }
 
   const [locations, weddingParty, storyItems] = await Promise.all([
     prisma.eventLocation.findMany({

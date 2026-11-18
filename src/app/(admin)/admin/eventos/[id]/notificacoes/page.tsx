@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { auth } from "@/lib/auth";
 import { requireOrganizer } from "@/lib/authorization";
 import { notFound } from "next/navigation";
@@ -34,7 +35,7 @@ export default async function NotificacoesPage({ params }: Props) {
         ceremonyDate: true,
         timezone: true,
         guests: {
-          where: { deletedAt: null, banned: false },
+          where: { deletedAt: null, banned: false, ...EXCLUDE_VISITORS },
           select: { id: true, rsvpStatus: true, email: true },
         },
       },

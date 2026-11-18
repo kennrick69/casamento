@@ -2,6 +2,7 @@ import { getAppUrl } from "@/lib/app-url";
 import { NextRequest, NextResponse } from "next/server";
 import { requireOrganizer } from "@/lib/authorization";
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { generateSaveTheDatePdf, type SaveTheDateTemplate } from "@/lib/pdf/save-the-date";
 import { createRequire } from "node:module";
 import { Readable } from "stream";
@@ -36,8 +37,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   });
 
   const guestWhere = guestIds?.length
-    ? { eventId: id, id: { in: guestIds }, deletedAt: null }
-    : { eventId: id, deletedAt: null, rsvpStatus: { not: "DECLINED" as const } };
+    ? { eventId: id, id: { in: guestIds }, deletedAt: null, ...EXCLUDE_VISITORS }
+    : { eventId: id, deletedAt: null, rsvpStatus: { not: "DECLINED" as const }, ...EXCLUDE_VISITORS };
 
   const guests = await prisma.guest.findMany({
     where: guestWhere,

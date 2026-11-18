@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireOrganizer } from "@/lib/authorization";
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { createRequire } from "node:module";
 
 const pdfkit = createRequire(import.meta.url)("pdfkit") as typeof import("pdfkit");
@@ -22,7 +23,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         },
       },
       guests: {
-        where: { deletedAt: null },
+        where: { deletedAt: null, ...EXCLUDE_VISITORS },
         select: { id: true, name: true, plusOnes: true },
       },
     },

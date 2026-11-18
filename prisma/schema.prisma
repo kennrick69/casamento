@@ -167,6 +167,7 @@ model Event {
   coverImageKey         String?
   themeId               String
   status                EventStatus    @default(DRAFT)
+  experienceType        ExperienceType @default(CLASSIC)
   features              Json
   donationMode          DonationMode   @default(TRUST)
   pixKey                String?
@@ -192,6 +193,7 @@ model Event {
   seatingTables       SeatingTable[]
   liveEvents          LiveEvent[]
   guests              Guest[]
+  identificationLogs  GuestIdentificationLog[]
   locations           EventLocation[]
   journeyItems        JourneyItem[]
   gifts               Gift[]
@@ -215,6 +217,14 @@ enum EventStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+}
+
+// Modo Gamificado (S1): escolhe a experiência do convite.
+// CLASSIC = site clássico atual (default → zero regressão em eventos existentes).
+// GAMIFIED = jogo RPG (em construção; por ora mostra placeholder ao convidado).
+enum ExperienceType {
+  CLASSIC
+  GAMIFIED
 }
 
 enum DonationMode {
@@ -303,6 +313,12 @@ model Guest {
   thankYouNote        String?
   thankYouSent        Boolean    @default(false)
 
+  // Modo Gamificado (S2) — identidade no jogo. Tudo aditivo, defaults seguros:
+  // eventos/convidados clássicos não mudam de comportamento.
+  isVisitor           Boolean    @default(false) // entrou como visitante (fora da lista)
+  playerName          String?    // 1º nome exibido no jogo (LGPD: opt-in, nunca nome completo)
+  characterClaimedAt  DateTime?  // quando reivindicou o boneco (criador de aparência = S3)
+
   event               Event                @relation(fields: [eventId], references: [id], onDelete: Cascade)
   photos              Photo[]
   chatMessages        ChatMessage[]
@@ -316,9 +332,54 @@ model Guest {
   guestPoints         GuestPoints?
   reportsMade         Report[]             @relation("Reporter")
   companions          GuestCompanion[]
+  credentials         GuestCredential[]
+  identificationLogs  GuestIdentificationLog[]
 
   @@unique([eventId, email])
   @@index([eventId, sessionToken])
+}
+
+// Modo Gamificado (S2) — passkey WebAuthn do convidado (SimpleWebAuthn).
+// Login sem senha e à prova de phishing. Fallback = acesso por e-mail
+// (magic link) já existente. Nenhum dado biométrico sai do dispositivo: só
+// guardamos a chave pública e o contador anti-clonagem.
+model GuestCredential {
+  id           String    @id @default(cuid())
+  guestId      String
+  credentialId String    @unique // rawId em base64url (identificador público do passkey)
+  publicKey    Bytes             // chave pública COSE (não é segredo nem biometria)
+  counter      Int       @default(0) // contador de assinaturas (detecção de clonagem)
+  transports   String?           // CSV: "internal,hybrid,usb,nfc,ble"
+  deviceType   String?           // "singleDevice" | "multiDevice"
+  backedUp     Boolean   @default(false)
+  nickname     String?           // apelido do dispositivo (ex.: "iPhone da Letícia")
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+
+  guest        Guest     @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@index([guestId])
+}
+
+// Modo Gamificado (S2) — auditoria de identificação no jogo. Como a entrada
+// "nome + celular" (Opção B) NÃO verifica posse do número, cada identificação
+// é registrada (quando, quem, como, aparelho/IP) para os noivos auditarem no
+// painel. `method`: "name_phone" | "passkey" | "visitor".
+model GuestIdentificationLog {
+  id        String   @id @default(cuid())
+  eventId   String
+  guestId   String
+  method    String
+  ip        String?
+  userAgent String?
+  deviceId  String?
+  createdAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, createdAt])
+  @@index([guestId, createdAt])
 }
 
 enum RsvpStatus {

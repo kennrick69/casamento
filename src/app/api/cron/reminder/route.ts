@@ -1,6 +1,7 @@
 import { getAppUrl } from "@/lib/app-url";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { email } from "@/lib/email";
 import { formatEventDate } from "@/lib/timezone";
 import { reminderHtml, reminderText } from "@/lib/email/templates";
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
       ceremonyLocation: true,
       timezone: true,
       guests: {
-        where: { rsvpStatus: "CONFIRMED", deletedAt: null, banned: false },
+        where: { rsvpStatus: "CONFIRMED", deletedAt: null, banned: false, ...EXCLUDE_VISITORS },
         select: { id: true, name: true, email: true },
       },
     },

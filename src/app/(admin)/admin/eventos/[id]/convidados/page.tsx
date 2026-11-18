@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { requireOrganizer } from "@/lib/authorization";
 import { EventNav } from "@/components/admin/event-nav";
 import { AdminHeader } from "@/components/admin/admin-header";
@@ -32,7 +33,7 @@ export default async function ConvidadosPage({
   if (!event) notFound();
 
   const guests = await prisma.guest.findMany({
-    where: { eventId: id, deletedAt: null },
+    where: { eventId: id, deletedAt: null, ...EXCLUDE_VISITORS },
     orderBy: [{ rsvpStatus: "asc" }, { createdAt: "desc" }],
     select: {
       id: true,
