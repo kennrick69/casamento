@@ -18,9 +18,12 @@ import { WizardBasicForm } from "./wizard-basic-form";
 import { WizardLocationForm } from "./wizard-location-form";
 import { WizardThemeForm } from "./wizard-theme-form";
 import { WizardPublishForm } from "./wizard-publish-form";
+import { DangerZone } from "./danger-zone";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Configurações" };
+
+const PRIMARY_SLUG = process.env.NEXT_PUBLIC_PRIMARY_EVENT_SLUG || "joseeleticia";
 
 const STEPS = ["Dados básicos", "Local", "Tema visual", "Publicar"];
 
@@ -129,6 +132,11 @@ export default async function ConfiguracoesPage({
             </div>
             <ExperienceForm event={event} />
             <FeaturesForm event={event} />
+            <DangerZone
+              eventId={id}
+              coupleNames={event.coupleNames}
+              isPrimary={event.slug === PRIMARY_SLUG}
+            />
           </>
         )}
 
