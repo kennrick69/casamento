@@ -199,9 +199,16 @@ export async function updateEventExperience(formData: FormData): Promise<void> {
     return;
   }
 
-  await prisma.event.update({ where: { id: eventId }, data: { experienceType } });
+  const updated = await prisma.event.update({
+    where: { id: eventId },
+    data: { experienceType },
+    select: { slug: true },
+  });
   revalidatePath(`/admin/eventos/${eventId}/configuracoes`);
   revalidatePath(`/admin/eventos/${eventId}`);
+  // Página pública do convidado — para a troca CLASSIC/GAMIFIED aparecer na
+  // hora mesmo com cache de rota.
+  revalidatePath(`/${updated.slug}`);
 }
 
 // ── Variantes de rascunho (sem redirect — usadas pelo auto-save onBlur) ───
