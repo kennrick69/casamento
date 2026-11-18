@@ -11,6 +11,7 @@ import {
   updateEventLocation,
   updateEventBasic,
   updateEventFeatures,
+  updateEventExperience,
 } from "./actions";
 import { WizardBasicForm } from "./wizard-basic-form";
 import { WizardLocationForm } from "./wizard-location-form";
@@ -125,6 +126,7 @@ export default async function ConfiguracoesPage({
                 themes={themes}
               />
             </div>
+            <ExperienceForm event={event} />
             <FeaturesForm event={event} />
           </>
         )}
@@ -385,6 +387,71 @@ function LocationForm({
         </div>
         <Button type="submit" className="h-11">
           Salvar local →
+        </Button>
+      </form>
+    </div>
+  );
+}
+
+// ── Experiência do convite (Modo Gamificado — step=0 apenas) ─────────────────
+
+function ExperienceForm({
+  event,
+}: {
+  event: { id: string; experienceType: "CLASSIC" | "GAMIFIED" };
+}) {
+  const current = event.experienceType;
+  const options = [
+    {
+      value: "CLASSIC" as const,
+      label: "Clássica",
+      desc: "O site de convite atual — como está hoje.",
+    },
+    {
+      value: "GAMIFIED" as const,
+      label: "Gamificada",
+      desc: "Um jogo RPG do casamento. Em construção — por enquanto o convidado vê uma página de prévia.",
+    },
+  ];
+
+  return (
+    <div className="bg-background rounded-lg border border-border p-6 mb-6">
+      <h2 className="text-base font-semibold mb-1">Experiência do convite</h2>
+      <p className="text-sm text-muted-foreground mb-5">
+        Como os convidados vão ver o convite. A opção Clássica é o padrão e não muda nada do que já
+        existe.
+      </p>
+      <form action={updateEventExperience} className="flex flex-col gap-4">
+        <input type="hidden" name="eventId" value={event.id} />
+        <div className="flex flex-col gap-3">
+          {options.map(({ value, label, desc }) => (
+            <label
+              key={value}
+              className="flex items-start gap-3 cursor-pointer rounded-lg border border-border p-3 hover:bg-muted/40"
+            >
+              <input
+                type="radio"
+                name="experienceType"
+                value={value}
+                defaultChecked={current === value}
+                className="mt-1 size-4"
+              />
+              <span className="flex flex-col">
+                <span className="text-sm font-medium">
+                  {label}
+                  {value === "GAMIFIED" && (
+                    <span className="ml-2 rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 text-xs font-normal align-middle">
+                      em construção
+                    </span>
+                  )}
+                </span>
+                <span className="text-xs text-muted-foreground">{desc}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+        <Button type="submit" className="h-11">
+          Salvar experiência
         </Button>
       </form>
     </div>

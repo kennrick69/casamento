@@ -167,6 +167,7 @@ model Event {
   coverImageKey         String?
   themeId               String
   status                EventStatus    @default(DRAFT)
+  experienceType        ExperienceType @default(CLASSIC)
   features              Json
   donationMode          DonationMode   @default(TRUST)
   pixKey                String?
@@ -215,6 +216,14 @@ enum EventStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+}
+
+// Modo Gamificado (S1): escolhe a experiência do convite.
+// CLASSIC = site clássico atual (default → zero regressão em eventos existentes).
+// GAMIFIED = jogo RPG (em construção; por ora mostra placeholder ao convidado).
+enum ExperienceType {
+  CLASSIC
+  GAMIFIED
 }
 
 enum DonationMode {

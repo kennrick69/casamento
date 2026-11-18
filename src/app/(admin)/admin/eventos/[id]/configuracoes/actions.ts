@@ -177,6 +177,33 @@ export async function updateEventFeatures(formData: FormData): Promise<void> {
   revalidatePath(`/admin/eventos/${eventId}/configuracoes`);
 }
 
+// ── Experiência do convite (Modo Gamificado — S1) ────────────────────────
+// Clássico (default) x Gamificado. GAMIFIED hoje mostra placeholder ao
+// convidado; o jogo chega nos próximos sprints. Migration estritamente
+// aditiva: Event.experienceType default CLASSIC → eventos existentes intactos.
+
+const ExperienceSchema = z.object({
+  eventId: z.string(),
+  experienceType: z.enum(["CLASSIC", "GAMIFIED"]),
+});
+
+export async function updateEventExperience(formData: FormData): Promise<void> {
+  const parsed = ExperienceSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return;
+
+  const { eventId, experienceType } = parsed.data;
+
+  try {
+    await withOrganizer(eventId);
+  } catch {
+    return;
+  }
+
+  await prisma.event.update({ where: { id: eventId }, data: { experienceType } });
+  revalidatePath(`/admin/eventos/${eventId}/configuracoes`);
+  revalidatePath(`/admin/eventos/${eventId}`);
+}
+
 // ── Variantes de rascunho (sem redirect — usadas pelo auto-save onBlur) ───
 
 export async function saveEventLocationDraft(formData: FormData): Promise<{ ok: boolean }> {
