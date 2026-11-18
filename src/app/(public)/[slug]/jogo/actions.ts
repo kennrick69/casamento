@@ -14,7 +14,13 @@ import {
   generateSessionToken,
 } from "@/lib/auth/guest";
 import { gameRateLimit, GAME_RATE_LIMITS } from "@/lib/game/rate-limit";
-import { getGameEvent, createVisitor, claimCharacter } from "@/lib/game/identity";
+import {
+  getGameEvent,
+  createVisitor,
+  claimCharacter,
+  findGuestByNamePhone,
+} from "@/lib/game/identity";
+import { logIdentification } from "@/lib/game/audit";
 import {
   buildRegistrationOptions,
   verifyRegistration,
@@ -59,8 +65,49 @@ export async function enterAsVisitor(
   if (!event) return { ok: false, message: "Jogo indisponível para este evento." };
 
   const sessionToken = generateSessionToken();
-  await createVisitor(event.id, parsed.data.displayName, sessionToken);
+  const visitor = await createVisitor(event.id, parsed.data.displayName, sessionToken);
   await setGuestCookie(sessionToken);
+  await logIdentification(event.id, visitor.id, "visitor");
+  return { ok: true };
+}
+
+// ── Identificação por nome + celular (Opção B) ──────────────────────────────
+
+const IdentifySchema = z.object({
+  slug: z.string().min(1),
+  name: z.string().min(1, "Diga seu nome").max(120),
+  phone: z.string().min(8, "Celular inválido").max(30),
+});
+
+// Resposta genérica: NUNCA revela nome. Só identifica quando nome E celular
+// batem no MESMO convidado (ver findGuestByNamePhone).
+export async function identifyByNamePhone(
+  slug: string,
+  name: string,
+  phone: string
+): Promise<SimpleResult> {
+  const rl = await gameRateLimit("identify", GAME_RATE_LIMITS.identify);
+  if (!rl.allowed) return tooManyTries(rl.retryAfterSeconds);
+
+  const parsed = IdentifySchema.safeParse({ slug, name, phone });
+  if (!parsed.success) {
+    return { ok: false, message: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+  }
+
+  const event = await getGameEvent(parsed.data.slug);
+  if (!event) return { ok: false, message: "Jogo indisponível para este evento." };
+
+  const guest = await findGuestByNamePhone(event.id, parsed.data.name, parsed.data.phone);
+  if (!guest) {
+    // Genérico de propósito: não vaza se o nome OU o celular existe.
+    return {
+      ok: false,
+      message: "Não encontramos você. Confira o nome e o celular, ou entre pelo e-mail.",
+    };
+  }
+
+  await setGuestCookie(guest.sessionToken);
+  await logIdentification(event.id, guest.id, "name_phone");
   return { ok: true };
 }
 
@@ -127,6 +174,7 @@ export async function completeAuthentication(
   if (!guest) return { ok: false, message: "Passkey de outro evento." };
 
   await setGuestCookie(result.sessionToken);
+  await logIdentification(event.id, result.guestId, "passkey");
   return { ok: true };
 }
 

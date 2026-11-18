@@ -11,6 +11,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import {
   enterAsVisitor,
+  identifyByNamePhone,
   getRegistrationOptions,
   completeRegistration,
   getAuthenticationOptions,
@@ -52,6 +53,8 @@ export function JogoIdentityClient({
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const [visitorName, setVisitorName] = useState("");
+  const [idName, setIdName] = useState("");
+  const [idPhone, setIdPhone] = useState("");
   const [claimName, setClaimName] = useState(state.playerName ?? "");
 
   // Suporte a passkey só pode ser lido no browser. useSyncExternalStore lê o
@@ -107,6 +110,13 @@ export function JogoIdentityClient({
     }
   }
 
+  async function onIdentify() {
+    setMsg(null);
+    const res = await identifyByNamePhone(slug, idName, idPhone);
+    if (res.ok) refresh();
+    else setMsg({ kind: "err", text: res.message });
+  }
+
   async function onEnterVisitor() {
     setMsg(null);
     const res = await enterAsVisitor(slug, visitorName);
@@ -154,6 +164,40 @@ export function JogoIdentityClient({
 
       {!state.identified ? (
         <>
+          <div className={card}>
+            <span className={label}>Novo jogo</span>
+            <p className="text-sm text-[var(--theme-secondary)]">
+              Entre com o nome e o celular que você deu no convite.
+            </p>
+            <input
+              type="text"
+              value={idName}
+              onChange={(e) => setIdName(e.target.value)}
+              placeholder="Seu nome (como no convite)"
+              maxLength={120}
+              autoComplete="name"
+              className="h-11 rounded-[var(--theme-radius)] border border-[var(--theme-border)] bg-[var(--theme-background)] px-3 text-sm text-[var(--theme-foreground)]"
+            />
+            <input
+              type="tel"
+              inputMode="tel"
+              value={idPhone}
+              onChange={(e) => setIdPhone(e.target.value)}
+              placeholder="Celular com DDD"
+              maxLength={30}
+              autoComplete="tel"
+              className="h-11 rounded-[var(--theme-radius)] border border-[var(--theme-border)] bg-[var(--theme-background)] px-3 text-sm text-[var(--theme-foreground)]"
+            />
+            <button
+              type="button"
+              disabled={pending || idName.trim().length === 0 || idPhone.trim().length === 0}
+              onClick={onIdentify}
+              className={buttonVariants({ className: "h-11 justify-center" })}
+            >
+              Começar
+            </button>
+          </div>
+
           {supportsPasskey && (
             <div className={card}>
               <span className={label}>Já tenho passkey</span>

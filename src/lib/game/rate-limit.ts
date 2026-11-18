@@ -65,4 +65,8 @@ export const GAME_RATE_LIMITS = {
   // Login por passkey: barato e à prova de forja (exige credencial + desafio).
   // Por aparelho: 20 em 5 min. Por IP: 600 em 5 min.
   auth: { deviceMax: 20, deviceWindowMin: 5, ipMax: 600, ipWindowMin: 5 },
+  // Identificar por nome+celular (Opção B): não cria linha, mas é a superfície
+  // de "adivinhar o celular de alguém". Por aparelho estrito (10 em 10 min) p/
+  // conter tentativa e erro; por IP alto (300 em 5 min) p/ aguentar o salão.
+  identify: { deviceMax: 10, deviceWindowMin: 10, ipMax: 300, ipWindowMin: 5 },
 } as const satisfies Record<string, GameRateLimits>;

@@ -267,6 +267,55 @@ export function rsvpDeclineText(o: RsvpDeclineOpts): string {
   ].join("\n");
 }
 
+// ── Aviso de alteração (cancelamento / acompanhantes) ──────────────────────────
+// Disparado quando a presença é cancelada ou os acompanhantes mudam. Como o
+// Modo Gamificado permite identificar por nome+celular (sem verificar o e-mail),
+// este aviso alerta o dono do e-mail caso a alteração não tenha sido ele.
+
+export interface RsvpChangeAlertOpts {
+  name: string;
+  coupleNames: string;
+  eventTitle: string;
+  eventUrl: string;
+  kind: "cancel" | "companions";
+}
+
+function changeAlertLine(kind: RsvpChangeAlertOpts["kind"]): string {
+  return kind === "cancel"
+    ? "sua presença foi marcada como <strong>não vou</strong>"
+    : "a sua lista de <strong>acompanhantes</strong> foi alterada";
+}
+
+export function rsvpChangeAlertHtml(o: RsvpChangeAlertOpts): string {
+  return wrap(`
+    ${h1(o.coupleNames)}
+    ${eyebrow(o.eventTitle)}
+
+    ${p(`Olá, <strong style="color:${c.heading}">${o.name}</strong>!`)}
+    ${p(`Avisando que ${changeAlertLine(o.kind)} na sua resposta ao convite.`)}
+    ${p("Se foi você, está tudo certo — pode ignorar este e-mail.")}
+    ${p("<strong>Se não foi você</strong>, atualize sua resposta aqui ou fale com os noivos:")}
+
+    <div style="text-align:center;margin:32px 0">
+      ${btn(`${o.eventUrl}/rsvp`, "Revisar minha resposta")}
+    </div>
+  `);
+}
+
+export function rsvpChangeAlertText(o: RsvpChangeAlertOpts): string {
+  const line = o.kind === "cancel"
+    ? "sua presença foi marcada como 'não vou'"
+    : "sua lista de acompanhantes foi alterada";
+  return [
+    `${o.coupleNames} — ${o.eventTitle}`,
+    "",
+    `Olá, ${o.name}!`,
+    `Avisando que ${line} na sua resposta ao convite.`,
+    "Se foi você, pode ignorar. Se NÃO foi você, revise aqui:",
+    `${o.eventUrl}/rsvp`,
+  ].join("\n");
+}
+
 // ── Recuperação de acesso (magic link) ────────────────────────────────────────
 
 export interface RecoveryOpts {

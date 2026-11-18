@@ -454,6 +454,16 @@ function ExperienceForm({
           Salvar experiência
         </Button>
       </form>
+      {current === "GAMIFIED" && (
+        <div className="mt-5 pt-5 border-t border-border">
+          <Link
+            href={`/admin/eventos/${event.id}/acessos-jogo`}
+            className="text-sm underline text-foreground"
+          >
+            Ver acessos ao jogo (auditoria de identificações) →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

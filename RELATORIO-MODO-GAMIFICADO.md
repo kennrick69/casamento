@@ -111,9 +111,36 @@ Problema: todo mundo no mesmo Wi-Fi = mesmo IP; limite por IP barraria convidado
 
 O limite **por dispositivo** pega o abuso real (um aparelho martelando); o **por IP** fica bem acima de 150 pessoas, só barrando script. Trocar o cookie reseta o nível do dispositivo, mas aí o teto de IP segura. Os limites antigos (visitante 5/min por IP, auth 10/min por IP) foram substituídos.
 
-### 3. Entrada "Nome + celular" — PRECISA da sua decisão
+### 3. Entrada "Nome + celular" (Opção B) — IMPLEMENTADA
 
-A missão pedia Novo Jogo com **nome + celular → "Você é a Marta?"**; o S2 entregou magic link por e-mail. As opções (a/b/c) estão na minha mensagem; **não implemento até você escolher**.
+Decisão do JOs: opção (b) com salvaguardas. Entregue:
+
+- **Identifica só quando NOME + CELULAR batem no mesmo convidado.** `findGuestByNamePhone` (`src/lib/game/identity.ts`): normaliza nome (sem acento/caixa) e celular (só dígitos, tolera `55`/DDD ausentes); nome = 1º nome exato + sobrenome parcial; celular = igualdade, ou últimos 8–9 dígitos quando falta DDD (dois DDDs diferentes NÃO batem). Identifica só se **exatamente um** convidado casa nos dois campos. 0 ou ambíguo → resposta **genérica** ("Não encontramos você. Confira o nome e o celular, ou entre pelo e-mail."), **sem revelar nenhum nome**.
+- **Pós-identificação:** oferece criar passkey ("trave este acesso neste aparelho") e mantém "Entrar com e-mail" como alternativa (já na tela de identidade).
+- **Aviso por e-mail em alteração sensível:** cancelar presença ou mudar acompanhantes dispara `rsvpChangeAlert` para o e-mail do convidado (se tiver). Como a entrada por nome+celular não prova posse do número, se foi um impostor o dono do e-mail descobre. **Mudança de comportamento:** o RSVP clássico agora permite ao **dono da sessão** (cookie) atualizar a resposta in-place (antes mandava só magic link); quem **não** é o dono continua recebendo o magic link (anti-hijack preservado). Pontos de RSVP agora só na 1ª confirmação (evita farm ao reconfirmar).
+- **Auditoria no painel:** cada identificação (nome+celular, passkey, visitante) grava `GuestIdentificationLog` (quando, quem, método, IP, aparelho, user-agent). Visível em **Configurações → "Ver acessos ao jogo"** (`/admin/eventos/[id]/acessos-jogo`), últimas 200.
+- **Rate limit** da entrada no padrão novo: `identify` = 10/10min por aparelho + 300/5min por IP.
+- **(c) WhatsApp/SMS** fica para quando o custo for aprovado (§12.4).
+
+**Migration aditiva** `20261118154920_add_guest_identification_log` (SQL abaixo).
+
+```sql
+CREATE TABLE "GuestIdentificationLog" (
+    "id" TEXT NOT NULL,
+    "eventId" TEXT NOT NULL,
+    "guestId" TEXT NOT NULL,
+    "method" TEXT NOT NULL,
+    "ip" TEXT, "userAgent" TEXT, "deviceId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "GuestIdentificationLog_pkey" PRIMARY KEY ("id")
+);
+CREATE INDEX "GuestIdentificationLog_eventId_createdAt_idx" ON "GuestIdentificationLog"("eventId", "createdAt");
+CREATE INDEX "GuestIdentificationLog_guestId_createdAt_idx" ON "GuestIdentificationLog"("guestId", "createdAt");
+ALTER TABLE "GuestIdentificationLog" ADD CONSTRAINT "GuestIdentificationLog_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "Event"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "GuestIdentificationLog" ADD CONSTRAINT "GuestIdentificationLog_guestId_fkey" FOREIGN KEY ("guestId") REFERENCES "Guest"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+```
+
+**Testes (Windows):** `tests/unit/lib/game-identity.test.ts` cobre normalização e match de nome/celular (incl. recusa de primeiro nome incompleto, sobrenome solto e DDD divergente).
 
 ---
 

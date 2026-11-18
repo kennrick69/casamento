@@ -193,6 +193,7 @@ model Event {
   seatingTables       SeatingTable[]
   liveEvents          LiveEvent[]
   guests              Guest[]
+  identificationLogs  GuestIdentificationLog[]
   locations           EventLocation[]
   journeyItems        JourneyItem[]
   gifts               Gift[]
@@ -332,6 +333,7 @@ model Guest {
   reportsMade         Report[]             @relation("Reporter")
   companions          GuestCompanion[]
   credentials         GuestCredential[]
+  identificationLogs  GuestIdentificationLog[]
 
   @@unique([eventId, email])
   @@index([eventId, sessionToken])
@@ -357,6 +359,27 @@ model GuestCredential {
   guest        Guest     @relation(fields: [guestId], references: [id], onDelete: Cascade)
 
   @@index([guestId])
+}
+
+// Modo Gamificado (S2) — auditoria de identificação no jogo. Como a entrada
+// "nome + celular" (Opção B) NÃO verifica posse do número, cada identificação
+// é registrada (quando, quem, como, aparelho/IP) para os noivos auditarem no
+// painel. `method`: "name_phone" | "passkey" | "visitor".
+model GuestIdentificationLog {
+  id        String   @id @default(cuid())
+  eventId   String
+  guestId   String
+  method    String
+  ip        String?
+  userAgent String?
+  deviceId  String?
+  createdAt DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, createdAt])
+  @@index([guestId, createdAt])
 }
 
 enum RsvpStatus {
