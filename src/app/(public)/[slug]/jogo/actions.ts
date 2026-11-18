@@ -1,7 +1,6 @@
 "use server";
 
 import { z } from "zod";
-import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
 import type {
   RegistrationResponseJSON,
@@ -14,7 +13,7 @@ import {
   setGuestCookie,
   generateSessionToken,
 } from "@/lib/auth/guest";
-import { checkRateLimit } from "@/lib/auth/rate-limit";
+import { gameRateLimit, GAME_RATE_LIMITS } from "@/lib/game/rate-limit";
 import { getGameEvent, createVisitor, claimCharacter } from "@/lib/game/identity";
 import {
   buildRegistrationOptions,
@@ -28,12 +27,14 @@ import {
 // contrário): o jogo nunca aparece num evento clássico. Actions com escopo de
 // convidado exigem o cookie de sessão (getCurrentGuest) e conferem o evento.
 
-async function clientIp(): Promise<string> {
-  const h = await headers();
-  return h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-}
-
 export type SimpleResult = { ok: true } | { ok: false; message: string };
+
+function tooManyTries(retryAfterSeconds: number): SimpleResult {
+  return {
+    ok: false,
+    message: `Muitas tentativas. Aguarde ${Math.ceil(retryAfterSeconds / 60)} min.`,
+  };
+}
 
 // ── Visitante (fora da lista) ───────────────────────────────────────────────
 
@@ -46,11 +47,8 @@ export async function enterAsVisitor(
   slug: string,
   displayName: string
 ): Promise<SimpleResult> {
-  const ip = await clientIp();
-  const rl = await checkRateLimit(`game:visitor:${ip}`, ip, 5, 60);
-  if (!rl.allowed) {
-    return { ok: false, message: `Muitas tentativas. Aguarde ${Math.ceil(rl.retryAfterSeconds / 60)} min.` };
-  }
+  const rl = await gameRateLimit("visitor", GAME_RATE_LIMITS.visitor);
+  if (!rl.allowed) return tooManyTries(rl.retryAfterSeconds);
 
   const parsed = VisitorSchema.safeParse({ slug, displayName });
   if (!parsed.success) {
@@ -115,11 +113,8 @@ export async function completeAuthentication(
   slug: string,
   response: AuthenticationResponseJSON
 ): Promise<SimpleResult> {
-  const ip = await clientIp();
-  const rl = await checkRateLimit(`game:auth:${ip}`, ip, 10, 60);
-  if (!rl.allowed) {
-    return { ok: false, message: `Muitas tentativas. Aguarde ${Math.ceil(rl.retryAfterSeconds / 60)} min.` };
-  }
+  const rl = await gameRateLimit("auth", GAME_RATE_LIMITS.auth);
+  if (!rl.allowed) return tooManyTries(rl.retryAfterSeconds);
 
   const event = await getGameEvent(slug);
   if (!event) return { ok: false, message: "Jogo indisponível." };

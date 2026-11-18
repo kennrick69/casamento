@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireOrganizer } from "@/lib/authorization";
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { EventNav } from "@/components/admin/event-nav";
 import { SaveTheDateClient } from "./save-the-date-client";
@@ -21,7 +22,7 @@ export default async function SaveTheDatePage({ params }: Props) {
   if (!event) notFound();
 
   const guestCount = await prisma.guest.count({
-    where: { eventId, deletedAt: null, rsvpStatus: { not: "DECLINED" } },
+    where: { eventId, deletedAt: null, rsvpStatus: { not: "DECLINED" }, ...EXCLUDE_VISITORS },
   });
 
   return (

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { requireOrganizer } from "@/lib/authorization";
 
 export async function GET(
@@ -19,7 +20,7 @@ export async function GET(
   }
 
   const guests = await prisma.guest.findMany({
-    where: { eventId: id, deletedAt: null },
+    where: { eventId: id, deletedAt: null, ...EXCLUDE_VISITORS },
     orderBy: [{ rsvpStatus: "asc" }, { name: "asc" }],
   });
 

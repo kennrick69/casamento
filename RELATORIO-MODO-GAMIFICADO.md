@@ -69,6 +69,54 @@ O projeto ainda **não tem SMS/WhatsApp** (o custo da API oficial é pendência 
 
 ---
 
+## S2 — Ajustes pós-revisão (2026-11-18)
+
+### 1. Visitantes nunca aparecem no clássico/painel
+
+Visitante = `Guest` com `isVisitor=true` e e-mail sintético. Dois mecanismos:
+
+**(a) Trava de e-mail (chokepoint testável).** `src/lib/email/index.ts` agora envolve o provider com `withUndeliverableGuard` (`src/lib/email/guard.ts`): **nenhum** e-mail vai para endereço `.invalid` (RFC 2606). Cobre visitantes (`@visitante.voem.invalid`) **e** removidos por LGPD (`@deleted.invalid`). Mesmo que um query esqueça o filtro, o e-mail para aqui. Teste: `tests/unit/lib/guest-filters.test.ts`.
+
+**(b) Filtro `EXCLUDE_VISITORS` (`{ isVisitor: false }`, em `src/lib/guest-filters.ts`)** aplicado em TODAS as listagens/contagens de convidados (greppável por `EXCLUDE_VISITORS`):
+
+| Ponto | Arquivo |
+|---|---|
+| Dashboard: contagens RSVP (total/confirmados/recusados/pendentes), recentes, soma de acompanhantes | `admin/eventos/[id]/page.tsx` |
+| Lista de convidados | `admin/eventos/[id]/convidados/page.tsx` |
+| Import: dedupe por e-mail | `admin/eventos/[id]/convidados/actions.ts` |
+| Analytics (gráfico RSVP) | `admin/eventos/[id]/analytics/page.tsx` |
+| Visão geral (groupBy por evento) | `admin/visao-geral/page.tsx` |
+| Sininho de notificações (badge confirmados 24h) | `components/admin/notification-bell.tsx` |
+| Plano de mesas (lista + não-alocados) | `admin/eventos/[id]/mesas/page.tsx` |
+| Export CSV de convidados | `api/admin/eventos/[id]/convidados/export/route.ts` |
+| Export PDF do plano de mesas | `api/admin/eventos/[id]/mesas/export/route.ts` |
+| Save the Date (contagem + PDFs/zip) | `admin/.../save-the-date/page.tsx` + `api/.../save-the-date/route.ts` |
+| E-mail em massa (destinatários) | `admin/.../notificacoes/actions.ts` + `page.tsx` |
+| Agradecimentos | `admin/.../agradecimentos/page.tsx` |
+| Cron de lembrete (e-mail) | `api/cron/reminder/route.ts` |
+| Cron de digest (contagem p/ os noivos) | `api/cron/digest/route.ts` |
+| Lista pública "Quem vai" | `(public)/[slug]/convidados/page.tsx` |
+| Ranking da gincana (admin + público + posição + total) | `admin/.../gincana/page.tsx` + `(public)/[slug]/gincana/page.tsx` |
+
+**Deliberadamente NÃO filtrados (e por quê):** `lgpd/page.tsx` (contagem) e `api/admin/lgpd/export` — LGPD trata de titulares de dados; visitante é titular, deve ser contado/exportado para um pedido ser completo. `api/cron/backup` — backup é cópia íntegra do banco. `moderacao/page.tsx` — visitante que posta conteúdo abusivo precisa ser moderável. `api/health/deep` — probe de liveness. `chat/page.tsx` (lookup dos noivos por e-mail de organizador — visitante nunca casa). Se preferir filtrar LGPD/moderação também, é 1 linha em cada — me avise.
+
+### 2. Rate limit para o salão (~150 pessoas, mesmo IP)
+
+Problema: todo mundo no mesmo Wi-Fi = mesmo IP; limite por IP barraria convidados. Solução de **dois níveis** (`src/lib/game/rate-limit.ts`, cookie `game_device`):
+
+| Fluxo | Por dispositivo (cookie) | Por IP (teto anti-flood) |
+|---|---|---|
+| Entrar como visitante (cria linha no banco) | 5 / 60 min | 300 / 5 min |
+| Login por passkey (barato, à prova de forja) | 20 / 5 min | 600 / 5 min |
+
+O limite **por dispositivo** pega o abuso real (um aparelho martelando); o **por IP** fica bem acima de 150 pessoas, só barrando script. Trocar o cookie reseta o nível do dispositivo, mas aí o teto de IP segura. Os limites antigos (visitante 5/min por IP, auth 10/min por IP) foram substituídos.
+
+### 3. Entrada "Nome + celular" — PRECISA da sua decisão
+
+A missão pedia Novo Jogo com **nome + celular → "Você é a Marta?"**; o S2 entregou magic link por e-mail. As opções (a/b/c) estão na minha mensagem; **não implemento até você escolher**.
+
+---
+
 ## Sprint S1 — Gate de experiência (CLASSIC × GAMIFIED)
 
 **Objetivo:** permitir que cada evento escolha a experiência do convite, sem tocar em nada do site clássico atual.

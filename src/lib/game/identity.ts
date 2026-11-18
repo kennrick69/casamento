@@ -1,5 +1,6 @@
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/db";
+import { VISITOR_EMAIL_DOMAIN } from "@/lib/guest-filters";
 import type { Event, Guest } from "@prisma/client";
 
 // ─── Modo Gamificado · Identidade (S2) ──────────────────────────────────────
@@ -49,7 +50,7 @@ export async function getGameEvent(slug: string): Promise<GameEvent | null> {
 /** E-mail sintético e único para visitantes (mantém o NOT NULL de Guest.email
  *  sem relaxar o schema; nunca é um e-mail real nem recebe mensagens). */
 function visitorEmail(): string {
-  return `visitante_${randomBytes(12).toString("hex")}@visitante.voem.invalid`;
+  return `visitante_${randomBytes(12).toString("hex")}@${VISITOR_EMAIL_DOMAIN}`;
 }
 
 /**

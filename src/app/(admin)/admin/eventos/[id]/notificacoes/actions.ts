@@ -2,6 +2,7 @@
 
 import { getAppUrl } from "@/lib/app-url";
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { requireOrganizer } from "@/lib/authorization";
 import { email } from "@/lib/email";
 import { massEmailHtml, massEmailText } from "@/lib/email/templates";
@@ -45,6 +46,7 @@ export async function sendMassEmail(formData: FormData): Promise<SendResult> {
       eventId,
       deletedAt: null,
       banned: false,
+      ...EXCLUDE_VISITORS,
       ...(audience === "confirmed" ? { rsvpStatus: "CONFIRMED" } : {}),
     },
     select: { id: true, name: true, email: true },

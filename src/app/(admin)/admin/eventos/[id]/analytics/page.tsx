@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireOrganizer } from "@/lib/authorization";
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { EventNav } from "@/components/admin/event-nav";
 import { RsvpChart } from "./rsvp-chart";
@@ -27,7 +28,7 @@ export default async function AnalyticsPage({ params }: Props) {
 
   const [guests, photos, songs] = await Promise.all([
     prisma.guest.findMany({
-      where: { eventId, deletedAt: null },
+      where: { eventId, deletedAt: null, ...EXCLUDE_VISITORS },
       select: { rsvpStatus: true, plusOnes: true, createdAt: true },
       orderBy: { createdAt: "asc" },
     }),

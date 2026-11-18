@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { requireOrganizer } from "@/lib/authorization";
 import { revalidatePath } from "next/cache";
 import { nanoid } from "nanoid";
@@ -90,7 +91,7 @@ export async function importGuestsFromCsv(
 
   const existingEmails = new Set(
     (await prisma.guest.findMany({
-      where: { eventId, deletedAt: null },
+      where: { eventId, deletedAt: null, ...EXCLUDE_VISITORS },
       select: { email: true },
     })).map((g) => g.email.toLowerCase())
   );

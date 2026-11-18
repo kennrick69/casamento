@@ -1,5 +1,6 @@
 import { getAppUrl } from "@/lib/app-url";
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { requireOrganizer } from "@/lib/authorization";
 import { notFound } from "next/navigation";
 import { EventNav } from "@/components/admin/event-nav";
@@ -27,7 +28,7 @@ export default async function GincanaAdminPage({ params }: Props) {
       include: { mission: { select: { title: true, points: true } } },
     }),
     prisma.guestPoints.findMany({
-      where: { eventId },
+      where: { eventId, guest: { is: EXCLUDE_VISITORS } },
       orderBy: { totalPoints: "desc" },
       include: { guest: { select: { name: true } } },
     }),

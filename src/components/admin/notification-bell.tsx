@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 
 export async function NotificationBell({ eventId }: { eventId: string }) {
   const now = new Date();
@@ -10,7 +11,7 @@ export async function NotificationBell({ eventId }: { eventId: string }) {
     prisma.photo.count({ where: { eventId, approvedByCouple: false, removedAt: null } }),
     prisma.playlistSuggestion.count({ where: { eventId, songStatus: "PENDING" } }),
     prisma.guest.count({
-      where: { eventId, rsvpStatus: "CONFIRMED", updatedAt: { gte: since24h }, deletedAt: null },
+      where: { eventId, rsvpStatus: "CONFIRMED", updatedAt: { gte: since24h }, deletedAt: null, ...EXCLUDE_VISITORS },
     }),
     prisma.event.findUnique({
       where: { id: eventId },

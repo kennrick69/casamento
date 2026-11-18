@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { getOrganizerEvents } from "@/lib/authorization";
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { format, differenceInCalendarDays } from "date-fns";
@@ -21,7 +22,7 @@ export default async function VisaoGeralPage() {
   const [guestCounts, photoCounts, pendingReports] = await Promise.all([
     prisma.guest.groupBy({
       by: ["eventId", "rsvpStatus"],
-      where: { eventId: { in: eventIds }, deletedAt: null },
+      where: { eventId: { in: eventIds }, deletedAt: null, ...EXCLUDE_VISITORS },
       _count: true,
     }),
     prisma.photo.groupBy({

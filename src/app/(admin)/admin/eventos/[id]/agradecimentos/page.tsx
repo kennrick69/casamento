@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { requireOrganizer } from "@/lib/authorization";
 import { EventNav } from "@/components/admin/event-nav";
 import { AdminHeader } from "@/components/admin/admin-header";
@@ -22,7 +23,7 @@ export default async function AgradecimentosPage({ params }: { params: Promise<{
       coupleNames: true,
       slug: true,
       guests: {
-        where: { deletedAt: null, banned: false, rsvpStatus: "CONFIRMED" },
+        where: { deletedAt: null, banned: false, rsvpStatus: "CONFIRMED", ...EXCLUDE_VISITORS },
         select: {
           id: true, name: true, giftReceived: true, thankYouNote: true, thankYouSent: true,
         },

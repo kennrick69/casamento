@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { email } from "@/lib/email";
 import { format, subDays, subWeeks, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     const [newRsvps, pendingPhotos, pendingChat] = await Promise.all([
       prisma.guest.count({
-        where: { eventId: ev.id, rsvpStatus: "CONFIRMED", createdAt: { gte: since }, deletedAt: null },
+        where: { eventId: ev.id, rsvpStatus: "CONFIRMED", createdAt: { gte: since }, deletedAt: null, ...EXCLUDE_VISITORS },
       }),
       prisma.photo.count({ where: { eventId: ev.id, approvedByCouple: false, removedAt: null } }),
       prisma.chatMessage.count({ where: { eventId: ev.id, removedAt: null, reports: { some: {} } } }),
