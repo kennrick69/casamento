@@ -2,7 +2,6 @@ import type { NextRequest } from "next/server";
 import { getGameEvent } from "@/lib/game/identity";
 import { resolveLayers } from "@/lib/game/character/catalog";
 import { composeSheet } from "@/lib/game/character/compositor";
-import { isEventOrganizer } from "@/lib/game/character/organizer";
 import { specFromParams } from "../preview/route";
 
 export const runtime = "nodejs";
@@ -18,10 +17,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
     return new Response("not found", { status: 404 });
   }
 
-  const canRestricted = await isEventOrganizer(event.id);
+  // Render-permissivo: desenhar os pixels de noivo/noiva é inofensivo (não cria
+  // nem salva personagem). A trava de organizador fica no SAVE (actions.ts) — e
+  // assim o atlas de um organizador-noiva também carrega no contexto do jogo,
+  // além de permitir os avatares decorativos do casal no altar da Fase 3.
   const spec = specFromParams(req.nextUrl.searchParams);
 
-  const r = resolveLayers(spec, canRestricted);
+  const r = resolveLayers(spec, true);
   if ("error" in r) return new Response(r.error, { status: 400 });
 
   const png = await composeSheet(r.layers);

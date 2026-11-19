@@ -1,19 +1,21 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { Dir, Point } from "@/lib/game/world";
 
-// ─── Modo Gamificado · Cena jogável (S4, Fase 1: Recepção) ──────────────────
-// Phaser 3 é carregado como script vendored same-origin (public/game/vendor),
-// NÃO como dependência npm — assim não entra no bundle clássico e não exige
-// mexer no node_modules (ver docs/ASSETS-LICENSES.md e AGENTS.md). A UI (diálogo,
-// D-pad, botões) é React por cima do <canvas>; o Phaser só cuida do mundo andável.
+// ─── Modo Gamificado · Motor da cena (Phaser) ──────────────────────────────
+// Um único canvas que renderiza DOIS modos a partir de um SceneConfig:
+//   • "world"  — mapa-múndi: avatar anda por nós da trilha (estilo SMW).
+//   • "phase"  — fase: andar livre, câmera segue o avatar, colisão por retângulos
+//                lidos do .colisao.json, interações por proximidade.
+// Phaser vem do script vendored same-origin (public/game/vendor), NÃO do npm
+// (ver AGENTS.md / docs/ASSETS-LICENSES.md). A UI (diálogos, HUD, D-pad) é React
+// por cima do <canvas>.
 
 const PHASER_SRC = "/game/vendor/phaser-3.88.2.min.js";
-const SPEED = 130;
+const SPEED = 165;
 const FRAMES_PER_DIR = 9; // sheets LPC: 9 colunas × 4 linhas
-// linhas do sheet: 0 cima, 1 esquerda, 2 baixo, 3 direita
-const ROW = { down: 2, up: 0, left: 1, right: 3 } as const;
-type Dir = keyof typeof ROW;
+const ROW: Record<Dir, number> = { up: 0, left: 1, down: 2, right: 3 };
 
 export type Controls = {
   up: boolean;
@@ -23,8 +25,46 @@ export type Controls = {
   interact: boolean; // edge-trigger: a cena consome e zera
 };
 
-// Phaser vem do script global; tipamos como unknown e usamos com cuidado
-// (a API é validada à parte contra os tipos reais do Phaser).
+export interface Interactable {
+  id: string;
+  x: number;
+  y: number;
+  radius?: number;
+  label?: string;
+  locked?: boolean;
+  done?: boolean;
+  kind?: "npc" | "pedestal" | "gate" | "table" | "marker";
+  icon?: string; // emoji flutuante
+  tableLabel?: string; // texto da mesa
+  highlight?: boolean; // alvo da missão (brilho dourado)
+}
+
+export interface NpcAvatar {
+  x: number;
+  y: number;
+  atlasUrl: string;
+  facing: Dir;
+}
+
+export interface SceneConfig {
+  mode: "world" | "phase";
+  map: string;
+  w: number;
+  h: number;
+  atlasUrl: string;
+  spawn: { x: number; y: number; facing: Dir };
+  zoom?: number;
+  collisionUrl?: string;
+  interactables: Interactable[];
+  // world:
+  nodes?: Point[];
+  edges?: [number, number][];
+  startNode?: number;
+  // phase:
+  npcs?: NpcAvatar[];
+  debug?: boolean;
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare global {
   interface Window {
@@ -49,77 +89,220 @@ function loadPhaser(): Promise<any> {
 }
 
 export function GameCanvas({
-  atlasUrl,
+  config,
   controls,
   onNearChange,
   onInteract,
+  onDebugPoint,
 }: {
-  atlasUrl: string;
+  config: SceneConfig;
   controls: React.RefObject<Controls>;
-  onNearChange: (near: boolean) => void;
-  onInteract: () => void;
+  onNearChange: (it: Interactable | null) => void;
+  onInteract: (id: string) => void;
+  onDebugPoint?: (p: Point) => void;
 }) {
   const hostRef = useRef<HTMLDivElement>(null);
-  // callbacks sempre atuais dentro do closure da cena
   const onNearRef = useRef(onNearChange);
   const onInteractRef = useRef(onInteract);
+  const onDebugRef = useRef(onDebugPoint);
+  const cfgRef = useRef(config);
+  const sceneApiRef = useRef<{ rebuild: () => void } | null>(null);
   onNearRef.current = onNearChange;
   onInteractRef.current = onInteract;
+  onDebugRef.current = onDebugPoint;
+  cfgRef.current = config;
+
+  // Recria o jogo quando o mapa muda (troca de fase). Interações/estado dentro
+  // da mesma cena são atualizados por refs sem recriar.
+  const sceneKey = `${config.mode}:${config.map}:${config.atlasUrl}`;
 
   useEffect(() => {
     let game: any = null;
     let destroyed = false;
+    const cfg = cfgRef.current;
 
     loadPhaser()
       .then((Phaser) => {
         if (destroyed || !hostRef.current) return;
 
+        // ── estado da cena ──
         let player: any;
         let keys: any;
-        let desk: any;
-        let near = false;
-        let facing: Dir = "down";
+        let facing: Dir = cfg.spawn.facing;
+        let nearId: string | null = null;
+        const markerSprites: Record<string, any> = {};
+        let hudText: any;
+        // world mode
+        let currentNode = cfg.startNode ?? 0;
+        let moving = false;
 
-        function preload(this: any) {
-          this.load.spritesheet("player", atlasUrl, { frameWidth: 64, frameHeight: 64 });
+        function addWalkAnims(scene: any, key: string, texture: string) {
+          (["up", "left", "down", "right"] as Dir[]).forEach((d) => {
+            const base = ROW[d] * FRAMES_PER_DIR;
+            const name = `${key}-walk-${d}`;
+            if (scene.anims.exists(name)) return;
+            scene.anims.create({
+              key: name,
+              frames: scene.anims.generateFrameNumbers(texture, {
+                frames: [base + 1, base + 2, base + 3, base + 4, base + 5, base + 6, base + 7, base + 8],
+              }),
+              frameRate: 10,
+              repeat: -1,
+            });
+          });
         }
 
-        function makeWalk(scene: any, dir: Dir) {
-          const base = ROW[dir] * FRAMES_PER_DIR;
-          scene.anims.create({
-            key: `walk-${dir}`,
-            frames: scene.anims.generateFrameNumbers("player", {
-              frames: [base + 1, base + 2, base + 3, base + 4, base + 5, base + 6, base + 7, base + 8],
-            }),
-            frameRate: 10,
-            repeat: -1,
+        function preload(this: any) {
+          this.load.image("map", cfg.map);
+          this.load.spritesheet("player", cfg.atlasUrl, { frameWidth: 64, frameHeight: 64 });
+          if (cfg.collisionUrl) this.load.json("col", cfg.collisionUrl);
+          (cfg.npcs ?? []).forEach((n, i) => {
+            this.load.spritesheet(`npc${i}`, n.atlasUrl, { frameWidth: 64, frameHeight: 64 });
+          });
+        }
+
+        // desenha uma mesa redonda (arte própria via Graphics) com cadeiras
+        function drawTable(scene: any, x: number, y: number, label: string, highlight: boolean) {
+          const c = scene.add.container(x, y);
+          const g = scene.add.graphics();
+          // cadeiras (8) em volta
+          for (let i = 0; i < 8; i++) {
+            const a = (i / 8) * Math.PI * 2;
+            g.fillStyle(0x8a5a3a, 1);
+            g.fillCircle(Math.cos(a) * 46, Math.sin(a) * 46, 9);
+          }
+          // tampo
+          g.fillStyle(0xffffff, 1);
+          g.fillCircle(0, 0, 34);
+          g.fillStyle(0xf3e6c4, 1);
+          g.fillCircle(0, 0, 30);
+          g.lineStyle(2, 0xc9a24a, 1);
+          g.strokeCircle(0, 0, 30);
+          // centro (arranjo)
+          g.fillStyle(0xe48aa6, 1);
+          g.fillCircle(0, 0, 8);
+          c.add(g);
+          const t = scene.add
+            .text(0, 1, label, { fontFamily: "monospace", fontSize: "16px", color: "#5a3d2b", fontStyle: "bold" })
+            .setOrigin(0.5);
+          c.add(t);
+          c.setDepth(y);
+          if (highlight) {
+            const ring = scene.add.circle(x, y, 52, 0xffd24a, 0.18).setStrokeStyle(3, 0xffd24a, 0.9);
+            ring.setDepth(y - 1);
+            scene.tweens.add({ targets: ring, scale: { from: 0.9, to: 1.15 }, alpha: { from: 0.9, to: 0.3 }, duration: 800, yoyo: true, repeat: -1 });
+          }
+          return c;
+        }
+
+        // marcador flutuante (ring + emoji) para NPC / pedestal / portão / mesa
+        function drawMarker(scene: any, it: Interactable) {
+          const dimmed = it.locked;
+          const color = it.done ? 0x9aa0a6 : it.locked ? 0x9aa0a6 : 0xffe58a;
+          const ring = scene.add.circle(it.x, it.y, 26, color, 0.0).setStrokeStyle(3, color, dimmed ? 0.5 : 0.95);
+          ring.setDepth(100000);
+          if (!dimmed && !it.done) {
+            scene.tweens.add({ targets: ring, scale: { from: 0.85, to: 1.1 }, duration: 900, yoyo: true, repeat: -1 });
+          }
+          const icon = it.icon ?? (it.locked ? "🔒" : it.done ? "✓" : "❗");
+          const label = scene.add
+            .text(it.x, it.y - 44, icon, { fontSize: "26px" })
+            .setOrigin(0.5)
+            .setDepth(100001);
+          scene.tweens.add({ targets: label, y: it.y - 52, duration: 900, yoyo: true, repeat: -1 });
+          const c = scene.add.container(0, 0, [ring, label]);
+          c.setDepth(100000);
+          return c;
+        }
+
+        function buildInteractables(scene: any) {
+          Object.values(markerSprites).forEach((m) => m.destroy());
+          for (const k of Object.keys(markerSprites)) delete markerSprites[k];
+          cfgRef.current.interactables.forEach((it) => {
+            if (it.kind === "table") {
+              markerSprites[it.id] = drawTable(scene, it.x, it.y, it.tableLabel ?? "", !!it.highlight);
+            } else {
+              markerSprites[it.id] = drawMarker(scene, it);
+            }
           });
         }
 
         function create(this: any) {
-          const W = this.scale.width;
-          const H = this.scale.height;
+          buildScene(this);
+        }
+        function buildScene(scene: any) {
+          const W = cfg.w;
+          const H = cfg.h;
 
-          // chão de jardim + caminho simples (sem assets: formas do Phaser)
-          this.add.rectangle(W / 2, H / 2, W, H, 0x6b8f4e); // grama
-          this.add.rectangle(W / 2, H - 40, W, 80, 0x8a7a5c); // calçada da recepção
+          const bg = scene.add.image(0, 0, "map").setOrigin(0, 0);
+          bg.setDepth(0);
 
-          // balcão da recepção + placa
-          desk = this.add.rectangle(W / 2, 70, 180, 54, 0x5a3d2b).setStrokeStyle(3, 0x3a2619);
-          this.add.rectangle(W / 2, 40, 150, 22, 0xf4ead2).setStrokeStyle(2, 0x3a2619);
-          this.add
-            .text(W / 2, 40, "RECEPÇÃO", { fontFamily: "monospace", fontSize: "14px", color: "#3a2619" })
-            .setOrigin(0.5);
+          scene.physics.world.setBounds(0, 0, W, H);
+          scene.cameras.main.setBounds(0, 0, W, H);
+          scene.cameras.main.setZoom(cfg.zoom ?? (cfg.mode === "world" ? 1 : 2));
+          scene.cameras.main.setBackgroundColor("#2b3a1e");
 
-          (["down", "up", "left", "right"] as Dir[]).forEach((d) => makeWalk(this, d));
+          addWalkAnims(scene, "player", "player");
 
-          player = this.physics.add.sprite(W / 2, H - 70, "player", ROW.up * FRAMES_PER_DIR);
+          // ── colisões (fase) ──
+          if (cfg.collisionUrl) {
+            const col = scene.cache.json.get("col") as { blocks: { x: number; y: number; w: number; h: number }[] } | null;
+            const walls: any[] = [];
+            (col?.blocks ?? []).forEach((b) => {
+              const r = scene.add.rectangle(b.x + b.w / 2, b.y + b.h / 2, b.w, b.h, 0xff3344, cfg.debug ? 0.28 : 0);
+              scene.physics.add.existing(r, true);
+              if (cfg.debug) r.setStrokeStyle(2, 0xff3344, 0.9).setDepth(90000);
+              walls.push(r);
+            });
+            scene._walls = walls;
+          }
+
+          // ── mesas / pedestais / NPCs decorativos ──
+          buildInteractables(scene);
+
+          (cfg.npcs ?? []).forEach((n, i) => {
+            addWalkAnims(scene, `npc${i}`, `npc${i}`);
+            const s = scene.add.sprite(n.x, n.y, `npc${i}`, ROW[n.facing] * FRAMES_PER_DIR);
+            s.setDepth(n.y);
+          });
+
+          // ── avatar ──
+          player = scene.physics.add.sprite(cfg.spawn.x, cfg.spawn.y, "player", ROW[cfg.spawn.facing] * FRAMES_PER_DIR);
           player.setCollideWorldBounds(true);
-          player.body.setSize(20, 16).setOffset(22, 44); // pés, não o frame inteiro
+          player.body.setSize(22, 16).setOffset(21, 46); // pés
+          player.setDepth(cfg.spawn.y);
+          if (scene._walls) scene.physics.add.collider(player, scene._walls);
+          scene.cameras.main.startFollow(player, true, 0.12, 0.12);
 
-          this.physics.world.setBounds(0, 0, W, H);
+          // ── world: desenha a trilha e posiciona no nó inicial ──
+          if (cfg.mode === "world" && cfg.nodes && cfg.edges) {
+            const g = scene.add.graphics();
+            g.lineStyle(10, 0xffffff, 0.35);
+            cfg.edges.forEach(([a, b]) => {
+              g.lineBetween(cfg.nodes![a].x, cfg.nodes![a].y, cfg.nodes![b].x, cfg.nodes![b].y);
+            });
+            g.setDepth(1);
+            const n = cfg.nodes[currentNode];
+            player.setPosition(n.x, n.y);
+            player.body.setAllowGravity(false);
+            player.body.moves = false; // movimento por tween, não física
+          }
 
-          keys = this.input.keyboard.addKeys({
+          // ── HUD de proximidade (debug: coords do mouse) ──
+          if (cfg.debug) {
+            hudText = scene.add
+              .text(8, 8, "", { fontFamily: "monospace", fontSize: "16px", color: "#fff", backgroundColor: "#000a" })
+              .setScrollFactor(0)
+              .setDepth(100002);
+            scene.input.on("pointermove", (p: any) => {
+              const wx = Math.round(p.worldX);
+              const wy = Math.round(p.worldY);
+              if (hudText) hudText.setText(`x:${wx} y:${wy}`);
+              onDebugRef.current?.({ x: wx, y: wy });
+            });
+          }
+
+          keys = scene.input.keyboard.addKeys({
             up: Phaser.Input.Keyboard.KeyCodes.UP,
             down: Phaser.Input.Keyboard.KeyCodes.DOWN,
             left: Phaser.Input.Keyboard.KeyCodes.LEFT,
@@ -131,60 +314,154 @@ export function GameCanvas({
             interact: Phaser.Input.Keyboard.KeyCodes.SPACE,
             enter: Phaser.Input.Keyboard.KeyCodes.ENTER,
           });
+
+          // atualiza marcadores/mesas sem recriar a cena (ex.: portão libera,
+          // memória vista, mesa encontrada) — preserva a posição do avatar.
+          sceneApiRef.current = { rebuild: () => buildInteractables(scene) };
+          scene._ready = true;
         }
 
-        function update(this: any) {
-          if (!player) return;
-          const c = controls.current ?? { up: false, down: false, left: false, right: false, interact: false };
-          const left = keys.left.isDown || keys.a.isDown || c.left;
-          const right = keys.right.isDown || keys.d.isDown || c.right;
-          const up = keys.up.isDown || keys.w.isDown || c.up;
-          const down = keys.down.isDown || keys.s.isDown || c.down;
+        function nearestInteractable(px: number, py: number): Interactable | null {
+          let best: Interactable | null = null;
+          let bestD = Infinity;
+          for (const it of cfgRef.current.interactables) {
+            const r = it.radius ?? 72;
+            const d = Phaser.Math.Distance.Between(px, py, it.x, it.y);
+            if (d <= r && d < bestD) {
+              best = it;
+              bestD = d;
+            }
+          }
+          return best;
+        }
 
+        function readDir(): { up: boolean; down: boolean; left: boolean; right: boolean; interact: boolean } {
+          const c = controls.current ?? { up: false, down: false, left: false, right: false, interact: false };
+          return {
+            left: keys.left.isDown || keys.a.isDown || c.left,
+            right: keys.right.isDown || keys.d.isDown || c.right,
+            up: keys.up.isDown || keys.w.isDown || c.up,
+            down: keys.down.isDown || keys.s.isDown || c.down,
+            interact:
+              Phaser.Input.Keyboard.JustDown(keys.interact) || Phaser.Input.Keyboard.JustDown(keys.enter) || c.interact,
+          };
+        }
+
+        function updatePhase() {
+          const d = readDir();
           let vx = 0;
           let vy = 0;
-          if (left) vx -= SPEED;
-          if (right) vx += SPEED;
-          if (up) vy -= SPEED;
-          if (down) vy += SPEED;
-          // normaliza diagonal pra não andar mais rápido
+          if (d.left) vx -= SPEED;
+          if (d.right) vx += SPEED;
+          if (d.up) vy -= SPEED;
+          if (d.down) vy += SPEED;
           if (vx !== 0 && vy !== 0) {
             vx *= 0.7071;
             vy *= 0.7071;
           }
           player.body.setVelocity(vx, vy);
-
           if (vx !== 0 || vy !== 0) {
             const dir: Dir = Math.abs(vx) > Math.abs(vy) ? (vx < 0 ? "left" : "right") : vy < 0 ? "up" : "down";
             facing = dir;
-            player.anims.play(`walk-${dir}`, true);
+            player.anims.play(`player-walk-${dir}`, true);
           } else {
             player.anims.stop();
-            player.setFrame(ROW[facing] * FRAMES_PER_DIR); // frame parado da direção
+            player.setFrame(ROW[facing] * FRAMES_PER_DIR);
           }
+          player.setDepth(player.y);
 
-          // proximidade da recepção
-          const dist = Phaser.Math.Distance.Between(player.x, player.y, desk.x, desk.y + 30);
-          const nowNear = dist < 60;
-          if (nowNear !== near) {
-            near = nowNear;
+          const near = nearestInteractable(player.x, player.y);
+          const id = near?.id ?? null;
+          if (id !== nearId) {
+            nearId = id;
             onNearRef.current(near);
           }
+          if (d.interact) {
+            if (controls.current) controls.current.interact = false;
+            if (near && !near.locked) onInteractRef.current(near.id);
+          }
+        }
 
-          const pressed =
-            Phaser.Input.Keyboard.JustDown(keys.interact) || Phaser.Input.Keyboard.JustDown(keys.enter) || c.interact;
-          if (pressed && controls.current) controls.current.interact = false;
-          if (pressed && near) onInteractRef.current();
+        function updateWorld(scene: any) {
+          const d = readDir();
+          if (!moving) {
+            // escolhe o vizinho cuja direção melhor casa com o input
+            let want: { x: number; y: number } | null = null;
+            if (d.left) want = { x: -1, y: 0 };
+            else if (d.right) want = { x: 1, y: 0 };
+            else if (d.up) want = { x: 0, y: -1 };
+            else if (d.down) want = { x: 0, y: 1 };
+            if (want) {
+              const here = cfg.nodes![currentNode];
+              let bestNode = -1;
+              let bestDot = 0.25;
+              (cfg.edges ?? []).forEach(([a, b]) => {
+                let other = -1;
+                if (a === currentNode) other = b;
+                else if (b === currentNode) other = a;
+                if (other < 0) return;
+                const nx = cfg.nodes![other].x - here.x;
+                const ny = cfg.nodes![other].y - here.y;
+                const len = Math.hypot(nx, ny) || 1;
+                const dot = (nx / len) * want!.x + (ny / len) * want!.y;
+                if (dot > bestDot) {
+                  bestDot = dot;
+                  bestNode = other;
+                }
+              });
+              if (bestNode >= 0) {
+                moving = true;
+                const target = cfg.nodes![bestNode];
+                const dir: Dir =
+                  Math.abs(want.x) > Math.abs(want.y) ? (want.x < 0 ? "left" : "right") : want.y < 0 ? "up" : "down";
+                facing = dir;
+                player.anims.play(`player-walk-${dir}`, true);
+                scene.tweens.add({
+                  targets: player,
+                  x: target.x,
+                  y: target.y,
+                  duration: Math.hypot(target.x - here.x, target.y - here.y) * 2.2,
+                  onComplete: () => {
+                    currentNode = bestNode;
+                    moving = false;
+                    player.anims.stop();
+                    player.setFrame(ROW[facing] * FRAMES_PER_DIR);
+                  },
+                });
+              }
+            }
+          }
+          player.setDepth(player.y);
+
+          // marcador no nó atual?
+          const marker = cfgRef.current.interactables.find((it) => {
+            return Phaser.Math.Distance.Between(player.x, player.y, it.x, it.y) < 40;
+          });
+          const id = marker?.id ?? null;
+          if (id !== nearId) {
+            nearId = id;
+            onNearRef.current(marker ?? null);
+          }
+          if (d.interact && !moving) {
+            if (controls.current) controls.current.interact = false;
+            if (marker && !marker.locked) onInteractRef.current(marker.id);
+          }
+        }
+
+        function update(this: any) {
+          if (!this._ready || !player) return;
+          if (cfgRef.current.mode === "world") updateWorld(this);
+          else updatePhase();
         }
 
         game = new Phaser.Game({
           type: Phaser.AUTO,
           parent: hostRef.current,
-          width: 480,
-          height: 320,
+          width: hostRef.current.clientWidth || 640,
+          height: hostRef.current.clientHeight || 400,
           pixelArt: true,
-          backgroundColor: "#6b8f4e",
-          scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+          backgroundColor: "#2b3a1e",
+          scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
           physics: { default: "arcade", arcade: { gravity: { x: 0, y: 0 }, debug: false } },
           scene: { preload, create, update },
         });
@@ -193,11 +470,22 @@ export function GameCanvas({
 
     return () => {
       destroyed = true;
+      sceneApiRef.current = null;
       if (game) game.destroy(true);
     };
-  }, [atlasUrl, controls]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sceneKey]);
 
-  return <div ref={hostRef} className="h-full w-full [&>canvas]:mx-auto [&>canvas]:block" />;
+  // Reconstrói marcadores/mesas dentro da MESMA cena quando o estado muda
+  // (portão libera, memória vista, mesa encontrada), sem perder a posição.
+  const interactSig = config.interactables
+    .map((i) => `${i.id}:${i.locked ? 1 : 0}${i.done ? 1 : 0}${i.highlight ? 1 : 0}`)
+    .join("|");
+  useEffect(() => {
+    sceneApiRef.current?.rebuild();
+  }, [interactSig]);
+
+  return <div ref={hostRef} className="h-full w-full" />;
 }
 
 export default GameCanvas;

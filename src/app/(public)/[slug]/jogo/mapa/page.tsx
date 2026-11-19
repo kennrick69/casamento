@@ -1,20 +1,53 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
+import { storage } from "@/lib/storage";
 import { getGameEvent } from "@/lib/game/identity";
 import { getCurrentGuest } from "@/lib/auth/guest";
 import { DEFAULT_SPEC, type CharacterSpec, type BodyType } from "@/lib/game/character/catalog";
-import { MapaClient } from "./mapa-client";
+import { MapaClient, type Memory, type TableInfo, type GameProgress } from "./mapa-client";
 
 export const metadata: Metadata = {
   title: "Mapa da festa",
   robots: { index: false, follow: false },
 };
 
-// Reconstrói o spec salvo (appearance JSON ou colunas legadas) e serializa como
-// query string para a rota do atlas (/jogo/personagem/sheet).
 function specToQuery(spec: CharacterSpec): string {
   return new URLSearchParams(spec as unknown as Record<string, string>).toString();
+}
+
+// Specs fixos do casal para os avatares decorativos no altar da Fase 3.
+const BRIDE_SPEC: CharacterSpec = {
+  body: "feminino",
+  skin: "light",
+  hairStyle: "long",
+  hairColor: "chestnut",
+  eyeColor: "castanho",
+  eyebrows: "thin",
+  beard: "none",
+  glasses: "none",
+  outfit: "noiva",
+};
+const GROOM_SPEC: CharacterSpec = {
+  body: "masculino",
+  skin: "light",
+  hairStyle: "buzzcut",
+  hairColor: "black",
+  eyeColor: "castanho",
+  eyebrows: "thick",
+  beard: "curta",
+  glasses: "none",
+  outfit: "noivo",
+};
+
+function parseProgress(raw: unknown): GameProgress {
+  const p = (raw ?? {}) as Partial<GameProgress>;
+  return {
+    phase1: !!p.phase1,
+    phase2: !!p.phase2,
+    phase3: !!p.phase3,
+    memoriesSeen: Array.isArray(p.memoriesSeen) ? p.memoriesSeen.filter((x) => typeof x === "string") : [],
+  };
 }
 
 export default async function MapaPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -29,6 +62,7 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
   const character = await prisma.gameCharacter.findUnique({ where: { guestId: guest.id } });
   if (!character) redirect(`/${slug}/jogo/personagem`);
 
+  // Spec salvo (appearance JSON ou colunas legadas)
   let spec: CharacterSpec = { ...DEFAULT_SPEC };
   if (character.appearance && typeof character.appearance === "object") {
     spec = { ...DEFAULT_SPEC, ...(character.appearance as Partial<CharacterSpec>) };
@@ -46,7 +80,35 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
     };
   }
 
+  // Dados das fases
+  const [storyItems, seatingTables, myAssignment] = await Promise.all([
+    prisma.coupleStoryItem.findMany({
+      where: { eventId: event.id },
+      orderBy: { order: "asc" },
+      take: 5,
+    }),
+    prisma.seatingTable.findMany({
+      where: { eventId: event.id },
+      orderBy: { order: "asc" },
+      take: 10,
+    }),
+    prisma.seatingAssignment.findUnique({ where: { guestId: guest.id } }),
+  ]);
+
+  const memories: Memory[] = storyItems.map((s) => ({
+    id: s.id,
+    title: s.title,
+    dateLabel: s.dateLabel ?? null,
+    description: s.description ?? null,
+    photoUrl: s.photoKey ? storage.getUrl(s.photoKey) : null,
+  }));
+
+  const tables: TableInfo[] = seatingTables.map((t) => ({ id: t.id, name: t.name, capacity: t.capacity }));
+  const myTableId = myAssignment?.tableId ?? null;
+
   const atlasUrl = `/${slug}/jogo/personagem/sheet?${specToQuery(spec)}`;
+  const brideAtlas = `/${slug}/jogo/personagem/sheet?${specToQuery(BRIDE_SPEC)}`;
+  const groomAtlas = `/${slug}/jogo/personagem/sheet?${specToQuery(GROOM_SPEC)}`;
 
   return (
     <MapaClient
@@ -56,6 +118,13 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
       atlasUrl={atlasUrl}
       isVisitor={guest.isVisitor}
       rsvpConfirmed={guest.rsvpStatus === "CONFIRMED"}
+      memories={memories}
+      tables={tables}
+      myTableId={myTableId}
+      coupleMessage={null}
+      brideAtlas={brideAtlas}
+      groomAtlas={groomAtlas}
+      progress={parseProgress(character.gameProgress)}
     />
   );
 }
