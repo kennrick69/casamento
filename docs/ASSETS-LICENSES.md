@@ -72,6 +72,7 @@ ou **OGA-BY** (nenhuma peça somente-GPL). Arquivos em `public/game/personagem/`
 - **Fontes:** https://github.com/ElizaWy/LPC/tree/main/Characters/Head%20Accessories, https://opengameart.org/content/lpc-expanded-sit-run-jump-more
 
 ## Observações
+- Motor do jogo: **Phaser 3.88.2** (MIT), vendorizado em `public/game/vendor/` — ver `public/game/vendor/README.md`.
 - Paletas de pele/cabelo: `palette_definitions` do gerador LPC (recolor por rampa).
 - Olhos: fornecidos pela base da cabeça LPC (ver seção *Cabeça / rosto*); o criador só troca a cor da íris via recolor, sem peça de olhos adicional.
 - Gerador: https://github.com/liberatedpixelcup/Universal-LPC-Spritesheet-Character-Generator

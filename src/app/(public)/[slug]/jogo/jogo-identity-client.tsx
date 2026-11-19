@@ -280,10 +280,22 @@ export function JogoIdentityClient({
 
           <Link
             href={`/${slug}/jogo/personagem`}
-            className={buttonVariants({ className: "h-12 justify-center text-base font-semibold" })}
+            className={buttonVariants({
+              variant: state.characterClaimed ? "outline" : "default",
+              className: "h-12 justify-center text-base font-semibold",
+            })}
           >
             {state.characterClaimed ? "Editar meu personagem" : "Criar meu personagem"}
           </Link>
+
+          {state.characterClaimed && (
+            <Link
+              href={`/${slug}/jogo/mapa`}
+              className={buttonVariants({ className: "h-12 justify-center text-base font-semibold" })}
+            >
+              Entrar na festa
+            </Link>
+          )}
 
           {supportsPasskey && !state.isVisitor && (
             <div className={card}>
@@ -305,8 +317,8 @@ export function JogoIdentityClient({
           )}
 
           <p className="text-xs text-[var(--theme-secondary)] max-w-sm">
-            <Construction className="inline size-4 -mt-0.5 mr-1" aria-hidden /> O salão da festa e as missões chegam em seguida. Sua
-            identidade e seu personagem já ficam guardados.
+            <Construction className="inline size-4 -mt-0.5 mr-1" aria-hidden /> A recepção já está aberta; o salão e as demais fases
+            chegam em seguida. Sua identidade e seu personagem ficam guardados.
           </p>
         </>
       )}
