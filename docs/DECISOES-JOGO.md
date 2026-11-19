@@ -67,3 +67,67 @@ o **mais simples**, anotar aqui e seguir. JOs ajusta depois.
   do demo (`demo-session-amanda-12`). Screenshots conferidos em `docs/screens-jogo/`.
 - Dados de teste (dev-only): o demo não tinha História nem Mesas — seeds dev
   adicionados pra tornar as fases 2 e 3 demonstráveis.
+
+---
+
+## Rodada de feedback do JOs (2026-11-19, 20 itens)
+
+### Movimento e câmera
+- **Zoom responsivo "cover"** (item 14/19): o mapa enche a tela (sem faixas
+  vazias), celular ~2 casas, desktop quase a fase toda. `centerOn` imediato faz o
+  avatar nascer visível (não espera o lerp da câmera).
+- **Movimento (item 17):** 4 direções livres estilo Pokémon GBA (cima/baixo/
+  esquerda/direita, animação por direção, respeitando colisões). **Decisão:** NÃO
+  implementei "snap de grade/tile por vez" — os mapas são pintados à mão, não
+  tilemaps; travar numa grade imaginária pioraria o passeio. O movimento livre
+  cobre a necessidade real (antes "só esquerda/direita" era o botão ↓ do D-pad
+  coberto pelo badge dev do Next, não um bug de engine).
+
+### Mapa-múndi (itens 12, 20)
+- Nós reposicionados sobre as **plataformas de pedra** da arte.
+- Cada aresta tem **waypoints** sobre a trilha de terra (curvas, ponte); o avatar
+  caminha ponto a ponto e nunca corta grama/água. Removida a linha reta branca
+  sobreposta (a arte já traz a trilha).
+
+### Criador
+- **Filtro por corpo (item 1):** roupa/cabelo mostram só o que combina; trocar o
+  corpo auto-ajusta. Tags `suit` no catálogo.
+- **Cabelos (item 2):** 8 novos do LPC (topete, social, raspado, cacheado curto;
+  chanel, cacheado, coque c/ franja, rabo de cavalo). **Decisão:** "rabo de
+  cavalo" usa `half_up` (camada única) em vez de `ponytail` (que tem bg/fg e
+  exigiria suporte a cabelo multicamada).
+- **Terno ≠ Noivo (item 11):** terno = paletó charcoal + gravata vinho; noivo =
+  smoking preto + gravata-borboleta branca. **Decisão:** sem flor na lapela
+  (boutonnière exigiria arte por-frame); o contraste paletó/gravata já distingue.
+- **Véu (item 10):** o véu (`veil_bg`) subiu de z5 para z130 (acima do cabelo
+  z120) — antes ficava atrás de tudo e a noiva saía "sem véu". Funciona com
+  qualquer penteado, inclusive coque com franja.
+- **Prévia sem banco (itens 8/9):** preview e atlas viraram função pura dos
+  params (render-permissivo, sem `getGameEvent`/`isEventOrganizer`). Error
+  boundary amigável em `/jogo`. A trava real de noivo/noiva fica no SAVE.
+- **Item 3 (emerald):** não reproduziu (render ok por screenshot) — provável
+  flakiness do JIT do Tailwind v4 no 1º acesso frio. Botão "Salvar" ganhou
+  afordância (borda/sombra) e o pós-save mostra "Entrar no jogo" (item 18).
+
+### HUD / UI
+- **Sem emoji no jogo (item 6):** marcadores viraram ícones em pixel-art
+  (cadeado, estrela, pin, carta, flor, livro, porta, check). Removidos os emoji
+  das mensagens/toasts. **Decisão:** mantive emoji só fora do jogo.
+- **D-pad só em toque (item 13):** `(pointer: coarse)` / `hasTouch`. No PC usa
+  teclado. D-pad maior; rótulo de proximidade legível (item 19).
+- **Chrome do site no jogo (item 16):** `HideOnGame` esconde idioma/
+  acessibilidade/nav inferior em `/jogo` e subrotas (experiência imersiva).
+
+### Colisões (item 5)
+- Refinadas por mim via `?debug=1` (sem pedir coordenadas ao JOs): vila (bancos,
+  postes, mural, canteiros), bosque (lago/córrego justos, ponte livre), grande
+  dia (palco do altar, DJ, bolo). Conferidas por screenshot sobre a arte.
+
+### Verificação de organizador (itens 4/10/11)
+- Sessão NextAuth é **JWT** — forjar uma sessão de organizador é inviável sem o
+  segredo. Verifiquei: (a) visitante NÃO vê noivo/noiva (screenshot); (b) a
+  renderização de noivo/noiva/véu está correta (prévias); (c) os **avatares do
+  casal no altar** (Fase 3) provam que esses trajes renderizam no jogo pela rota
+  render-permissiva. O filtro `outfitsFor(body, canRestricted)` é o mesmo nos dois
+  lados. Falta só o screenshot do criador logado como organizador (precisa de
+  login admin real).
