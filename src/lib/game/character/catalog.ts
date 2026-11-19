@@ -150,11 +150,14 @@ export const OUTFITS: Outfit[] = [
     id: "noiva",
     label: "Noiva (véu)",
     bride: true,
+    // véu branco translúcido POR CIMA do cabelo (z>120) — antes ficava atrás de
+    // tudo (z5) e a noiva saía "sem véu". Funciona com qualquer cabelo, inclusive
+    // o coque com franja (item 10). veil_fg cobre o rosto nas vistas frontais.
     layers: [
-      { file: "bride/veil_bg.png", z: 5 },
       { file: "outfit/shoes_female.png", z: 15 },
       { file: "bride/skirt.png", z: 30 },
       { file: "bride/bodice.png", z: 35 },
+      { file: "bride/veil_bg.png", z: 130 },
       { file: "bride/veil_fg.png", z: 200 },
     ],
   },
