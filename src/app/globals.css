@@ -177,18 +177,28 @@ html[data-contrast="high"] {
 .game-skin[data-game-skin="fairytale"] {
   --skin-head: var(--font-dm-serif), serif;
   --skin-body: var(--font-cormorant), Georgia, serif;
-  --background: #dbe8fa; --foreground: #2a3358;
-  --card: #ffffff; --card-foreground: #2a3358;
-  --popover: #ffffff; --popover-foreground: #2a3358;
-  --primary: #3f63b8; --primary-foreground: #fff7d8;
-  --secondary: #e6edfa; --secondary-foreground: #2a3358;
-  --muted: #e6edfa; --muted-foreground: #46506e;
-  --accent: #b88a2a; --accent-foreground: #ffffff;
-  --border: #c3d0e8; --input: #c3d0e8; --ring: #6a8fd8;
+  --background: #dbe8fa; --foreground: #202845;
+  --card: #ffffff; --card-foreground: #202845;
+  --popover: #ffffff; --popover-foreground: #202845;
+  /* Contraste AA (>=4.5:1) sobre o azul-pó e o branco: azul e dourado mais
+     escuros p/ links, textos e selos (ex. "Abrir", "QR PNG", link do convite). */
+  --primary: #2f4e9c; --primary-foreground: #fff7d8;
+  --secondary: #e6edfa; --secondary-foreground: #202845;
+  --muted: #e6edfa; --muted-foreground: #39415c;
+  --accent: #8a6414; --accent-foreground: #ffffff;
+  --border: #c3d0e8; --input: #c3d0e8; --ring: #3f63b8;
   --radius: 1rem;
   --skin-bevel-lt: #ffffff; --skin-bevel-dk: #c3d0e8; --skin-hard: #2a3a6a26;
 }
-.game-skin[data-game-skin="fairytale"] { font-size: 1.05rem; }
+/* Cormorant é fino: peso maior p/ legibilidade, e algarismos lining/tabular
+   pra o zero não parecer "O" (ex. "0 confirmados"). */
+.game-skin[data-game-skin="fairytale"] {
+  font-size: 1.05rem; font-weight: 600;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.game-skin[data-game-skin="fairytale"] :is(p, span, a, label, small, button, li, td, th, dd, dt, .text-xs, .text-sm, .text-muted-foreground) {
+  font-weight: 600;
+}
 
 /* Perfil: Metal — metal escuro, ferrugem/sangue, pixel */
 .game-skin[data-game-skin="metal"] {
@@ -293,7 +303,7 @@ html[data-contrast="high"] {
   text-shadow: 2px 2px 0 var(--skin-hard);
 }
 .game-skin[data-game-skin="metal"] .game-stat-num { text-shadow: 0 0 6px currentColor, 2px 2px 0 var(--skin-hard); }
-.game-skin[data-game-skin="fairytale"] .game-stat-num { font-family: var(--skin-body); font-weight: 700; font-size: 3rem; text-shadow: 1px 1px 0 rgba(255,255,255,.7); }
+.game-skin[data-game-skin="fairytale"] .game-stat-num { font-family: var(--skin-body); font-weight: 700; font-size: 3rem; font-variant-numeric: lining-nums tabular-nums; text-shadow: 1px 1px 0 rgba(255,255,255,.7); }
 .game-skin .game-stat-ico { width: 30px; height: 30px; }
 .game-skin[data-game-skin="metal"] .game-stat-ico,
 .game-skin[data-game-skin="pixel"] .game-stat-ico { image-rendering: pixelated; }
@@ -332,7 +342,10 @@ html[data-contrast="high"] {
 }
 .game-skin nav a {
   justify-content: center; text-align: center; min-width: 0; margin: 0;
-  white-space: normal; line-height: 1.25; word-break: normal; overflow-wrap: break-word;
+  /* overflow-wrap: anywhere (não break-word) reduz o min-content do item do
+     grid, deixando palavras longas (Agradecimentos, Notificações) quebrarem em
+     2 linhas DENTRO do botão em vez de vazar. Vale p/ Metal, 8-Bit e Fadas. */
+  white-space: normal; line-height: 1.2; word-break: normal; overflow-wrap: anywhere;
   hyphens: none; padding-top: 8px; padding-bottom: 8px;
 }
 .game-skin[data-game-skin="fairytale"] nav a { font-size: 0.72rem; letter-spacing: 0.4px; }

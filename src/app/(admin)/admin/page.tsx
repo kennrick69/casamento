@@ -6,8 +6,7 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { SignOutButton } from "@/components/admin/sign-out-button";
 import { unarchiveEvent } from "@/app/(admin)/admin/eventos/[id]/configuracoes/actions";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatEventDate } from "@/lib/timezone";
 import { Heart, RotateCcw } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -96,7 +95,7 @@ export default async function AdminPage({
                   <div>
                     <p className="font-semibold">{event.coupleNames}</p>
                     <p className="text-sm text-muted-foreground">
-                      {format(event.ceremonyDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                      {formatEventDate(event.ceremonyDate, event.timezone, "d 'de' MMMM 'de' yyyy")}
                       {" · "}
                       <span className="font-mono text-xs">/{event.slug}</span>
                     </p>

@@ -26,6 +26,7 @@ interface WhatsappContext {
   coupleNames: string;
   slug: string;
   ceremonyDate: string;
+  timezone: string;
   publicTokenK: string;
   appUrl: string;
 }
@@ -51,6 +52,7 @@ function buildWhatsappLink(guest: Guest, ctx: WhatsappContext): string {
     day: "numeric",
     month: "long",
     year: "numeric",
+    timeZone: ctx.timezone,
   });
   const rsvpUrl = `${ctx.appUrl}/${ctx.slug}/rsvp?k=${ctx.publicTokenK}`;
   const msg = `Olá, ${guest.name.split(" ")[0]}! 🎊\n\nVocê está convidado(a) para o casamento de ${ctx.coupleNames} em ${date}.\n\nConfirme sua presença em:\n${rsvpUrl}`;

@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/db";
+import { formatEventDate } from "@/lib/timezone";
 
 export const runtime = "nodejs";
 export const alt = "Convite de casamento";
@@ -10,12 +11,12 @@ export default async function OgImage({ params }: { params: Promise<{ slug: stri
   const { slug } = await params;
   const event = await prisma.event.findUnique({
     where: { slug },
-    select: { coupleNames: true, ceremonyDate: true, description: true },
+    select: { coupleNames: true, ceremonyDate: true, description: true, timezone: true },
   });
 
   const coupleNames = event?.coupleNames ?? "Convite de Casamento";
   const dateStr = event
-    ? event.ceremonyDate.toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" })
+    ? formatEventDate(event.ceremonyDate, event.timezone, "d 'de' MMMM 'de' yyyy")
     : "";
 
   return new ImageResponse(

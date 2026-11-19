@@ -4,8 +4,8 @@ import { prisma } from "@/lib/db";
 import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { format, differenceInCalendarDays } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { differenceInCalendarDays } from "date-fns";
+import { formatEventDate } from "@/lib/timezone";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Visão geral" };
@@ -132,7 +132,7 @@ export default async function VisaoGeralPage() {
                             : `−${Math.abs(daysLeft)}d`}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {format(event.ceremonyDate, "d MMM yyyy", { locale: ptBR })}
+                          {formatEventDate(event.ceremonyDate, event.timezone, "d MMM yyyy")}
                         </p>
                       </div>
                     </div>
@@ -168,7 +168,7 @@ export default async function VisaoGeralPage() {
                   <div>
                     <p className="font-medium text-sm">{event.coupleNames}</p>
                     <p className="text-xs text-muted-foreground">
-                      {format(event.ceremonyDate, "d MMM yyyy", { locale: ptBR })}
+                      {formatEventDate(event.ceremonyDate, event.timezone, "d MMM yyyy")}
                     </p>
                   </div>
                   <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
@@ -195,7 +195,7 @@ export default async function VisaoGeralPage() {
                 >
                   <p className="font-medium text-sm">{event.coupleNames}</p>
                   <p className="text-xs text-muted-foreground">
-                    {format(event.ceremonyDate, "d MMM yyyy", { locale: ptBR })}
+                    {formatEventDate(event.ceremonyDate, event.timezone, "d MMM yyyy")}
                   </p>
                 </Link>
               ))}

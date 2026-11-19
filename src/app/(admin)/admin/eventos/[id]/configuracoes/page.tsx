@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { requireOrganizer } from "@/lib/authorization";
+import { formatEventDate, formatTime } from "@/lib/timezone";
 import { EventNav } from "@/components/admin/event-nav";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -61,10 +62,12 @@ export default async function ConfiguracoesPage({
 
   const themes = await prisma.theme.findMany({ orderBy: { name: "asc" } });
 
-  const dateStr = event.ceremonyDate.toISOString().split("T")[0];
-  const timeStr = event.ceremonyDate.toISOString().split("T")[1]?.slice(0, 5) ?? "16:00";
+  // Sempre no fuso do evento (nao em UTC/toISOString), pra bater com o Dashboard
+  // e com a gravacao (fromZonedTime na action). Evita o deslocamento de +3h.
+  const dateStr = formatEventDate(event.ceremonyDate, event.timezone, "yyyy-MM-dd");
+  const timeStr = formatTime(event.ceremonyDate, event.timezone);
   const deadlineStr = event.rsvpEarlyDeadline
-    ? event.rsvpEarlyDeadline.toISOString().split("T")[0]
+    ? formatEventDate(event.rsvpEarlyDeadline, event.timezone, "yyyy-MM-dd")
     : undefined;
 
   const features = event.features as Record<string, boolean>;
@@ -122,14 +125,24 @@ export default async function ConfiguracoesPage({
           <>
             <BasicForm event={event} />
             <LocationForm event={event} />
-            <div className="bg-background rounded-lg border border-border p-6 mb-6">
-              <h2 className="text-base font-semibold mb-5">Tema visual</h2>
-              <WizardThemeForm
-                eventId={id}
-                currentThemeKey={event.theme.key}
-                themes={themes}
-              />
-            </div>
+            {event.experienceType === "GAMIFIED" ? (
+              <div className="bg-background rounded-lg border border-border p-6 mb-6">
+                <h2 className="text-base font-semibold mb-2">Tema visual</h2>
+                <p className="text-sm text-muted-foreground">
+                  Temas visuais valem para o convite Clássico. A aparência do modo Gamificado é
+                  definida pelo Skin do jogo.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-background rounded-lg border border-border p-6 mb-6">
+                <h2 className="text-base font-semibold mb-5">Tema visual</h2>
+                <WizardThemeForm
+                  eventId={id}
+                  currentThemeKey={event.theme.key}
+                  themes={themes}
+                />
+              </div>
+            )}
             <ExperienceForm event={event} />
             <FeaturesForm event={event} />
             <DangerZone
@@ -176,17 +189,26 @@ export default async function ConfiguracoesPage({
         )}
 
         {/* ── Step 3: tema ── */}
-        {step === 3 && (
-          <div className="bg-background rounded-lg border border-border p-6 mb-6">
-            <h2 className="text-base font-semibold mb-5">Tema visual</h2>
-            <WizardThemeForm
-              eventId={id}
-              currentThemeKey={event.theme.key}
-              themes={themes}
-              isWizard
-            />
-          </div>
-        )}
+        {step === 3 &&
+          (event.experienceType === "GAMIFIED" ? (
+            <div className="bg-background rounded-lg border border-border p-6 mb-6">
+              <h2 className="text-base font-semibold mb-2">Tema visual</h2>
+              <p className="text-sm text-muted-foreground">
+                Temas visuais valem para o convite Clássico. A aparência do modo Gamificado é
+                definida pelo Skin do jogo.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-background rounded-lg border border-border p-6 mb-6">
+              <h2 className="text-base font-semibold mb-5">Tema visual</h2>
+              <WizardThemeForm
+                eventId={id}
+                currentThemeKey={event.theme.key}
+                themes={themes}
+                isWizard
+              />
+            </div>
+          ))}
 
         {/* ── Step 4: publicar (apenas rascunhos — veja P4-C acima) ── */}
         {step === 4 && (
@@ -228,10 +250,10 @@ function BasicForm({
     rsvpEarlyDeadline: Date | null;
   };
 }) {
-  const dateStr = event.ceremonyDate.toISOString().split("T")[0];
-  const timeStr = event.ceremonyDate.toISOString().split("T")[1]?.slice(0, 5) ?? "16:00";
+  const dateStr = formatEventDate(event.ceremonyDate, event.timezone, "yyyy-MM-dd");
+  const timeStr = formatTime(event.ceremonyDate, event.timezone);
   const deadlineStr = event.rsvpEarlyDeadline
-    ? event.rsvpEarlyDeadline.toISOString().split("T")[0]
+    ? formatEventDate(event.rsvpEarlyDeadline, event.timezone, "yyyy-MM-dd")
     : "";
 
   return (
