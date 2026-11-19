@@ -14,7 +14,7 @@ import { isEventOrganizer } from "@/lib/game/character/organizer";
 
 // Normaliza o payload do cliente para um CharacterSpec completo (defaults para
 // campos ausentes). resolveLayers faz a validação real de cada id.
-export function toSpec(raw: Partial<CharacterSpec>): CharacterSpec {
+function toSpec(raw: Partial<CharacterSpec>): CharacterSpec {
   return {
     body: (raw.body as BodyType) ?? DEFAULT_SPEC.body,
     skin: raw.skin ?? DEFAULT_SPEC.skin,
