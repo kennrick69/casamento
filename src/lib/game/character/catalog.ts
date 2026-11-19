@@ -29,10 +29,23 @@ export const SKINS: Option[] = [
   { id: "black", label: "Negra", hex: "#5a3a28" },
 ];
 
+// Cabelos extraídos do LPC (walk.png na paleta base "orange", recolor por
+// cor). `suit` filtra por corpo (item 2). Arte/licenças em docs/ASSETS-LICENSES.
 export const HAIR_STYLES: Option[] = [
-  { id: "long", label: "Longo", suit: "feminino" },
-  { id: "buzzcut", label: "Curto" }, // serve nos dois
-  { id: "none", label: "Sem cabelo" },
+  // femininos
+  { id: "long", label: "Liso longo", suit: "feminino" },
+  { id: "bob", label: "Chanel", suit: "feminino" },
+  { id: "cacheado", label: "Cacheado", suit: "feminino" },
+  { id: "coque", label: "Coque c/ franja", suit: "feminino" },
+  { id: "rabo", label: "Rabo de cavalo", suit: "feminino" },
+  // masculinos
+  { id: "topete", label: "Topete", suit: "masculino" },
+  { id: "social", label: "Social", suit: "masculino" },
+  { id: "raspado", label: "Raspado", suit: "masculino" },
+  { id: "cacheado_curto", label: "Cacheado curto", suit: "masculino" },
+  // dois corpos
+  { id: "buzzcut", label: "Curtinho" },
+  { id: "none", label: "Careca / sem cabelo" },
 ];
 export const HAIR_COLORS: Option[] = [
   { id: "dark_brown", label: "Castanho", hex: "#4a3121" },

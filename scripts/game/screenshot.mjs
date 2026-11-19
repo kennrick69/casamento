@@ -41,9 +41,17 @@ for (const s of shots) {
   const errs = [];
   page.on("pageerror", (e) => errs.push("PAGEERROR " + e.message));
   try {
-    await page.goto(s.url, { waitUntil: "load", timeout: 60000 });
+    if (s.html) {
+      // Galeria embutida (ex.: comparar prévias de personagem lado a lado).
+      // Navega numa página HTML real (mesma origem) antes do setContent p/ as
+      // <img> do localhost carregarem.
+      await page.goto("http://localhost:3000/demo/jogo", { waitUntil: "domcontentloaded", timeout: 30000 }).catch(() => {});
+      await page.setContent(s.html, { waitUntil: "networkidle", timeout: 60000 });
+    } else {
+      await page.goto(s.url, { waitUntil: "load", timeout: 60000 });
+    }
   } catch (e) {
-    console.log("goto-warn", s.url, e.message);
+    console.log("goto-warn", s.url || "html", e.message);
   }
   await page.waitForTimeout(s.wait ?? 5000);
   try {

@@ -25,6 +25,19 @@ ou **OGA-BY** (nenhuma peça somente-GPL). Arquivos em `public/game/personagem/`
 - **Autores:** ElizaWy
 - **Fontes:** https://opengameart.org/content/lpc-hair
 
+### Cabelos adicionais do criador (item 2 do feedback)
+Novos estilos extraídos do LPC (`hair/<estilo>/adult/walk.png`, paleta base
+"orange", recolor por cor). Todos sob licença compatível (CC-BY-SA / OGA-BY / CC0).
+- **Chanel** (`bob`) — CC0 — ElizaWy, bluecarrot16
+- **Cacheado** (`curly_long`) — OGA-BY 3.0 — ElizaWy
+- **Cacheado curto** (`curly_short`) — OGA-BY 3.0 — ElizaWy
+- **Coque com franja** (`bangs_bun`) — CC0 — ElizaWy, bluecarrot16
+- **Rabo de cavalo** (`half_up`) — OGA-BY 3.0 — ElizaWy
+- **Topete** (`cowlick`) — CC0 — ElizaWy, bluecarrot16
+- **Social** (`parted`) — CC-BY-SA 3.0 — JaidynReiman, Joe White, Manuel Riecke (MrBeast)
+- **Raspado** (`high_and_tight`) — CC-BY-SA 3.0 — Skorpio, bluecarrot16
+- **Fontes:** https://opengameart.org/content/lpc-hair, https://github.com/ElizaWy/LPC/tree/main/Characters/Hair
+
 ### Camisa formal (terno)
 - **Licenças:** CC-BY-SA 3.0, GPL 3.0
 - **Autores:** Johannes Sjölund (wulax), Stephen Challener (Redshrike), Thane Brimhall (pennomi), bluecarrot16, laetissima
