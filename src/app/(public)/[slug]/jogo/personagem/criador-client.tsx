@@ -84,10 +84,10 @@ export function CriadorClient({
           {error && <p className="text-xs text-red-400 text-center">{error}</p>}
           {saved && (
             <Link
-              href={`/${slug}/jogo/mapa`}
+              href={`/${slug}/jogo`}
               className="inline-flex items-center justify-center h-11 px-6 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold w-full"
             >
-              Ir para a festa →
+              Voltar ao jogo
             </Link>
           )}
         </div>
