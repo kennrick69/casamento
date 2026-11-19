@@ -68,6 +68,7 @@ for (const s of shots) {
       console.log("click-warn", s.clickText, e.message);
     }
   }
+  if (s.waitAfter) await page.waitForTimeout(s.waitAfter);
   await page.screenshot({ path: s.out });
   console.log("shot", s.out, errs.length ? "ERR:" + errs.slice(0, 3).join(" | ") : "ok");
   await page.close();

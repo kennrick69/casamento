@@ -17,6 +17,7 @@ export interface Option {
   id: string;
   label: string;
   hex?: string; // swatch (pele/olhos)
+  suit?: BodyType; // combina só com este corpo; ausente = serve nos dois
 }
 
 // Pele (paleta body_ulpc; base embutida = "light")
@@ -29,8 +30,8 @@ export const SKINS: Option[] = [
 ];
 
 export const HAIR_STYLES: Option[] = [
-  { id: "long", label: "Longo" },
-  { id: "buzzcut", label: "Curto" },
+  { id: "long", label: "Longo", suit: "feminino" },
+  { id: "buzzcut", label: "Curto" }, // serve nos dois
   { id: "none", label: "Sem cabelo" },
 ];
 export const HAIR_COLORS: Option[] = [
@@ -81,6 +82,7 @@ export const OUTFITS: Outfit[] = [
   {
     id: "terno",
     label: "Terno",
+    suit: "masculino",
     layers: [
       { file: "outfit/shoes_male.png", z: 15 },
       { file: "outfit/terno_pants.png", z: 20 },
@@ -90,6 +92,7 @@ export const OUTFITS: Outfit[] = [
   {
     id: "vestido_rose",
     label: "Vestido rosé",
+    suit: "feminino",
     layers: [
       { file: "outfit/shoes_female.png", z: 15 },
       { file: "dress/rose.png", z: 30 },
@@ -98,6 +101,7 @@ export const OUTFITS: Outfit[] = [
   {
     id: "vestido_blue",
     label: "Vestido azul",
+    suit: "feminino",
     layers: [
       { file: "outfit/shoes_female.png", z: 15 },
       { file: "dress/blue.png", z: 30 },
@@ -106,6 +110,7 @@ export const OUTFITS: Outfit[] = [
   {
     id: "vestido_lavender",
     label: "Vestido lilás",
+    suit: "feminino",
     layers: [
       { file: "outfit/shoes_female.png", z: 15 },
       { file: "dress/lavender.png", z: 30 },
@@ -114,6 +119,7 @@ export const OUTFITS: Outfit[] = [
   {
     id: "noivo",
     label: "Noivo",
+    suit: "masculino",
     groom: true,
     layers: [
       { file: "outfit/shoes_male.png", z: 15 },
@@ -161,6 +167,23 @@ export const DEFAULT_SPEC: CharacterSpec = {
 
 export function getOutfit(id: string): Outfit | undefined {
   return OUTFITS.find((o) => o.id === id);
+}
+
+// ── Filtragem por corpo (item 1): listas mostram só o que combina ──
+// Visitante não vê noivo/noiva (item 4): canRestricted = organizador.
+const suits = (o: Option, body: BodyType) => !o.suit || o.suit === body;
+export function outfitsFor(body: BodyType, canRestricted: boolean): Outfit[] {
+  return OUTFITS.filter((o) => suits(o, body) && (canRestricted || (!o.bride && !o.groom)));
+}
+export function hairsFor(body: BodyType): Option[] {
+  return HAIR_STYLES.filter((h) => suits(h, body));
+}
+export function defaultOutfit(body: BodyType, canRestricted: boolean): string {
+  const list = outfitsFor(body, canRestricted).filter((o) => !o.bride && !o.groom);
+  return (list[0] ?? OUTFITS[0]).id;
+}
+export function defaultHair(body: BodyType): string {
+  return hairsFor(body).some((h) => h.id === "long") ? "long" : "buzzcut";
 }
 
 const idIn = (list: Option[], id: string) => list.some((o) => o.id === id);

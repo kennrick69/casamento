@@ -2,17 +2,20 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { Lock, Check, Loader2 } from "lucide-react";
+import { Check, Loader2, Play } from "lucide-react";
 import {
   SKINS,
-  HAIR_STYLES,
   HAIR_COLORS,
   EYE_COLORS,
   EYEBROWS,
   BEARDS,
   GLASSES,
-  OUTFITS,
+  outfitsFor,
+  hairsFor,
+  defaultOutfit,
+  defaultHair,
   type CharacterSpec,
+  type BodyType,
 } from "@/lib/game/character/catalog";
 import { saveCharacter } from "./actions";
 
@@ -42,8 +45,25 @@ export function CriadorClient({
     return `/${slug}/jogo/personagem/preview?${q.toString()}`;
   }, [slug, spec]);
 
+  // Listas visíveis conforme o corpo (item 1) e o papel (item 4: visitante não
+  // vê noivo/noiva).
+  const visibleOutfits = useMemo(() => outfitsFor(spec.body, canRestricted), [spec.body, canRestricted]);
+  const visibleHairs = useMemo(() => hairsFor(spec.body), [spec.body]);
+
   function set<K extends keyof CharacterSpec>(key: K, value: CharacterSpec[K]) {
     setSpec((s) => ({ ...s, [key]: value }));
+    setSaved(false);
+    setError(null);
+  }
+
+  // Trocar o corpo auto-ajusta roupa e cabelo que não combinam (item 1).
+  function setBody(body: BodyType) {
+    setSpec((s) => {
+      const next = { ...s, body };
+      if (!outfitsFor(body, canRestricted).some((o) => o.id === s.outfit)) next.outfit = defaultOutfit(body, canRestricted);
+      if (!hairsFor(body).some((h) => h.id === s.hairStyle)) next.hairStyle = defaultHair(body);
+      return next;
+    });
     setSaved(false);
     setError(null);
   }
@@ -65,8 +85,8 @@ export function CriadorClient({
 
       <div className="grid gap-6 w-full max-w-3xl md:grid-cols-[220px_1fr]">
         {/* Preview */}
-        <div className="flex flex-col items-center gap-3">
-          <div className="rounded-xl p-4 bg-gradient-to-b from-sky-200 to-sky-400 shadow-inner">
+        <div className="flex flex-col items-center gap-3 md:sticky md:top-4 md:self-start">
+          <div className="relative flex size-[200px] items-center justify-center rounded-xl bg-gradient-to-b from-sky-200 to-sky-400 p-4 shadow-inner">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               key={previewUrl}
@@ -74,25 +94,46 @@ export function CriadorClient({
               alt="Prévia do personagem"
               width={192}
               height={192}
+              onError={(e) => {
+                // prévia nunca derruba a página: se falhar, mostra o alt (item 9)
+                e.currentTarget.style.visibility = "hidden";
+              }}
+              onLoad={(e) => {
+                e.currentTarget.style.visibility = "visible";
+              }}
               style={{ imageRendering: "pixelated", width: 192, height: 192 }}
             />
           </div>
-          <button
-            onClick={onSave}
-            disabled={pending}
-            className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-semibold disabled:opacity-60 w-full"
-          >
-            {pending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
-            {saved ? "Salvo!" : "Salvar personagem"}
-          </button>
-          {error && <p className="text-xs text-red-400 text-center">{error}</p>}
-          {saved && (
-            <Link
-              href={`/${slug}/jogo`}
-              className="inline-flex items-center justify-center h-11 px-6 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold w-full"
+
+          {saved ? (
+            <>
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-emerald-400">
+                <Check className="size-4" aria-hidden /> Personagem salvo!
+              </p>
+              <Link
+                href={`/${slug}/jogo`}
+                className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-lg font-bold text-white shadow-lg ring-1 ring-emerald-300 hover:bg-emerald-500"
+              >
+                <Play className="size-5" aria-hidden /> Entrar no jogo
+              </Link>
+              <button onClick={() => setSaved(false)} className="text-xs text-neutral-400 underline hover:text-neutral-200">
+                Continuar editando
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={onSave}
+              disabled={pending}
+              className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-emerald-400 bg-emerald-600 text-lg font-bold text-white shadow-lg hover:bg-emerald-500 disabled:opacity-60"
             >
-              Voltar ao jogo
-            </Link>
+              {pending ? <Loader2 className="size-5 animate-spin" aria-hidden /> : <Check className="size-5" aria-hidden />}
+              Salvar personagem
+            </button>
+          )}
+          {error && (
+            <p className="rounded-lg bg-red-950/60 px-3 py-2 text-center text-xs text-red-300" role="alert">
+              {error}
+            </p>
           )}
         </div>
 
@@ -100,7 +141,7 @@ export function CriadorClient({
         <div className="flex flex-col gap-5">
           <Group label="Corpo">
             {BODIES.map((o) => (
-              <Pick key={o.id} active={spec.body === o.id} onClick={() => set("body", o.id as CharacterSpec["body"])}>
+              <Pick key={o.id} active={spec.body === o.id} onClick={() => setBody(o.id as BodyType)}>
                 {o.label}
               </Pick>
             ))}
@@ -127,7 +168,7 @@ export function CriadorClient({
             ))}
           </Group>
           <Group label="Cabelo">
-            {HAIR_STYLES.map((o) => (
+            {visibleHairs.map((o) => (
               <Pick key={o.id} active={spec.hairStyle === o.id} onClick={() => set("hairStyle", o.id)}>
                 {o.label}
               </Pick>
@@ -157,21 +198,11 @@ export function CriadorClient({
             ))}
           </Group>
           <Group label="Roupa">
-            {OUTFITS.map((o) => {
-              const locked = (o.bride || o.groom) && !canRestricted;
-              return (
-                <Pick
-                  key={o.id}
-                  active={spec.outfit === o.id}
-                  disabled={locked}
-                  title={locked ? "Traje reservado aos organizadores do evento." : undefined}
-                  onClick={() => !locked && set("outfit", o.id)}
-                >
-                  {locked && <Lock className="size-3" />}
-                  {o.label}
-                </Pick>
-              );
-            })}
+            {visibleOutfits.map((o) => (
+              <Pick key={o.id} active={spec.outfit === o.id} onClick={() => set("outfit", o.id)}>
+                {o.label}
+              </Pick>
+            ))}
           </Group>
         </div>
       </div>
