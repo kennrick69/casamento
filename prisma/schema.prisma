@@ -409,6 +409,7 @@ model GameCharacter {
   hairColor      String
   outfit         String
   appearance     Json?
+  gameProgress   Json?
   isChild        Boolean  @default(false)
   lockedByRoleId String?
   randomSeed     Int?
