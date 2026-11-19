@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Loader2, Info, MapPin, X } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Info, MapPin, X, Lock } from "lucide-react";
 import { WORLD, PHASES, tableGrid, type LevelId } from "@/lib/game/world";
 import type { Controls, Interactable, SceneConfig, NpcAvatar } from "./game-canvas";
 
@@ -62,6 +62,16 @@ export function MapaClient(props: MapaClientProps) {
   const controls = useRef<Controls>({ up: false, down: false, left: false, right: false, interact: false });
 
   const [debug, setDebug] = useState(false);
+  // Controles touch (D-pad/A) só aparecem em telas de toque (item 13). No PC
+  // usa-se teclado (setas/WASD + Enter).
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => {
+    const touch =
+      typeof window !== "undefined" &&
+      (window.matchMedia?.("(pointer: coarse)").matches || "ontouchstart" in window || navigator.maxTouchPoints > 0);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsTouch(!!touch);
+  }, []);
 
   // Progresso: fase 1 também conclui quando o RSVP está CONFIRMED.
   const [progress, setProgress] = useState<GameProgress>(() => ({
@@ -133,7 +143,7 @@ export function MapaClient(props: MapaClientProps) {
           label: m.label,
           locked,
           done,
-          icon: locked ? "🔒" : done ? "⭐" : "📍",
+          glyph: locked ? "lock" : done ? "star" : "pin",
         };
       });
       return {
@@ -143,7 +153,6 @@ export function MapaClient(props: MapaClientProps) {
         h: WORLD.h,
         atlasUrl,
         spawn: { x: WORLD.nodes[0].x, y: WORLD.nodes[0].y, facing: "down" },
-        zoom: 1,
         nodes: WORLD.nodes,
         edges: WORLD.edges,
         startNode: 0,
@@ -158,13 +167,13 @@ export function MapaClient(props: MapaClientProps) {
 
     if (view === "vila") {
       interactables = [
-        { id: "npc", x: phase.anchors.npc.x, y: phase.anchors.npc.y, kind: "npc", icon: "💌", label: "Recepcionista" },
+        { id: "npc", x: phase.anchors.npc.x, y: phase.anchors.npc.y, kind: "npc", glyph: "mail", label: "Recepcionista" },
         {
           id: "gate",
           x: phase.anchors.gate.x,
           y: phase.anchors.gate.y,
           kind: "gate",
-          icon: progress.phase1 ? "🌸" : "🔒",
+          glyph: progress.phase1 ? "flower" : "lock",
           locked: !progress.phase1,
           label: "Portão de flores",
         },
@@ -176,7 +185,7 @@ export function MapaClient(props: MapaClientProps) {
         x: peds[i].x,
         y: peds[i].y,
         kind: "pedestal",
-        icon: progress.memoriesSeen.includes(mem.id) ? "✓" : "📖",
+        glyph: progress.memoriesSeen.includes(mem.id) ? "check" : "book",
         done: progress.memoriesSeen.includes(mem.id),
         label: mem.title,
       }));
@@ -185,7 +194,7 @@ export function MapaClient(props: MapaClientProps) {
         x: phase.anchors.exit.x,
         y: phase.anchors.exit.y,
         kind: "gate",
-        icon: "🚪",
+        glyph: "door",
         label: "Voltar ao mapa",
       });
     } else if (view === "grande-dia") {
@@ -212,7 +221,6 @@ export function MapaClient(props: MapaClientProps) {
       h: phase.h,
       atlasUrl,
       spawn: phase.spawn,
-      zoom: 2,
       collisionUrl: phase.collision,
       interactables,
       npcs,
@@ -245,7 +253,7 @@ export function MapaClient(props: MapaClientProps) {
           setProgress(next);
           persist(next);
           setView("world");
-          showToast("Fase da Vila concluída! O Bosque foi liberado. 🌿");
+          showToast("Fase da Vila concluída! O Bosque foi liberado.");
         }
         return;
       }
@@ -267,7 +275,7 @@ export function MapaClient(props: MapaClientProps) {
             const next = { ...progress, memoriesSeen: seen, phase2: progress.phase2 || allSeen };
             setProgress(next);
             persist(next);
-            if (allSeen) showToast("Você reviveu todas as memórias! O Grande Dia foi liberado. 💞");
+            if (allSeen) showToast("Você reviveu todas as memórias! O Grande Dia foi liberado.");
           }
         }
         return;
@@ -302,7 +310,7 @@ export function MapaClient(props: MapaClientProps) {
     view === "grande-dia" && props.myTableId
       ? `Encontre sua mesa: ${props.tables.find((t) => t.id === props.myTableId)?.name ?? ""}`
       : view === "grande-dia" && !props.myTableId
-        ? "Sua mesa será definida em breve 💛"
+        ? "Sua mesa será definida em breve"
         : view === "bosque"
           ? `Memórias: ${progress.memoriesSeen.length}/${props.memories.length}`
           : null;
@@ -349,15 +357,20 @@ export function MapaClient(props: MapaClientProps) {
           onDebugPoint={debug ? setDebugPoint : undefined}
         />
 
-        {/* Dica de proximidade */}
+        {/* Dica de proximidade (rótulo legível — item 19) */}
         {near && !dialog && (
-          <div className="pointer-events-none absolute left-1/2 top-3 -translate-x-1/2 rounded-md bg-black/75 px-3 py-1.5 text-center text-xs">
+          <div className="pointer-events-none absolute left-1/2 top-3 flex max-w-[92%] -translate-x-1/2 items-center gap-2 rounded-lg bg-black/80 px-4 py-2 text-center text-sm shadow-lg">
             {near.locked ? (
-              <>🔒 {near.label} — bloqueado</>
+              <>
+                <Lock className="size-4 shrink-0 text-neutral-300" aria-hidden />
+                <span className="font-semibold">{near.label}</span>
+                <span className="text-neutral-400">— bloqueado</span>
+              </>
             ) : (
               <>
-                <span className="font-semibold">{near.label}</span> · aperte{" "}
-                <kbd className="rounded bg-neutral-700 px-1">⏎</kbd>/<kbd className="rounded bg-neutral-700 px-1">A</kbd>
+                <span className="font-semibold">{near.label}</span>
+                <span className="text-neutral-300">· aperte</span>
+                <kbd className="rounded bg-neutral-700 px-1.5 py-0.5 text-xs">{isTouch ? "A" : "⏎"}</kbd>
               </>
             )}
           </div>
@@ -377,20 +390,28 @@ export function MapaClient(props: MapaClientProps) {
           </div>
         )}
 
-        {/* Controles touch */}
-        <div className="absolute bottom-4 left-4 select-none">
-          <DPad onPress={press} />
-        </div>
-        <button
-          type="button"
-          aria-label="Interagir"
-          onPointerDown={() => {
-            controls.current.interact = true;
-          }}
-          className="absolute bottom-7 right-6 size-16 select-none rounded-full border-2 border-emerald-300 bg-emerald-600/90 text-xl font-bold text-white active:scale-95"
-        >
-          A
-        </button>
+        {/* Controles touch — só em telas de toque (item 13) */}
+        {isTouch && (
+          <>
+            <div
+              className="absolute bottom-6 left-5 select-none"
+              style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
+            >
+              <DPad onPress={press} />
+            </div>
+            <button
+              type="button"
+              aria-label="Interagir"
+              onPointerDown={() => {
+                controls.current.interact = true;
+              }}
+              className="absolute bottom-10 right-6 size-20 select-none rounded-full border-2 border-emerald-300 bg-emerald-600/90 text-2xl font-bold text-white shadow-lg active:scale-95"
+              style={{ bottom: "calc(2.5rem + env(safe-area-inset-bottom, 0px))" }}
+            >
+              A
+            </button>
+          </>
+        )}
       </div>
 
       {/* ── Diálogos ── */}
@@ -400,7 +421,7 @@ export function MapaClient(props: MapaClientProps) {
             <>
               <p className="text-sm">
                 Olá, {playerName}! Visitantes não confirmam presença — mas fique à vontade para explorar a festa de{" "}
-                {coupleNames}. 💛
+                {coupleNames}.
               </p>
               <DialogActions>
                 <GhostBtn onClick={() => setDialog(null)}>Fechar</GhostBtn>
@@ -409,7 +430,7 @@ export function MapaClient(props: MapaClientProps) {
           ) : progress.phase1 ? (
             <>
               <p className="text-sm">
-                Sua presença já está confirmada, {playerName}! 🎉 Atravesse o portão de flores à direita para seguir
+                Sua presença já está confirmada, {playerName}! Atravesse o portão de flores à direita para seguir
                 viagem.
               </p>
               <DialogActions>
@@ -466,13 +487,13 @@ export function MapaClient(props: MapaClientProps) {
         <DialogBox title={tableMsg.name} onClose={() => setDialog(null)}>
           {tableMsg.mine ? (
             <p className="text-sm">
-              Encontrou seu lugar, {playerName}! 🎉{" "}
+              Encontrou seu lugar, {playerName}!{" "}
               {props.coupleMessage ?? `${coupleNames} agradecem de coração por você estar aqui neste dia.`}
             </p>
           ) : props.myTableId ? (
-            <p className="text-sm">Essa não é a sua mesa — siga o brilho dourado até a sua. ✨</p>
+            <p className="text-sm">Essa não é a sua mesa — siga o brilho dourado até a sua.</p>
           ) : (
-            <p className="text-sm">Sua mesa será definida em breve. Fique à vontade para explorar o salão! 💛</p>
+            <p className="text-sm">Sua mesa será definida em breve. Fique à vontade para explorar o salão!</p>
           )}
           <DialogActions>
             <PrimaryBtn onClick={() => setDialog(null)}>Fechar</PrimaryBtn>
@@ -559,7 +580,7 @@ function CreditsOverlay({ onClose }: { onClose: () => void }) {
 // D-pad de 4 direções para toque.
 function DPad({ onPress }: { onPress: (key: keyof Controls, value: boolean) => void }) {
   const btn =
-    "flex size-12 items-center justify-center rounded-lg border border-neutral-500 bg-neutral-700/80 text-lg text-white active:bg-neutral-600";
+    "flex size-14 items-center justify-center rounded-lg border border-neutral-400 bg-neutral-700/85 text-2xl text-white shadow-md active:bg-emerald-600 touch-none";
   const bind = (key: keyof Controls) => ({
     onPointerDown: () => onPress(key, true),
     onPointerUp: () => onPress(key, false),

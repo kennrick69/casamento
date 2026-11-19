@@ -3,6 +3,10 @@
 import { useEffect, useRef } from "react";
 import type { Dir, Point } from "@/lib/game/world";
 
+// Phaser é dinâmico (script vendored) e sua API não é tipada aqui; `any` é
+// intencional em todo o motor desta cena.
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // ─── Modo Gamificado · Motor da cena (Phaser) ──────────────────────────────
 // Um único canvas que renderiza DOIS modos a partir de um SceneConfig:
 //   • "world"  — mapa-múndi: avatar anda por nós da trilha (estilo SMW).
@@ -16,6 +20,42 @@ const PHASER_SRC = "/game/vendor/phaser-3.88.2.min.js";
 const SPEED = 165;
 const FRAMES_PER_DIR = 9; // sheets LPC: 9 colunas × 4 linhas
 const ROW: Record<Dir, number> = { up: 0, left: 1, down: 2, right: 3 };
+
+// Zoom responsivo "cover": o mapa sempre enche a tela (sem faixas vazias) e a
+// câmera segue o avatar. No celular mostra ~2 casas; no desktop, quase a fase
+// toda. (Feedback do JOs, itens 14 e 19.)
+function computeZoom(vw: number, vh: number, mapW: number, mapH: number): number {
+  const cover = Math.max(vw / mapW, vh / mapH);
+  return Math.max(0.5, Math.min(1.6, cover));
+}
+
+// ─── Ícones em pixel-art (sem emoji — feedback do JOs, item 6) ───────────────
+// Pequenos bitmaps desenhados com retângulos (cada caractere ≠ '.' vira um
+// bloco). Substituem os emoji flutuantes dos marcadores (cadeado, estrela…).
+type GlyphName = "lock" | "star" | "pin" | "mail" | "flower" | "book" | "check" | "door";
+const GLYPHS: Record<GlyphName, string[]> = {
+  lock: ["..###..", ".#...#.", ".#...#.", ".#...#.", "#######", "##.#.##", "#######", "#######"],
+  star: ["...#...", "...#...", "#######", ".#####.", "..###..", ".##.##.", "##...##"],
+  pin: [".#####.", "#.....#", "#..#..#", "#.....#", ".#...#.", "..#.#..", "...#...", "...#..."],
+  mail: ["#######", "##...##", "#.#.#.#", "#..#..#", "#.....#", "#######"],
+  flower: ["..#.#..", ".#####.", ".#####.", "..###..", "...#...", ".##.#..", "...#..."],
+  book: [".#...#.", "#######", "#.#.#.#", "#.#.#.#", "#######", ".#...#."],
+  check: [".....##", "....##.", "#..##..", "##.##..", ".###...", "..#...."],
+  door: ["#######", "#.....#", "#.....#", "#....##", "#.....#", "#.....#", "#######"],
+};
+function paintGlyph(scene: any, container: any, cx: number, cy: number, name: GlyphName, color: number, alpha: number, off: number) {
+  const g = scene.add.graphics();
+  const rows = GLYPHS[name];
+  const u = 3;
+  const w = rows[0].length;
+  const ox = cx - (w * u) / 2 + off;
+  const oy = cy - (rows.length * u) / 2 + off;
+  g.fillStyle(color, alpha);
+  rows.forEach((row: string, r: number) => {
+    for (let c = 0; c < row.length; c++) if (row[c] !== ".") g.fillRect(ox + c * u, oy + r * u, u, u);
+  });
+  container.add(g);
+}
 
 export type Controls = {
   up: boolean;
@@ -34,7 +74,7 @@ export interface Interactable {
   locked?: boolean;
   done?: boolean;
   kind?: "npc" | "pedestal" | "gate" | "table" | "marker";
-  icon?: string; // emoji flutuante
+  glyph?: GlyphName; // ícone pixel-art flutuante (sem emoji)
   tableLabel?: string; // texto da mesa
   highlight?: boolean; // alvo da missão (brilho dourado)
 }
@@ -65,7 +105,6 @@ export interface SceneConfig {
   debug?: boolean;
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 declare global {
   interface Window {
     Phaser?: any;
@@ -195,7 +234,7 @@ export function GameCanvas({
           return c;
         }
 
-        // marcador flutuante (ring + emoji) para NPC / pedestal / portão / mesa
+        // marcador flutuante (anel + ícone pixel-art) para NPC / pedestal / portão
         function drawMarker(scene: any, it: Interactable) {
           const dimmed = it.locked;
           const color = it.done ? 0x9aa0a6 : it.locked ? 0x9aa0a6 : 0xffe58a;
@@ -204,13 +243,17 @@ export function GameCanvas({
           if (!dimmed && !it.done) {
             scene.tweens.add({ targets: ring, scale: { from: 0.85, to: 1.1 }, duration: 900, yoyo: true, repeat: -1 });
           }
-          const icon = it.icon ?? (it.locked ? "🔒" : it.done ? "✓" : "❗");
-          const label = scene.add
-            .text(it.x, it.y - 44, icon, { fontSize: "26px" })
-            .setOrigin(0.5)
-            .setDepth(100001);
-          scene.tweens.add({ targets: label, y: it.y - 52, duration: 900, yoyo: true, repeat: -1 });
-          const c = scene.add.container(0, 0, [ring, label]);
+          // ícone pixel-art flutuante (cadeado, estrela, etc. — nunca emoji)
+          const glyph: GlyphName =
+            it.glyph ?? (it.locked ? "lock" : it.done ? (it.kind === "pedestal" ? "check" : "star") : "pin");
+          const glyphColor = it.locked ? 0xb9bdc2 : it.done ? 0xffd24a : 0xffe58a;
+          const gy = it.y - 46;
+          const iconLayer = scene.add.container(0, 0);
+          paintGlyph(scene, iconLayer, it.x, gy, glyph, 0x201208, 0.55, 1.5); // sombra
+          paintGlyph(scene, iconLayer, it.x, gy, glyph, glyphColor, 1, 0);
+          iconLayer.setDepth(100001);
+          scene.tweens.add({ targets: iconLayer, y: -7, duration: 900, yoyo: true, repeat: -1 });
+          const c = scene.add.container(0, 0, [ring, iconLayer]);
           c.setDepth(100000);
           return c;
         }
@@ -239,8 +282,18 @@ export function GameCanvas({
 
           scene.physics.world.setBounds(0, 0, W, H);
           scene.cameras.main.setBounds(0, 0, W, H);
-          scene.cameras.main.setZoom(cfg.zoom ?? (cfg.mode === "world" ? 1 : 2));
+          const applyZoom = () => {
+            const vw = scene.scale.width || 640;
+            const vh = scene.scale.height || 400;
+            scene.cameras.main.setZoom(cfg.zoom ?? computeZoom(vw, vh, W, H));
+          };
+          applyZoom();
           scene.cameras.main.setBackgroundColor("#2b3a1e");
+          // recalcula zoom e recentra ao girar/redimensionar a tela
+          scene.scale.on("resize", () => {
+            applyZoom();
+            if (player) scene.cameras.main.centerOn(player.x, player.y);
+          });
 
           addWalkAnims(scene, "player", "player");
 
@@ -272,7 +325,10 @@ export function GameCanvas({
           player.body.setSize(22, 16).setOffset(21, 46); // pés
           player.setDepth(cfg.spawn.y);
           if (scene._walls) scene.physics.add.collider(player, scene._walls);
-          scene.cameras.main.startFollow(player, true, 0.12, 0.12);
+          scene.cameras.main.startFollow(player, true, 0.14, 0.14);
+          // snap imediato: o avatar já nasce centralizado e visível (não espera
+          // o lerp da câmera) — resolve "o boneco não aparece" (itens 15 e 19).
+          scene.cameras.main.centerOn(player.x, player.y);
 
           // ── world: desenha a trilha e posiciona no nó inicial ──
           if (cfg.mode === "world" && cfg.nodes && cfg.edges) {

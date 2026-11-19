@@ -27,10 +27,15 @@ const COOKIE = { name: "guest_token", value: TOKEN, url: "http://localhost:3000"
 const shots = JSON.parse(readFileSync(process.argv[2], "utf8"));
 
 const browser = await chromium.launch({ channel: "chrome" });
-const ctx = await browser.newContext({ deviceScaleFactor: 1 });
-await ctx.addCookies([COOKIE]);
+// Dois contextos: desktop (padrão) e toque (celular, hasTouch/isMobile → o jogo
+// mostra o D-pad só nesse; ver item 13). Cada shot escolhe via "touch": true.
+const ctxDesktop = await browser.newContext({ deviceScaleFactor: 1 });
+const ctxTouch = await browser.newContext({ deviceScaleFactor: 2, hasTouch: true, isMobile: true });
+await ctxDesktop.addCookies([COOKIE]);
+await ctxTouch.addCookies([COOKIE]);
 
 for (const s of shots) {
+  const ctx = s.touch ? ctxTouch : ctxDesktop;
   const page = await ctx.newPage();
   await page.setViewportSize({ width: s.w ?? 1280, height: s.h ?? 800 });
   const errs = [];
@@ -67,4 +72,6 @@ for (const s of shots) {
   console.log("shot", s.out, errs.length ? "ERR:" + errs.slice(0, 3).join(" | ") : "ok");
   await page.close();
 }
+await ctxDesktop.close();
+await ctxTouch.close();
 await browser.close();
