@@ -53,6 +53,15 @@ Novos estilos extraídos do LPC (`hair/<estilo>/adult/walk.png`, paleta base
 - **Autores:** Bluecarrot16, ElizaWy, JaidynReiman, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
 - **Fontes:** https://github.com/ElizaWy/LPC/tree/main/Characters/Clothing, https://opengameart.org/content/lpc-expanded-socks-shoes
 
+### Terno e Noivo (item 11 do feedback)
+Trajes masculinos distintos — convidado (terno) e organizador (noivo). Peças LPC
+pré-coloridas ou recoloridas por luminância para tons escuros sólidos.
+- **Paletó** (`torso/jacket/collared`, charcoal/black) — CC-BY-SA 3.0 — bluecarrot16
+- **Gravata** (`neck/tie/necktie`, recolor vinho) — CC-BY-SA 3.0 — JaidynReiman, bluecarrot16, Thane Brimhall (pennomi), laetissima, Makrohn
+- **Gravata-borboleta** (`neck/tie/bowtie`, recolor branco) — CC-BY-SA 3.0 — JaidynReiman, bluecarrot16, Thane Brimhall (pennomi), laetissima, Makrohn
+- **Calça social** (`legs/pants`, recolor charcoal/preto) — OGA-BY 3.0 / CC-BY-SA 3.0 — bluecarrot16, JaidynReiman, ElizaWy, Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+- **Fontes:** https://opengameart.org/content/lpc-gentleman, https://github.com/ElizaWy/LPC
+
 ### Vestido (slit)
 - **Licenças:** CC-BY-SA 3.0, GPL 2.0, GPL 3.0, OGA-BY 3.0
 - **Autores:** ElizaWy, Nila122, bluecarrot16

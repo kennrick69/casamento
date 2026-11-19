@@ -96,10 +96,13 @@ export const OUTFITS: Outfit[] = [
     id: "terno",
     label: "Terno",
     suit: "masculino",
+    // convidado: paletó escuro (charcoal) + calça social + camisa clara + gravata
     layers: [
       { file: "outfit/shoes_male.png", z: 15 },
-      { file: "outfit/terno_pants.png", z: 20 },
+      { file: "outfit/pants_charcoal.png", z: 20 },
       { file: "outfit/terno_shirt.png", z: 35 },
+      { file: "outfit/necktie.png", z: 37 },
+      { file: "outfit/jacket_charcoal.png", z: 40 },
     ],
   },
   {
@@ -134,10 +137,13 @@ export const OUTFITS: Outfit[] = [
     label: "Noivo",
     suit: "masculino",
     groom: true,
+    // destaque do noivo: paletó preto (smoking) + calça preta + gravata-borboleta
     layers: [
       { file: "outfit/shoes_male.png", z: 15 },
-      { file: "outfit/terno_pants.png", z: 20 },
+      { file: "outfit/pants_black.png", z: 20 },
       { file: "outfit/terno_shirt.png", z: 35 },
+      { file: "outfit/bowtie.png", z: 37 },
+      { file: "outfit/jacket_black.png", z: 40 },
     ],
   },
   {
