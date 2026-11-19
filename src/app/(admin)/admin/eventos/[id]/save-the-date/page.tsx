@@ -17,7 +17,7 @@ export default async function SaveTheDatePage({ params }: Props) {
 
   const event = await prisma.event.findUnique({
     where: { id: eventId },
-    select: { coupleNames: true, ceremonyDate: true },
+    select: { coupleNames: true, ceremonyDate: true, timezone: true },
   });
   if (!event) notFound();
 
@@ -38,6 +38,7 @@ export default async function SaveTheDatePage({ params }: Props) {
           eventId={eventId}
           coupleNames={event.coupleNames}
           ceremonyDate={event.ceremonyDate.toISOString()}
+          timezone={event.timezone}
           guestCount={guestCount}
         />
       </main>

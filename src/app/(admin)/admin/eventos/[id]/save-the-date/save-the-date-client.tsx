@@ -18,15 +18,16 @@ interface Props {
   eventId: string;
   coupleNames: string;
   ceremonyDate: string;
+  timezone: string;
   guestCount: number;
 }
 
-export function SaveTheDateClient({ eventId, coupleNames, ceremonyDate, guestCount }: Props) {
+export function SaveTheDateClient({ eventId, coupleNames, ceremonyDate, timezone, guestCount }: Props) {
   const [template, setTemplate] = useState<Template>("classico");
   const [loading, setLoading] = useState(false);
 
   const dateStr = new Date(ceremonyDate).toLocaleDateString("pt-BR", {
-    day: "numeric", month: "long", year: "numeric",
+    day: "numeric", month: "long", year: "numeric", timeZone: timezone,
   });
 
   async function handleGenerate() {

@@ -8,6 +8,7 @@ interface SaveTheDateOptions {
   guestName: string;
   coupleNames: string;
   ceremonyDate: Date;
+  timezone: string;
   venueName?: string;
   rsvpUrl: string;
   template: SaveTheDateTemplate;
@@ -26,7 +27,7 @@ const H = 420;
 export async function generateSaveTheDatePdf(opts: SaveTheDateOptions): Promise<Buffer> {
   const tpl = TEMPLATES[opts.template];
   const dateStr = opts.ceremonyDate.toLocaleDateString("pt-BR", {
-    weekday: "long", day: "numeric", month: "long", year: "numeric",
+    weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: opts.timezone,
   });
 
   // Generate QR code as PNG buffer

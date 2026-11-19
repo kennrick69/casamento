@@ -24,10 +24,10 @@ export async function generateMetadata({
   const { slug } = await params;
   const event = await prisma.event.findUnique({
     where: { slug },
-    select: { coupleNames: true, ceremonyDate: true, description: true },
+    select: { coupleNames: true, ceremonyDate: true, description: true, timezone: true },
   });
   if (!event) return { title: slug };
-  const dateStr = event.ceremonyDate.toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" });
+  const dateStr = formatEventDate(event.ceremonyDate, event.timezone, "d 'de' MMMM 'de' yyyy");
   const title = `Casamento de ${event.coupleNames}`;
   const description = event.description
     ? event.description

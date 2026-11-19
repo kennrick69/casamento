@@ -10,8 +10,9 @@ import { buttonVariants } from "@/components/ui/button";
 import { Users, Camera, Gift, Shield, AlertTriangle, ClipboardList, Music, Lock, Settings, User as UserIcon, PartyPopper } from "lucide-react";
 import { GameStatIcon } from "@/components/admin/game-stat-icon";
 import Link from "next/link";
-import { format, formatDistanceToNow, differenceInCalendarDays } from "date-fns";
+import { formatDistanceToNow, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatEventDate } from "@/lib/timezone";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Dashboard do evento" };
@@ -138,7 +139,7 @@ export default async function EventDashboardPage({
             {countdownText}
           </p>
           <p className={`text-xs mt-0.5 ${daysLeft > 0 ? "text-white/50" : "text-muted-foreground"}`}>
-            {format(event.ceremonyDate, "EEEE, d 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+            {formatEventDate(event.ceremonyDate, event.timezone, "EEEE, d 'de' MMMM 'de' yyyy 'às' HH:mm")}
           </p>
         </div>
 

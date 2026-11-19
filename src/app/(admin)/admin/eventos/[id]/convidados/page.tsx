@@ -28,7 +28,7 @@ export default async function ConvidadosPage({
 
   const event = await prisma.event.findUnique({
     where: { id },
-    select: { coupleNames: true, slug: true, ceremonyDate: true, publicTokenK: true },
+    select: { coupleNames: true, slug: true, ceremonyDate: true, timezone: true, publicTokenK: true },
   });
   if (!event) notFound();
 
@@ -92,6 +92,7 @@ export default async function ConvidadosPage({
             coupleNames: event.coupleNames,
             slug: event.slug,
             ceremonyDate: event.ceremonyDate.toISOString(),
+            timezone: event.timezone,
             publicTokenK: event.publicTokenK,
             appUrl,
           }}

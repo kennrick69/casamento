@@ -27,7 +27,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const event = await prisma.event.findUnique({
     where: { id },
-    select: { coupleNames: true, ceremonyDate: true, slug: true, publicTokenK: true },
+    select: { coupleNames: true, ceremonyDate: true, timezone: true, slug: true, publicTokenK: true },
   });
   if (!event) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
 
@@ -80,6 +80,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         guestName: guest.name,
         coupleNames: event.coupleNames,
         ceremonyDate: event.ceremonyDate,
+        timezone: event.timezone,
         venueName: venueLoc?.title,
         rsvpUrl,
         template,

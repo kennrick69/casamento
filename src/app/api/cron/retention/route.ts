@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { email } from "@/lib/email";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatEventDate } from "@/lib/timezone";
 
 // Events with ceremony date older than this threshold get a 30-day archival warning
 const WARNING_THRESHOLD_DAYS = 365;
@@ -56,7 +55,7 @@ export async function POST(req: NextRequest) {
   let warned = 0;
   for (const event of toWarn) {
     const dateStr = event.ceremonyDate
-      ? format(event.ceremonyDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })
+      ? formatEventDate(event.ceremonyDate, event.timezone, "d 'de' MMMM 'de' yyyy")
       : "data desconhecida";
 
     for (const org of event.organizers) {
