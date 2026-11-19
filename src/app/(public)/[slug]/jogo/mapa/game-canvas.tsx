@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { Dir, Point } from "@/lib/game/world";
+import type { Dir, Point, WorldEdge } from "@/lib/game/world";
 
 // Phaser é dinâmico (script vendored) e sua API não é tipada aqui; `any` é
 // intencional em todo o motor desta cena.
@@ -98,7 +98,7 @@ export interface SceneConfig {
   interactables: Interactable[];
   // world:
   nodes?: Point[];
-  edges?: [number, number][];
+  edges?: WorldEdge[];
   startNode?: number;
   // phase:
   npcs?: NpcAvatar[];
@@ -330,16 +330,12 @@ export function GameCanvas({
           // o lerp da câmera) — resolve "o boneco não aparece" (itens 15 e 19).
           scene.cameras.main.centerOn(player.x, player.y);
 
-          // ── world: desenha a trilha e posiciona no nó inicial ──
+          // ── world: posiciona no nó inicial (a trilha já está pintada na arte;
+          // não desenhamos linha reta por cima — item 20) ──
           if (cfg.mode === "world" && cfg.nodes && cfg.edges) {
-            const g = scene.add.graphics();
-            g.lineStyle(10, 0xffffff, 0.35);
-            cfg.edges.forEach(([a, b]) => {
-              g.lineBetween(cfg.nodes![a].x, cfg.nodes![a].y, cfg.nodes![b].x, cfg.nodes![b].y);
-            });
-            g.setDepth(1);
             const n = cfg.nodes[currentNode];
             player.setPosition(n.x, n.y);
+            player.setDepth(n.y);
             player.body.setAllowGravity(false);
             player.body.moves = false; // movimento por tween, não física
           }
@@ -438,10 +434,68 @@ export function GameCanvas({
           }
         }
 
+        // vizinhos de um nó e a polilinha (start→…→end) seguindo a trilha
+        function neighborsOf(node: number): number[] {
+          const out: number[] = [];
+          (cfg.edges ?? []).forEach((e) => {
+            if (e.a === node) out.push(e.b);
+            else if (e.b === node) out.push(e.a);
+          });
+          return out;
+        }
+        function pathBetween(from: number, to: number): Point[] | null {
+          for (const e of cfg.edges ?? []) {
+            if (e.a === from && e.b === to) return [cfg.nodes![from], ...(e.via ?? []), cfg.nodes![to]];
+            if (e.a === to && e.b === from)
+              return [cfg.nodes![from], ...[...(e.via ?? [])].reverse(), cfg.nodes![to]];
+          }
+          return null;
+        }
+        // caminha o avatar ao longo da polilinha (um ponto por vez), virando a
+        // animação para a direção de cada trecho. Nunca sai da trilha.
+        function moveAlong(scene: any, points: Point[], onDone: () => void) {
+          const segs: { a: Point; b: Point; L: number; acc: number }[] = [];
+          let total = 0;
+          for (let i = 0; i < points.length - 1; i++) {
+            const L = Math.hypot(points[i + 1].x - points[i].x, points[i + 1].y - points[i].y) || 1;
+            segs.push({ a: points[i], b: points[i + 1], L, acc: total });
+            total += L;
+          }
+          const st = { d: 0 };
+          scene.tweens.add({
+            targets: st,
+            d: total,
+            duration: Math.max(220, total * 2.3),
+            ease: "Sine.easeInOut",
+            onUpdate: () => {
+              let seg = segs[segs.length - 1];
+              for (const s of segs) {
+                if (st.d <= s.acc + s.L) {
+                  seg = s;
+                  break;
+                }
+              }
+              const t = Math.min(1, Math.max(0, (st.d - seg.acc) / seg.L));
+              const x = seg.a.x + (seg.b.x - seg.a.x) * t;
+              const y = seg.a.y + (seg.b.y - seg.a.y) * t;
+              player.setPosition(x, y);
+              player.setDepth(y);
+              const dx = seg.b.x - seg.a.x;
+              const dy = seg.b.y - seg.a.y;
+              const dir: Dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "left" : "right") : dy < 0 ? "up" : "down";
+              if (dir !== facing) {
+                facing = dir;
+                player.anims.play(`player-walk-${dir}`, true);
+              }
+            },
+            onComplete: onDone,
+          });
+        }
+
         function updateWorld(scene: any) {
           const d = readDir();
           if (!moving) {
-            // escolhe o vizinho cuja direção melhor casa com o input
+            // escolhe o vizinho cuja direção INICIAL da trilha casa com o input
             let want: { x: number; y: number } | null = null;
             if (d.left) want = { x: -1, y: 0 };
             else if (d.right) want = { x: 1, y: 0 };
@@ -450,39 +504,28 @@ export function GameCanvas({
             if (want) {
               const here = cfg.nodes![currentNode];
               let bestNode = -1;
-              let bestDot = 0.25;
-              (cfg.edges ?? []).forEach(([a, b]) => {
-                let other = -1;
-                if (a === currentNode) other = b;
-                else if (b === currentNode) other = a;
-                if (other < 0) return;
-                const nx = cfg.nodes![other].x - here.x;
-                const ny = cfg.nodes![other].y - here.y;
+              let bestDot = 0.3;
+              let bestPath: Point[] | null = null;
+              neighborsOf(currentNode).forEach((other) => {
+                const path = pathBetween(currentNode, other);
+                if (!path || path.length < 2) return;
+                const nx = path[1].x - here.x;
+                const ny = path[1].y - here.y;
                 const len = Math.hypot(nx, ny) || 1;
                 const dot = (nx / len) * want!.x + (ny / len) * want!.y;
                 if (dot > bestDot) {
                   bestDot = dot;
                   bestNode = other;
+                  bestPath = path;
                 }
               });
-              if (bestNode >= 0) {
+              if (bestNode >= 0 && bestPath) {
                 moving = true;
-                const target = cfg.nodes![bestNode];
-                const dir: Dir =
-                  Math.abs(want.x) > Math.abs(want.y) ? (want.x < 0 ? "left" : "right") : want.y < 0 ? "up" : "down";
-                facing = dir;
-                player.anims.play(`player-walk-${dir}`, true);
-                scene.tweens.add({
-                  targets: player,
-                  x: target.x,
-                  y: target.y,
-                  duration: Math.hypot(target.x - here.x, target.y - here.y) * 2.2,
-                  onComplete: () => {
-                    currentNode = bestNode;
-                    moving = false;
-                    player.anims.stop();
-                    player.setFrame(ROW[facing] * FRAMES_PER_DIR);
-                  },
+                moveAlong(scene, bestPath, () => {
+                  currentNode = bestNode;
+                  moving = false;
+                  player.anims.stop();
+                  player.setFrame(ROW[facing] * FRAMES_PER_DIR);
                 });
               }
             }
@@ -491,7 +534,7 @@ export function GameCanvas({
 
           // marcador no nó atual?
           const marker = cfgRef.current.interactables.find((it) => {
-            return Phaser.Math.Distance.Between(player.x, player.y, it.x, it.y) < 40;
+            return Phaser.Math.Distance.Between(player.x, player.y, it.x, it.y) < 48;
           });
           const id = marker?.id ?? null;
           if (id !== nearId) {

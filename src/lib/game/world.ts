@@ -15,12 +15,21 @@ export interface Point {
 }
 
 // ── Mapa-múndi (00): movimento por nós ao longo da trilha (estilo SMW) ──
+// Cada aresta tem `via`: a sequência de waypoints (de a→b) sobre a trilha de
+// terra desenhada na arte (curvas, pontes, escadas). O avatar caminha por esses
+// pontos — nunca em linha reta por cima da grama/penhasco (feedback do JOs,
+// itens 12 e 20). Coordenadas medidas sobre public/game/mapas/mundi.png (grade).
+export interface WorldEdge {
+  a: number;
+  b: number;
+  via?: Point[];
+}
 export interface WorldConfig {
   map: string;
   w: number;
   h: number;
   nodes: Point[];
-  edges: [number, number][];
+  edges: WorldEdge[];
   markers: { id: LevelId; node: number; label: string }[];
 }
 
@@ -28,22 +37,25 @@ export const WORLD: WorldConfig = {
   map: "/game/mapas/mundi.png",
   w: 1536,
   h: 1024,
-  // trilha: Vila (casa, baixo-esq) → Bosque (cerejeiras) → jardim/fonte → ponte
-  // → Grande Dia (estufa de vidro, direita).
+  // Nós sobre as plataformas de pedra da arte; intermediários em junções da
+  // trilha. Vila (casa, baixo-esq) → Bosque (cerejeiras) → junção → ponte de
+  // madeira → Grande Dia (estufa de vidro, ilha da direita).
   nodes: [
-    { x: 215, y: 820 }, // 0 Vila
-    { x: 360, y: 735 }, // 1
-    { x: 560, y: 600 }, // 2 Bosque
-    { x: 815, y: 470 }, // 3 jardim da fonte
-    { x: 1050, y: 515 }, // 4 ponte
-    { x: 1270, y: 500 }, // 5 Grande Dia
+    { x: 290, y: 885 }, // 0 Vila (pedra em frente à casa)
+    { x: 470, y: 840 }, // 1 junção vila↔bosque
+    { x: 595, y: 760 }, // 2 Bosque (pedra sob as cerejeiras)
+    { x: 720, y: 520 }, // 3 junção central (antes da ponte)
+    { x: 1000, y: 500 }, // 4 ilha da direita (depois da ponte)
+    { x: 1210, y: 575 }, // 5 Grande Dia (pedra sob a estufa)
   ],
   edges: [
-    [0, 1],
-    [1, 2],
-    [2, 3],
-    [3, 4],
-    [4, 5],
+    { a: 0, b: 1, via: [{ x: 380, y: 876 }] },
+    { a: 1, b: 2, via: [{ x: 545, y: 802 }] },
+    { a: 2, b: 3, via: [{ x: 650, y: 650 }, { x: 705, y: 560 }] },
+    // ponte de madeira superior (trecho sobre a água): desce ao tabuleiro,
+    // atravessa e sobe na outra ilha
+    { a: 3, b: 4, via: [{ x: 800, y: 450 }, { x: 865, y: 420 }, { x: 930, y: 432 }] },
+    { a: 4, b: 5, via: [{ x: 1090, y: 520 }, { x: 1160, y: 560 }] },
   ],
   markers: [
     { id: "vila", node: 0, label: "A Vila" },
