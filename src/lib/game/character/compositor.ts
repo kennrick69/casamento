@@ -9,7 +9,11 @@ import type { Layer } from "./catalog";
 // PNG. Roda só no servidor (sharp é nativo). Assets em public/game/personagem.
 
 const ASSETS = path.join(process.cwd(), "public", "game", "personagem");
-const FRAME = { left: 0, top: 128, width: 64, height: 64 }; // sul, frame 0
+const FRAME = { left: 0, top: 128, width: 64, height: 64 }; // sul, frame 0 (preview)
+// Os sheets LPC são 9 colunas × 4 linhas de 64px: linhas = cima/esquerda/baixo/
+// direita; 9 frames de caminhada por direção. O atlas completo preserva isso.
+const SHEET = { width: 576, height: 256 };
+type Region = { left: number; top: number; width: number; height: number };
 
 const hexToRgb = (h: string): [number, number, number] => {
   const s = h.replace("#", "");
@@ -85,29 +89,45 @@ function eyeRecolor(data: Buffer, hex: string) {
   }
 }
 
-async function tile(layer: Layer): Promise<Buffer> {
-  const { data } = await sharp(path.join(ASSETS, layer.file))
-    .extract(FRAME)
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
+// Lê uma camada (opcionalmente recortando `region`), aplica recolor de pele/
+// cabelo e, se for a cabeça, o recolor da íris. Retorna o buffer RGBA cru.
+async function tile(layer: Layer, region: Region | null): Promise<Buffer> {
+  let pipe = sharp(path.join(ASSETS, layer.file));
+  if (region) pipe = pipe.extract(region);
+  const { data } = await pipe.ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   if (layer.recolor) recolor(data, layer.recolor.palette, layer.recolor.base, layer.recolor.target);
   if (layer.eyes) eyeRecolor(data, layer.eyes);
   return data;
 }
 
-// layers já ordenadas por z (ver resolveLayers). `scale` = nearest-neighbor.
-export async function composeCharacter(layers: Layer[], scale = 4): Promise<Buffer> {
+// Empilha `layers` (já ordenadas por z) dentro de `region` e devolve o PNG achatado.
+async function flatten(layers: Layer[], region: Region): Promise<Buffer> {
   const parts: sharp.OverlayOptions[] = [];
   for (const l of layers) {
-    parts.push({ input: await tile(l), raw: { width: 64, height: 64, channels: 4 }, left: 0, top: 0 });
+    parts.push({
+      input: await tile(l, region),
+      raw: { width: region.width, height: region.height, channels: 4 },
+      left: 0,
+      top: 0,
+    });
   }
-  const flat = await sharp({
-    create: { width: 64, height: 64, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+  return sharp({
+    create: { width: region.width, height: region.height, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
   })
     .composite(parts)
     .png()
     .toBuffer();
+}
+
+// Preview: um único frame (sul, parado), ampliado nearest-neighbor. `scale` 1..8.
+export async function composeCharacter(layers: Layer[], scale = 4): Promise<Buffer> {
+  const flat = await flatten(layers, FRAME);
   const size = 64 * Math.max(1, Math.min(8, scale));
   return sharp(flat).resize(size, size, { kernel: "nearest" }).png().toBuffer();
+}
+
+// Jogo: o atlas completo de caminhada (9×4 frames de 64px, resolução nativa).
+// Phaser carrega como spritesheet (frameWidth/Height = 64) e corta as animações.
+export async function composeSheet(layers: Layer[]): Promise<Buffer> {
+  return flatten(layers, { left: 0, top: 0, ...SHEET });
 }
