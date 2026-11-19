@@ -287,23 +287,40 @@ html[data-contrast="high"] {
   color: var(--card-foreground);
   border-style: solid; border-width: 4px;
   border-color: var(--skin-bevel-lt) var(--skin-bevel-dk) var(--skin-bevel-dk) var(--skin-bevel-lt);
-  box-shadow: 4px 4px 0 var(--skin-hard);
+  /* Cards sem sombra dura deslocada: sombra suave (Metal/8-Bit). A moldura
+     chanfrada (border) é que dá o relevo; sombra dura fica só nos botões. */
+  box-shadow: 0 3px 10px rgba(0,0,0,.22);
 }
 .game-skin[data-game-skin="fairytale"] .game-panel {
   border-width: 2px; border-color: var(--accent);
   box-shadow: 0 6px 16px rgba(42,58,106,.16);
+}
+/* Conto de Fadas: nada de sombra dura deslocada nem "afundar" ao clicar —
+   botões e abas ganham sombra suave e um realce leve no clique. */
+.game-skin[data-game-skin="fairytale"] button,
+.game-skin[data-game-skin="fairytale"] a[data-slot="button"],
+.game-skin[data-game-skin="fairytale"] .game-btn,
+.game-skin[data-game-skin="fairytale"] nav a {
+  box-shadow: 0 2px 6px rgba(42,58,106,.16);
+}
+.game-skin[data-game-skin="fairytale"] button:active,
+.game-skin[data-game-skin="fairytale"] a[data-slot="button"]:active,
+.game-skin[data-game-skin="fairytale"] .game-btn:active,
+.game-skin[data-game-skin="fairytale"] nav a:active {
+  transform: none;
+  box-shadow: 0 1px 3px rgba(42,58,106,.20);
 }
 
 /* HUD: contador grande + ícone próprio do skin */
 .game-skin .game-stat { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
 .game-skin .game-stat-label { font-family: var(--skin-head); font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted-foreground); }
 .game-skin[data-game-skin="fairytale"] .game-stat-label { font-family: var(--skin-head); font-size: 0.8rem; letter-spacing: 2px; }
+/* Números do HUD: sem text-shadow em nenhum skin (sombra nunca no texto) */
 .game-skin .game-stat-num {
   font-family: var(--skin-head); font-size: 2.6rem; line-height: 1; font-variant-numeric: tabular-nums;
-  text-shadow: 2px 2px 0 var(--skin-hard);
 }
-.game-skin[data-game-skin="metal"] .game-stat-num { text-shadow: 0 0 6px currentColor, 2px 2px 0 var(--skin-hard); }
-.game-skin[data-game-skin="fairytale"] .game-stat-num { font-family: var(--skin-body); font-weight: 700; font-size: 3rem; font-variant-numeric: lining-nums tabular-nums; text-shadow: 1px 1px 0 rgba(255,255,255,.7); }
+.game-skin[data-game-skin="metal"] .game-stat-num { color: var(--accent); }
+.game-skin[data-game-skin="fairytale"] .game-stat-num { font-family: var(--skin-body); font-weight: 700; font-size: 3rem; font-variant-numeric: lining-nums tabular-nums; }
 .game-skin .game-stat-ico { width: 30px; height: 30px; }
 .game-skin[data-game-skin="metal"] .game-stat-ico,
 .game-skin[data-game-skin="pixel"] .game-stat-ico { image-rendering: pixelated; }
@@ -372,7 +389,6 @@ html[data-contrast="high"] {
 .game-skin .game-countdown * { color: var(--card-foreground) !important; }
 .game-skin .game-countdown .game-countdown-num {
   font-family: var(--skin-head);
-  text-shadow: 2px 2px 0 var(--skin-hard);
 }
 .game-skin[data-game-skin="metal"] .game-countdown .game-countdown-num { color: var(--accent) !important; }
 .game-skin[data-game-skin="fairytale"] .game-countdown .game-countdown-num { font-family: var(--skin-body); }
