@@ -71,6 +71,12 @@ ou **OGA-BY** (nenhuma peça somente-GPL). Arquivos em `public/game/personagem/`
 - **Autores:** ElizaWy
 - **Fontes:** https://github.com/ElizaWy/LPC/tree/main/Characters/Head%20Accessories, https://opengameart.org/content/lpc-expanded-sit-run-jump-more
 
+## Mapas das fases (Modo Gamificado · jogo)
+- **Arquivos:** `public/game/mapas/{mundi,vila,bosque,grande-dia}.png` (1536×1024, pixel art top-down 3/4).
+- **Licença:** arte própria do **projeto Voem** (encomendada/gerada para o projeto). Não deriva de LPC.
+- **Uso no jogo:** renderizados em resolução nativa com filtro *nearest* (sem borrar); câmera segue o avatar; limites do mundo = tamanho da imagem. Colisões em `public/game/mapas/<fase>.colisao.json`.
+- As mesas da Fase 3 e os marcadores/pedestais são desenhados pelo próprio jogo (Phaser Graphics) — arte própria, sem dependência de licença.
+
 ## Observações
 - Motor do jogo: **Phaser 3.88.2** (MIT), vendorizado em `public/game/vendor/` — ver `public/game/vendor/README.md`.
 - Paletas de pele/cabelo: `palette_definitions` do gerador LPC (recolor por rampa).
