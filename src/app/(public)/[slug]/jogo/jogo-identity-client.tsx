@@ -278,6 +278,13 @@ export function JogoIdentityClient({
             </div>
           </div>
 
+          <Link
+            href={`/${slug}/jogo/personagem`}
+            className={buttonVariants({ className: "h-12 justify-center text-base font-semibold" })}
+          >
+            {state.characterClaimed ? "Editar meu personagem" : "Criar meu personagem"}
+          </Link>
+
           {supportsPasskey && !state.isVisitor && (
             <div className={card}>
               <span className={label}>Acesso rápido</span>
@@ -298,8 +305,8 @@ export function JogoIdentityClient({
           )}
 
           <p className="text-xs text-[var(--theme-secondary)] max-w-sm">
-            <Construction className="inline size-4 -mt-0.5 mr-1" aria-hidden /> O mundo do jogo (tela de título, fases, salão) chega nos próximos
-            sprints. Sua identidade e seu boneco já ficam guardados.
+            <Construction className="inline size-4 -mt-0.5 mr-1" aria-hidden /> O salão da festa e as missões chegam em seguida. Sua
+            identidade e seu personagem já ficam guardados.
           </p>
         </>
       )}
