@@ -414,8 +414,12 @@ model GameCharacter {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  guest     Guest?          @relation(fields: [guestId], references: [id], onDelete: Cascade)
-  companion GuestCompanion? @relation(fields: [companionId], references: [id], onDelete: Cascade)
+  guest        Guest?          @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  companion    GuestCompanion? @relation(fields: [companionId], references: [id], onDelete: Cascade)
+  // SetNull: se o papel for apagado, o personagem não fica preso num uniforme órfão
+  lockedByRole EventRole?      @relation("RoleLockedCharacters", fields: [lockedByRoleId], references: [id], onDelete: SetNull)
+
+  @@index([lockedByRoleId])
 }
 
 // Modo Gamificado (S3) — papéis com código (genérico: madrinha, padrinho,
@@ -432,8 +436,9 @@ model EventRole {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  event  Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  claims GuestRoleClaim[]
+  event            Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  claims           GuestRoleClaim[]
+  lockedCharacters GameCharacter[]  @relation("RoleLockedCharacters")
 
   @@unique([eventId, key])
 }
