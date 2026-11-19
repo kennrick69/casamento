@@ -48,6 +48,43 @@ function recolor(data: Buffer, palette: "body" | "hair", base: string, target: s
   }
 }
 
+// Cor dos olhos = recolor da íris que JÁ vem desenhada na cabeça LPC (shading do
+// artista preservado). A cabeça traz a íris em 3 tons de azul fixos; trocamos
+// cada um por um tom da cor escolhida (claro/médio/escuro). A pupila/contorno
+// (quase preto) e o branco do olho ficam intactos. Roda DEPOIS do recolor de
+// pele (os azuis da íris não existem na rampa de pele, então não conflitam).
+const IRIS_SHADES: [number, number, number][] = [
+  [87, 206, 228], // brilho (claro)
+  [86, 134, 174], // íris (médio)
+  [42, 60, 73], // sombra inferior (escuro)
+];
+function eyeRecolor(data: Buffer, hex: string) {
+  const [r, g, b] = hexToRgb(hex);
+  const lite = (c: number) => Math.round(c + (255 - c) * 0.45);
+  const dark = (c: number) => Math.round(c * 0.5);
+  const dst: [number, number, number][] = [
+    [lite(r), lite(g), lite(b)],
+    [r, g, b],
+    [dark(r), dark(g), dark(b)],
+  ];
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] === 0) continue;
+    for (let k = 0; k < IRIS_SHADES.length; k++) {
+      const s = IRIS_SHADES[k];
+      if (
+        Math.abs(data[i] - s[0]) <= 2 &&
+        Math.abs(data[i + 1] - s[1]) <= 2 &&
+        Math.abs(data[i + 2] - s[2]) <= 2
+      ) {
+        data[i] = dst[k][0];
+        data[i + 1] = dst[k][1];
+        data[i + 2] = dst[k][2];
+        break;
+      }
+    }
+  }
+}
+
 async function tile(layer: Layer): Promise<Buffer> {
   const { data } = await sharp(path.join(ASSETS, layer.file))
     .extract(FRAME)
@@ -55,6 +92,7 @@ async function tile(layer: Layer): Promise<Buffer> {
     .raw()
     .toBuffer({ resolveWithObject: true });
   if (layer.recolor) recolor(data, layer.recolor.palette, layer.recolor.base, layer.recolor.target);
+  if (layer.eyes) eyeRecolor(data, layer.eyes);
   return data;
 }
 

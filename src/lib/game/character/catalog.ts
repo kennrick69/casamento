@@ -1,7 +1,8 @@
 // Catálogo do criador de personagem (S3). Define as opções que o jogador
 // escolhe e, para cada peça, a(s) camada(s) LPC (z-order + recolor por paleta).
 // Os PNGs vivem em public/game/personagem (só licenças CC-BY/CC-BY-SA/OGA-BY;
-// créditos em docs/ASSETS-LICENSES.md). Compartilhado por compositor e UI.
+// créditos em docs/ASSETS-LICENSES.md). Olhos = arte própria (desenhados).
+// Compartilhado por compositor e UI (sem imports de servidor).
 
 export type BodyType = "feminino" | "masculino";
 
@@ -9,41 +10,71 @@ export interface Layer {
   file: string; // caminho relativo a public/game/personagem
   z: number;
   recolor?: { palette: "body" | "hair"; base: string; target: string };
+  eyes?: string; // hex do íris — recolore a íris embutida da cabeça (ver compositor)
 }
 
 export interface Option {
   id: string;
   label: string;
+  hex?: string; // swatch (pele/olhos)
 }
 
 // Pele (paleta body_ulpc; base embutida = "light")
 export const SKINS: Option[] = [
-  { id: "light", label: "Clara" },
-  { id: "peach", label: "Pêssego" },
-  { id: "bronze", label: "Bronze" },
-  { id: "brown", label: "Morena" },
-  { id: "black", label: "Negra" },
+  { id: "light", label: "Clara", hex: "#f9d5ba" },
+  { id: "peach", label: "Pêssego", hex: "#edc5a8" },
+  { id: "bronze", label: "Bronze", hex: "#c07a4b" },
+  { id: "brown", label: "Morena", hex: "#8a5a38" },
+  { id: "black", label: "Negra", hex: "#5a3a28" },
 ];
 
-// Cabelo: estilo + cor (paleta hair_ulpc; base embutida = "orange")
 export const HAIR_STYLES: Option[] = [
   { id: "long", label: "Longo" },
   { id: "buzzcut", label: "Curto" },
   { id: "none", label: "Sem cabelo" },
 ];
 export const HAIR_COLORS: Option[] = [
-  { id: "dark_brown", label: "Castanho" },
-  { id: "black", label: "Preto" },
-  { id: "chestnut", label: "Acaju" },
-  { id: "blonde", label: "Loiro" },
-  { id: "redhead", label: "Ruivo" },
-  { id: "gray", label: "Grisalho" },
+  { id: "dark_brown", label: "Castanho", hex: "#4a3121" },
+  { id: "black", label: "Preto", hex: "#231f20" },
+  { id: "chestnut", label: "Acaju", hex: "#7a4a2a" },
+  { id: "blonde", label: "Loiro", hex: "#d9b36a" },
+  { id: "redhead", label: "Ruivo", hex: "#a8431f" },
+  { id: "gray", label: "Grisalho", hex: "#b9b9b9" },
 ];
 
-// Roupas. `bride: true` é bloqueada para quem não é a noiva (validação no
-// servidor). Cada roupa lista suas camadas (sem corpo/cabelo, que são comuns).
+// Olhos — arte própria (íris colorida). Sem dependência de licença LPC.
+export const EYE_COLORS: Option[] = [
+  { id: "castanho", label: "Castanho", hex: "#5b3a1e" },
+  { id: "azul", label: "Azul", hex: "#3f6fb8" },
+  { id: "verde", label: "Verde", hex: "#3f7a4f" },
+  { id: "mel", label: "Mel", hex: "#9a6b2f" },
+  { id: "cinza", label: "Cinza", hex: "#5b6672" },
+];
+
+// Sobrancelha (recolor pela cor do cabelo). LPC OGA-BY.
+export const EYEBROWS: Option[] = [
+  { id: "thin", label: "Finas" },
+  { id: "thick", label: "Grossas" },
+  { id: "none", label: "Nenhuma" },
+];
+
+// Barba/bigode (opcional; recolor pela cor do cabelo). LPC CC-BY-SA/OGA-BY.
+export const BEARDS: Option[] = [
+  { id: "none", label: "Nenhuma" },
+  { id: "curta", label: "Barba curta" },
+  { id: "media", label: "Barba média" },
+  { id: "bigode", label: "Bigode" },
+];
+
+// Óculos (opcional; cor fixa). LPC CC-BY-SA/OGA-BY.
+export const GLASSES: Option[] = [
+  { id: "none", label: "Nenhum" },
+  { id: "redondo", label: "Redondo" },
+];
+
 export interface Outfit extends Option {
-  bride?: boolean;
+  bride?: boolean; // vestido de noiva — só organizador
+  groom?: boolean; // traje de noivo — só organizador
   layers: Layer[];
 }
 export const OUTFITS: Outfit[] = [
@@ -81,6 +112,16 @@ export const OUTFITS: Outfit[] = [
     ],
   },
   {
+    id: "noivo",
+    label: "Noivo",
+    groom: true,
+    layers: [
+      { file: "outfit/shoes_male.png", z: 15 },
+      { file: "outfit/terno_pants.png", z: 20 },
+      { file: "outfit/terno_shirt.png", z: 35 },
+    ],
+  },
+  {
     id: "noiva",
     label: "Noiva (véu)",
     bride: true,
@@ -99,6 +140,10 @@ export interface CharacterSpec {
   skin: string;
   hairStyle: string;
   hairColor: string;
+  eyeColor: string;
+  eyebrows: string;
+  beard: string;
+  glasses: string;
   outfit: string;
 }
 
@@ -107,6 +152,10 @@ export const DEFAULT_SPEC: CharacterSpec = {
   skin: "light",
   hairStyle: "long",
   hairColor: "chestnut",
+  eyeColor: "castanho",
+  eyebrows: "thin",
+  beard: "none",
+  glasses: "none",
   outfit: "vestido_rose",
 };
 
@@ -114,35 +163,51 @@ export function getOutfit(id: string): Outfit | undefined {
   return OUTFITS.find((o) => o.id === id);
 }
 
-function isIn(list: Option[], id: string) {
-  return list.some((o) => o.id === id);
-}
+const idIn = (list: Option[], id: string) => list.some((o) => o.id === id);
+const hexOf = (list: Option[], id: string) => list.find((o) => o.id === id)?.hex;
 
-// Valida a escolha. `canBride` vem do servidor (só a noiva). Retorna as camadas
-// finais (corpo + roupa + cabelo) já em ordem de z, ou um erro.
+// Valida a escolha. `canRestricted` (organizador) libera noivo/noiva. Retorna
+// as camadas finais já em ordem de z, ou um erro.
 export function resolveLayers(
   spec: CharacterSpec,
-  canBride: boolean,
+  canRestricted: boolean,
 ): { layers: Layer[] } | { error: string } {
   if (!["feminino", "masculino"].includes(spec.body)) return { error: "corpo inválido" };
-  if (!isIn(SKINS, spec.skin)) return { error: "pele inválida" };
-  if (!isIn(HAIR_STYLES, spec.hairStyle)) return { error: "cabelo inválido" };
-  if (!isIn(HAIR_COLORS, spec.hairColor)) return { error: "cor de cabelo inválida" };
+  if (!idIn(SKINS, spec.skin)) return { error: "pele inválida" };
+  if (!idIn(HAIR_STYLES, spec.hairStyle)) return { error: "cabelo inválido" };
+  if (!idIn(HAIR_COLORS, spec.hairColor)) return { error: "cor de cabelo inválida" };
+  if (!idIn(EYE_COLORS, spec.eyeColor)) return { error: "cor de olhos inválida" };
+  if (!idIn(EYEBROWS, spec.eyebrows)) return { error: "sobrancelha inválida" };
+  if (!idIn(BEARDS, spec.beard)) return { error: "barba inválida" };
+  if (!idIn(GLASSES, spec.glasses)) return { error: "óculos inválido" };
   const outfit = getOutfit(spec.outfit);
   if (!outfit) return { error: "roupa inválida" };
-  if (outfit.bride && !canBride) return { error: "Só a noiva pode usar o vestido de noiva." };
+  if ((outfit.bride || outfit.groom) && !canRestricted) {
+    return { error: "Traje de noivo/noiva é só para os organizadores do evento." };
+  }
 
   const bodyFile = spec.body === "masculino" ? "body/male.png" : "body/female.png";
+  const skinRecolor = { palette: "body" as const, base: "light", target: spec.skin };
+  const hairRecolor = { palette: "hair" as const, base: "orange", target: spec.hairColor };
+
+  const headFile = `head/${spec.body === "masculino" ? "male" : "female"}.png`;
   const layers: Layer[] = [
-    { file: bodyFile, z: 10, recolor: { palette: "body", base: "light", target: spec.skin } },
+    { file: bodyFile, z: 10, recolor: skinRecolor },
     ...outfit.layers,
+    // A cabeça já traz os olhos desenhados; `eyes` recolore a íris embutida.
+    { file: headFile, z: 100, recolor: skinRecolor, eyes: hexOf(EYE_COLORS, spec.eyeColor) },
   ];
+  if (spec.eyebrows !== "none") {
+    layers.push({ file: `eyebrows/${spec.eyebrows}.png`, z: 106, recolor: hairRecolor });
+  }
+  if (spec.beard !== "none") {
+    layers.push({ file: `beard/${spec.beard}.png`, z: 111, recolor: hairRecolor });
+  }
+  if (spec.glasses !== "none") {
+    layers.push({ file: `glasses/${spec.glasses}.png`, z: 115 });
+  }
   if (spec.hairStyle !== "none") {
-    layers.push({
-      file: `hair/${spec.hairStyle}.png`,
-      z: 120,
-      recolor: { palette: "hair", base: "orange", target: spec.hairColor },
-    });
+    layers.push({ file: `hair/${spec.hairStyle}.png`, z: 120, recolor: hairRecolor });
   }
   return { layers: layers.sort((a, b) => a.z - b.z) };
 }

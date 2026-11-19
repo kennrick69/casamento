@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { getGameEvent } from "@/lib/game/identity";
 import { getCurrentGuest } from "@/lib/auth/guest";
 import { DEFAULT_SPEC, type CharacterSpec, type BodyType } from "@/lib/game/character/catalog";
-import { canWearBride } from "@/lib/game/character/bride";
+import { isEventOrganizer } from "@/lib/game/character/organizer";
 import { CriadorClient } from "./criador-client";
 
 export const metadata: Metadata = {
@@ -22,16 +22,21 @@ export default async function PersonagemPage({ params }: { params: Promise<{ slu
   const guest = await getCurrentGuest(slug);
   if (!guest) redirect(`/${slug}/jogo`);
 
-  const canBride = canWearBride(guest.playerName, event.coupleNames);
+  const canRestricted = await isEventOrganizer(event.id);
 
-  // Spec inicial = personagem salvo (se houver). outfit vem "body:outfit".
+  // Spec inicial = personagem salvo (se houver). Preferir `appearance` (rosto
+  // completo); cair nas colunas legadas se for um registro antigo. outfit legado
+  // vem "body:outfit".
   const existing = await prisma.gameCharacter.findUnique({ where: { guestId: guest.id } });
   let initial: CharacterSpec = { ...DEFAULT_SPEC };
-  if (existing) {
+  if (existing?.appearance && typeof existing.appearance === "object") {
+    initial = { ...DEFAULT_SPEC, ...(existing.appearance as Partial<CharacterSpec>) };
+  } else if (existing) {
     const [body, outfit] = existing.outfit.includes(":")
       ? existing.outfit.split(":")
       : ["feminino", existing.outfit];
     initial = {
+      ...DEFAULT_SPEC,
       body: body as BodyType,
       skin: existing.skinColor,
       hairStyle: existing.hairStyle,
@@ -44,7 +49,7 @@ export default async function PersonagemPage({ params }: { params: Promise<{ slu
     <CriadorClient
       slug={slug}
       playerName={guest.playerName ?? "você"}
-      canBride={canBride}
+      canRestricted={canRestricted}
       initial={initial}
     />
   );

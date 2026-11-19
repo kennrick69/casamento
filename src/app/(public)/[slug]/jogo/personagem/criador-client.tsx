@@ -7,6 +7,10 @@ import {
   SKINS,
   HAIR_STYLES,
   HAIR_COLORS,
+  EYE_COLORS,
+  EYEBROWS,
+  BEARDS,
+  GLASSES,
   OUTFITS,
   type CharacterSpec,
 } from "@/lib/game/character/catalog";
@@ -20,12 +24,12 @@ const BODIES = [
 export function CriadorClient({
   slug,
   playerName,
-  canBride,
+  canRestricted,
   initial,
 }: {
   slug: string;
   playerName: string;
-  canBride: boolean;
+  canRestricted: boolean;
   initial: CharacterSpec;
 }) {
   const [spec, setSpec] = useState<CharacterSpec>(initial);
@@ -103,7 +107,21 @@ export function CriadorClient({
           </Group>
           <Group label="Pele">
             {SKINS.map((o) => (
-              <Pick key={o.id} active={spec.skin === o.id} onClick={() => set("skin", o.id)}>
+              <Pick key={o.id} active={spec.skin === o.id} swatch={o.hex} onClick={() => set("skin", o.id)}>
+                {o.label}
+              </Pick>
+            ))}
+          </Group>
+          <Group label="Olhos">
+            {EYE_COLORS.map((o) => (
+              <Pick key={o.id} active={spec.eyeColor === o.id} swatch={o.hex} onClick={() => set("eyeColor", o.id)}>
+                {o.label}
+              </Pick>
+            ))}
+          </Group>
+          <Group label="Sobrancelha">
+            {EYEBROWS.map((o) => (
+              <Pick key={o.id} active={spec.eyebrows === o.id} onClick={() => set("eyebrows", o.id)}>
                 {o.label}
               </Pick>
             ))}
@@ -118,21 +136,35 @@ export function CriadorClient({
           {spec.hairStyle !== "none" && (
             <Group label="Cor do cabelo">
               {HAIR_COLORS.map((o) => (
-                <Pick key={o.id} active={spec.hairColor === o.id} onClick={() => set("hairColor", o.id)}>
+                <Pick key={o.id} active={spec.hairColor === o.id} swatch={o.hex} onClick={() => set("hairColor", o.id)}>
                   {o.label}
                 </Pick>
               ))}
             </Group>
           )}
+          <Group label="Barba">
+            {BEARDS.map((o) => (
+              <Pick key={o.id} active={spec.beard === o.id} onClick={() => set("beard", o.id)}>
+                {o.label}
+              </Pick>
+            ))}
+          </Group>
+          <Group label="Óculos">
+            {GLASSES.map((o) => (
+              <Pick key={o.id} active={spec.glasses === o.id} onClick={() => set("glasses", o.id)}>
+                {o.label}
+              </Pick>
+            ))}
+          </Group>
           <Group label="Roupa">
             {OUTFITS.map((o) => {
-              const locked = o.bride && !canBride;
+              const locked = (o.bride || o.groom) && !canRestricted;
               return (
                 <Pick
                   key={o.id}
                   active={spec.outfit === o.id}
                   disabled={locked}
-                  title={locked ? "Só a noiva pode usar" : undefined}
+                  title={locked ? "Traje reservado aos organizadores do evento." : undefined}
                   onClick={() => !locked && set("outfit", o.id)}
                 >
                   {locked && <Lock className="size-3" />}
@@ -160,12 +192,14 @@ function Pick({
   active,
   disabled,
   title,
+  swatch,
   onClick,
   children,
 }: {
   active: boolean;
   disabled?: boolean;
   title?: string;
+  swatch?: string;
   onClick: () => void;
   children: React.ReactNode;
 }) {
@@ -175,12 +209,19 @@ function Pick({
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className={`inline-flex items-center gap-1 h-9 px-3 rounded-md text-sm border transition-colors ${
+      className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-md text-sm border transition-colors ${
         active
           ? "bg-emerald-600 border-emerald-400 text-white"
           : "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-neutral-200"
       } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >
+      {swatch && (
+        <span
+          className="inline-block size-3.5 rounded-full border border-black/30"
+          style={{ backgroundColor: swatch }}
+          aria-hidden
+        />
+      )}
       {children}
     </button>
   );

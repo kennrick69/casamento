@@ -408,6 +408,7 @@ model GameCharacter {
   hairStyle      String
   hairColor      String
   outfit         String
+  appearance     Json?
   isChild        Boolean  @default(false)
   lockedByRoleId String?
   randomSeed     Int?
