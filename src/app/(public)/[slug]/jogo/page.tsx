@@ -34,15 +34,17 @@ export default async function JogoPage({
   };
 
   if (guest) {
-    const passkeyCount = await prisma.guestCredential.count({
-      where: { guestId: guest.id },
-    });
+    const [passkeyCount, character] = await Promise.all([
+      prisma.guestCredential.count({ where: { guestId: guest.id } }),
+      prisma.gameCharacter.findUnique({ where: { guestId: guest.id }, select: { id: true } }),
+    ]);
     state = {
       identified: true,
       playerName: guest.playerName,
       isVisitor: guest.isVisitor,
       hasPasskey: passkeyCount > 0,
-      characterClaimed: guest.characterClaimedAt !== null,
+      // "tem personagem" = reivindicou nome OU já criou um GameCharacter (item 24)
+      characterClaimed: guest.characterClaimedAt !== null || character !== null,
     };
   }
 

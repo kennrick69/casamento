@@ -63,5 +63,12 @@ export async function saveCharacter(
     update: data,
   });
 
+  // marca que o jogador já tem personagem (1ª vez) → a tela de identidade mostra
+  // "Continuar jogando" em vez de "Criar meu personagem" (item 24).
+  await prisma.guest.updateMany({
+    where: { id: guest.id, characterClaimedAt: null },
+    data: { characterClaimedAt: new Date() },
+  });
+
   return { ok: true };
 }

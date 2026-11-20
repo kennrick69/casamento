@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Loader2, Info, MapPin, X, Lock } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Info, MapPin, X, Lock, MessageSquare } from "lucide-react";
 import { WORLD, PHASES, tableGrid, type LevelId } from "@/lib/game/world";
 import type { Controls, Interactable, SceneConfig, NpcAvatar } from "./game-canvas";
 import { leaveMessageForCouple } from "../actions";
@@ -448,10 +448,11 @@ export function MapaClient(props: MapaClientProps) {
               onPointerDown={() => {
                 controls.current.interact = true;
               }}
-              className="absolute bottom-10 right-6 size-20 select-none rounded-full border-2 border-emerald-300 bg-emerald-600/90 text-2xl font-bold text-white shadow-lg active:scale-95"
+              className="absolute bottom-10 right-6 flex size-16 select-none flex-col items-center justify-center rounded-full border border-emerald-300/70 bg-emerald-600/40 text-xs font-bold text-white shadow-md backdrop-blur-sm transition active:scale-95 active:bg-emerald-600/90"
               style={{ bottom: "calc(2.5rem + env(safe-area-inset-bottom, 0px))" }}
             >
-              A
+              <MessageSquare className="size-5" aria-hidden />
+              Entrar
             </button>
           </>
         )}
@@ -652,8 +653,9 @@ function CreditsOverlay({ onClose }: { onClose: () => void }) {
 
 // D-pad de 4 direções para toque.
 function DPad({ onPress }: { onPress: (key: keyof Controls, value: boolean) => void }) {
+  // semitransparente (não tapa o mapa) e mais opaco ao tocar (item 25)
   const btn =
-    "flex size-14 items-center justify-center rounded-lg border border-neutral-400 bg-neutral-700/85 text-2xl text-white shadow-md active:bg-emerald-600 touch-none";
+    "flex size-12 items-center justify-center rounded-lg border border-neutral-300/40 bg-neutral-700/35 text-xl text-white/90 shadow-md backdrop-blur-sm transition active:bg-emerald-600/85 touch-none";
   const bind = (key: keyof Controls) => ({
     onPointerDown: () => onPress(key, true),
     onPointerUp: () => onPress(key, false),
