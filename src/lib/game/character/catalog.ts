@@ -187,6 +187,35 @@ export const DEFAULT_SPEC: CharacterSpec = {
   outfit: "vestido_rose",
 };
 
+// Query string (?body=…&skin=…) consumida pelas rotas preview/sheet do personagem.
+export function specToQuery(spec: CharacterSpec): string {
+  return new URLSearchParams(spec as unknown as Record<string, string>).toString();
+}
+
+// Reconstrói o CharacterSpec de um GameCharacter salvo (appearance JSON novo ou
+// colunas legadas skinColor/hairStyle/hairColor/outfit "body:outfit"). Usado no
+// jogo e no painel dos noivos (prévia do skin de quem deixou recado).
+export function specFromCharacter(c: {
+  appearance?: unknown;
+  outfit: string;
+  skinColor: string;
+  hairStyle: string;
+  hairColor: string;
+}): CharacterSpec {
+  if (c.appearance && typeof c.appearance === "object") {
+    return { ...DEFAULT_SPEC, ...(c.appearance as Partial<CharacterSpec>) };
+  }
+  const [body, outfit] = c.outfit.includes(":") ? c.outfit.split(":") : ["feminino", c.outfit];
+  return {
+    ...DEFAULT_SPEC,
+    body: body as BodyType,
+    skin: c.skinColor,
+    hairStyle: c.hairStyle,
+    hairColor: c.hairColor,
+    outfit,
+  };
+}
+
 export function getOutfit(id: string): Outfit | undefined {
   return OUTFITS.find((o) => o.id === id);
 }

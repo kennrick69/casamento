@@ -5,17 +5,13 @@ import { storage } from "@/lib/storage";
 import { getGameEvent } from "@/lib/game/identity";
 import { getCurrentGuest } from "@/lib/auth/guest";
 import { isEventOrganizer } from "@/lib/game/character/organizer";
-import { DEFAULT_SPEC, type CharacterSpec, type BodyType } from "@/lib/game/character/catalog";
+import { type CharacterSpec, specFromCharacter, specToQuery } from "@/lib/game/character/catalog";
 import { MapaClient, type Memory, type TableInfo, type GameProgress } from "./mapa-client";
 
 export const metadata: Metadata = {
   title: "Mapa da festa",
   robots: { index: false, follow: false },
 };
-
-function specToQuery(spec: CharacterSpec): string {
-  return new URLSearchParams(spec as unknown as Record<string, string>).toString();
-}
 
 // Specs fixos do casal para os avatares decorativos no altar da Fase 3.
 const BRIDE_SPEC: CharacterSpec = {
@@ -64,22 +60,7 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
   if (!character) redirect(`/${slug}/jogo/personagem`);
 
   // Spec salvo (appearance JSON ou colunas legadas)
-  let spec: CharacterSpec = { ...DEFAULT_SPEC };
-  if (character.appearance && typeof character.appearance === "object") {
-    spec = { ...DEFAULT_SPEC, ...(character.appearance as Partial<CharacterSpec>) };
-  } else {
-    const [body, outfit] = character.outfit.includes(":")
-      ? character.outfit.split(":")
-      : ["feminino", character.outfit];
-    spec = {
-      ...DEFAULT_SPEC,
-      body: body as BodyType,
-      skin: character.skinColor,
-      hairStyle: character.hairStyle,
-      hairColor: character.hairColor,
-      outfit,
-    };
-  }
+  const spec: CharacterSpec = specFromCharacter(character);
 
   // Dados das fases
   const [storyItems, seatingTables, myAssignment] = await Promise.all([

@@ -3,6 +3,7 @@ import { requireOrganizer } from "@/lib/authorization";
 import { notFound } from "next/navigation";
 import { EventNav } from "@/components/admin/event-nav";
 import { AdminHeader } from "@/components/admin/admin-header";
+import { specFromCharacter, specToQuery } from "@/lib/game/character/catalog";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Acessos ao jogo" };
@@ -12,6 +13,16 @@ const METHOD_LABEL: Record<string, string> = {
   passkey: "Passkey",
   visitor: "Visitante",
 };
+
+// Remove emojis (pictogramas, modificadores de tom, ZWJ, variation selectors) —
+// o painel do jogo é sem emoji (regra do projeto, item 6). O recado é texto do
+// visitante; só tiramos os emojis, o resto fica igual.
+function stripEmojis(s: string): string {
+  return s
+    .replace(/[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u{200D}️]/gu, "")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
 
 const fmt = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
@@ -34,14 +45,48 @@ export default async function AcessosJogoPage({ params }: Props) {
     notFound();
   }
 
-  const logs = await prisma.guestIdentificationLog.findMany({
-    where: { eventId },
-    orderBy: { createdAt: "desc" },
-    take: 200,
-    include: {
-      guest: { select: { name: true, playerName: true, isVisitor: true } },
-    },
-  });
+  const [event, logs, recadoGuests] = await Promise.all([
+    prisma.event.findUnique({ where: { id: eventId }, select: { slug: true } }),
+    prisma.guestIdentificationLog.findMany({
+      where: { eventId },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+      include: {
+        guest: { select: { name: true, playerName: true, isVisitor: true } },
+      },
+    }),
+    // Recados do jogo = mensagens deixadas na Vila por VISITANTES (quem está na
+    // lista confirma via RSVP; o campo Guest.message é o mesmo, então filtramos
+    // por isVisitor para não misturar com mensagens de RSVP).
+    prisma.guest.findMany({
+      where: { eventId, isVisitor: true, banned: false, deletedAt: null, message: { not: null } },
+      orderBy: { updatedAt: "desc" },
+      take: 100,
+      select: {
+        id: true,
+        name: true,
+        playerName: true,
+        message: true,
+        updatedAt: true,
+        gameCharacter: {
+          select: { appearance: true, outfit: true, skinColor: true, hairStyle: true, hairColor: true },
+        },
+      },
+    }),
+  ]);
+
+  const slug = event?.slug ?? "";
+  const recados = recadoGuests
+    .map((g) => ({
+      id: g.id,
+      who: g.playerName || g.name,
+      text: stripEmojis(g.message ?? ""),
+      when: g.updatedAt,
+      avatarUrl: g.gameCharacter
+        ? `/${slug}/jogo/personagem/preview?${specToQuery(specFromCharacter(g.gameCharacter))}`
+        : null,
+    }))
+    .filter((r) => r.text.length > 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -50,6 +95,54 @@ export default async function AcessosJogoPage({ params }: Props) {
         <EventNav eventId={eventId} />
 
         <h1 className="text-2xl font-bold mb-2">Acessos ao jogo</h1>
+
+        {/* ── Recados do jogo (visitantes) ── */}
+        <section className="mb-8">
+          <h2 className="text-lg font-semibold mb-1">Recados do jogo</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Mensagens que os visitantes deixaram para vocês na Vila do jogo.
+          </p>
+          {recados.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum recado ainda.</p>
+          ) : (
+            <ul className="space-y-3">
+              {recados.map((r) => (
+                <li
+                  key={r.id}
+                  className="flex gap-3 rounded-lg border border-border bg-card p-3"
+                >
+                  <div className="shrink-0 flex items-end justify-center w-12 h-16 rounded-md bg-muted/40 overflow-hidden">
+                    {r.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={r.avatarUrl}
+                        alt={`Personagem de ${r.who}`}
+                        className="w-full h-full object-contain [image-rendering:pixelated]"
+                      />
+                    ) : (
+                      <span className="text-lg font-semibold text-muted-foreground self-center">
+                        {r.who.slice(0, 1).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-medium truncate">{r.who}</span>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {fmt.format(r.when)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-foreground/90 whitespace-pre-wrap break-words mt-0.5">
+                      {r.text}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <h2 className="text-lg font-semibold mb-1">Quem entrou</h2>
         <p className="text-sm text-muted-foreground mb-6">
           Cada identificação no modo jogo (últimas 200). A entrada por
           nome+celular não confirma o número, então use isto para auditar quem
