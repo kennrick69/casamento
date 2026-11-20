@@ -23,6 +23,12 @@ const SPEED = 195;
 // sem borrar. Aplicada ao avatar e aos NPCs (noivos no altar).
 const AVATAR_SCALE = 1.5;
 const FRAMES_PER_DIR = 9; // sheets LPC: 9 colunas × 4 linhas
+// Item 44: a referência de posição é a SOLA do pé (1º pixel opaco de baixo pra
+// cima do sprite LPC), medida em ~62 de 64px. Com a origem na sola, player.x/y =
+// ponto do pé → anda/para sobre a trilha/plataforma/piso, e a profundidade é pelo pé.
+const FRAME_H = 64;
+const FOOT_Y = 62;
+const ORIGIN_Y = FOOT_Y / FRAME_H;
 const ROW: Record<Dir, number> = { up: 0, left: 1, down: 2, right: 3 };
 
 // Zoom responsivo "cover": o mapa sempre enche a tela (sem faixas vazias) e a
@@ -426,16 +432,17 @@ export function GameCanvas({
           (cfg.npcs ?? []).forEach((n, i) => {
             addWalkAnims(scene, `npc${i}`, `npc${i}`);
             const s = scene.add.sprite(n.x, n.y, `npc${i}`, ROW[n.facing] * FRAMES_PER_DIR);
+            s.setOrigin(0.5, ORIGIN_Y); // origem na sola (item 44)
             s.setScale(AVATAR_SCALE);
             s.setDepth(n.y);
           });
 
           // ── avatar ──
           player = scene.physics.add.sprite(cfg.spawn.x, cfg.spawn.y, "player", ROW[cfg.spawn.facing] * FRAMES_PER_DIR);
+          player.setOrigin(0.5, ORIGIN_Y); // origem na sola → player.x/y = o pé (item 44)
           player.setScale(AVATAR_SCALE);
           player.setCollideWorldBounds(true);
-          // hitbox só nos PÉS (item 27): corpo pequeno na base do sprite. Em
-          // coords do frame (Phaser multiplica pela escala).
+          // hitbox na base: o fundo do corpo (frame y62) coincide com a sola.
           player.body.setSize(22, 12).setOffset(21, 50);
           player.setDepth(cfg.spawn.y);
           if (scene._walls) scene.physics.add.collider(player, scene._walls);
@@ -533,9 +540,9 @@ export function GameCanvas({
           // ── restrição à máscara caminhável: se os pés saíram da máscara, reverte
           // (tentando deslizar por um eixo antes de parar de vez) ──
           if (walkMask && player) {
-            // testa os PÉS (body.center): a máscara é o CHÃO/piso da arte, onde os
-            // pés pisam. As stamps da máscara ficam no nível dos pés (y+~36).
-            const fx = player.body.center.x, fy = player.body.center.y;
+            // testa a SOLA (player.x, player.y): com a origem na sola, esse é o
+            // ponto do pé — a máscara é o CHÃO/piso da arte, onde o pé pisa (item 44).
+            const fx = player.x, fy = player.y;
             if (walkableAt(fx, fy)) {
               lastGood = { x: player.x, y: player.y };
             } else {

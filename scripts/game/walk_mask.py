@@ -46,14 +46,15 @@ CFG = {
     ),
     # Bosque: trilha de areia (laranja: R bem > G, B baixo) + ponte (retângulo) +
     # recuo em cada pedestal pra interagir. Grama/água/árvores bloqueadas.
-    # stamps no nível dos PÉS (sprite.y + ~36): a máscara é o chão; os pés pisam nela.
+    # Item 44: a SOLA pisa direto na máscara (sem compensação `down`); stamps nas
+    # posições reais do spawn/pedestais (world.ts).
     "bosque": dict(
         floor_fn=lambda R, G, B, sat, mn: (R >= 198) & ((R - G) >= 42) & (B <= 135),
-        close_it=4, erode_it=3, down=32,   # down: cobre o nível dos pés (sprite+~36)
-        rects=[(600, 318, 846, 478)],      # ponte de madeira (até os pés na saída)
-        stamps=[(130, 596, 22),            # spawn (pés)
-                (255, 596, 46), (540, 366, 46), (505, 691, 46),
-                (1090, 366, 46), (1375, 556, 46)],  # recuos dos 5 pedestais (pés)
+        close_it=4, erode_it=3,
+        rects=[(600, 318, 846, 470)],      # ponte de madeira
+        stamps=[(130, 560, 22),            # spawn
+                (255, 560, 44), (540, 330, 44), (505, 655, 44),
+                (1090, 330, 44), (1375, 520, 44)],  # recuos dos 5 pedestais
     ),
 }
 

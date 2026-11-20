@@ -140,9 +140,11 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
     collision: "/game/mapas/grande-dia.colisao.json",
     spawn: { x: 778, y: 870, facing: "up" },
     anchors: {
-      altar: { x: 768, y: 150 }, // estrado do altar (avatares do casal)
-      brideStand: { x: 735, y: 150 },
-      groomStand: { x: 805, y: 150 },
+      altar: { x: 768, y: 195 }, // estrado do altar (avatares do casal)
+      // Item 44: com a origem na sola, a âncora é o PÉ. O casal pisa no estrado em
+      // ~y195 (antes era y150 do centro do sprite).
+      brideStand: { x: 735, y: 195 },
+      groomStand: { x: 805, y: 195 },
     },
     // Arco do altar + colunas + cortinas: cobrem o boneco quando ele sobe ao
     // estrado e fica atrás do arco (baseY na base das colunas, onde o casal pisa).
