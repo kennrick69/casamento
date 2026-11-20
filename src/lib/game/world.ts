@@ -85,14 +85,15 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
     map: "/game/mapas/vila.webp",
     w: 1536,
     h: 1024,
-    // Vila: anda ESTRITAMENTE no calçamento (máscara); postes/bancos/caixa/canteiros
-    // sobre a pedra viram obstáculos sólidos (buracos na máscara). SEM overlays de
-    // profundidade — o boneco nunca fica atrás de nada (decisão JOs 41/42).
+    // Vila NOVA PRAÇA (item 46): arte + máscara caminhável desenhadas pelo JOs
+    // (calçamento em cruz contornando o canteiro oval central; postes fora do
+    // calçamento). A máscara é usada TAL COMO ESTÁ. Teste pela SOLA do pé (item 44).
+    // Saídas nas pontas esquerda, direita e embaixo. SEM overlays/colisão por retângulo.
     walkMask: "/game/mapas/vila.walk.png",
-    spawn: { x: 130, y: 470, facing: "right" },
+    spawn: { x: 95, y: 505, facing: "right" }, // entrada pelo braço ESQUERDO
     anchors: {
-      npc: { x: 695, y: 610 }, // calçada em frente à caixa de correio / quadro
-      gate: { x: 1380, y: 380 }, // portão de flores à direita (saída)
+      npc: { x: 430, y: 460 }, // calçamento em frente ao mural/caixa de correio (topo-centro)
+      gate: { x: 1480, y: 519 }, // saída pelo braço DIREITO → volta ao mapa
     },
   },
   bosque: {
