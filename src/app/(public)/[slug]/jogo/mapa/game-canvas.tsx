@@ -620,8 +620,11 @@ export function GameCanvas({
           scene.tweens.add({
             targets: st,
             d: total,
-            duration: Math.max(220, total * 2.3),
-            ease: "Sine.easeInOut",
+            // Item 45: viagem no mapa com velocidade CONSTANTE ~166 px/s (um pouco
+            // menor que o andar das fases, SPEED=195), antes era ~435 px/s. Ease
+            // linear = ritmo de caminhada constante; passo e câmera já acompanham.
+            duration: Math.max(600, total * 6),
+            ease: "Linear",
             onUpdate: () => {
               let seg = segs[segs.length - 1];
               for (const s of segs) {
