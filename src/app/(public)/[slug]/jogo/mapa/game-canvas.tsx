@@ -217,36 +217,62 @@ export function GameCanvas({
           });
         }
 
-        // desenha uma mesa redonda (arte própria via Graphics) com cadeiras
+        // Mesa de 8 lugares em pixel-art no estilo do salão (item 37): toalha branca
+        // com sombra, arranjo de flores no centro, cadeiras de madeira com encosto
+        // (vistas 3/4 de cima), e o nome numa plaquinha com a fonte do jogo (Caveat).
+        // Escala: cadeira ~ largura do boneco; mesa bem maior que ele.
+        const CLOTH = 52, CHAIR_R = 72; // raios: toalha e anel de cadeiras
         function drawTable(scene: any, x: number, y: number, label: string, highlight: boolean) {
           const c = scene.add.container(x, y);
           const g = scene.add.graphics();
-          // cadeiras (8) em volta
+          // sombra no chão
+          g.fillStyle(0x000000, 0.14);
+          g.fillEllipse(0, 14, CLOTH * 2.5, CLOTH * 1.5);
+          // cadeiras de madeira (8) com encosto voltado pra fora
           for (let i = 0; i < 8; i++) {
             const a = (i / 8) * Math.PI * 2;
-            g.fillStyle(0x8a5a3a, 1);
-            g.fillCircle(Math.cos(a) * 46, Math.sin(a) * 46, 9);
+            const cx = Math.cos(a) * CHAIR_R, cy = Math.sin(a) * CHAIR_R;
+            const ox = Math.cos(a), oy = Math.sin(a);
+            // encosto (mais escuro), na borda externa
+            g.fillStyle(0x6b4423, 1);
+            g.fillRoundedRect(cx + ox * 8 - 11, cy + oy * 8 - 11, 22, 22, 5);
+            // assento (madeira clara)
+            g.fillStyle(0xa9713f, 1);
+            g.fillRoundedRect(cx - 11, cy - 10, 22, 20, 5);
+            g.fillStyle(0xc08a52, 1);
+            g.fillRoundedRect(cx - 8, cy - 7, 16, 12, 4);
           }
-          // tampo
-          g.fillStyle(0xffffff, 1);
-          g.fillCircle(0, 0, 34);
-          g.fillStyle(0xf3e6c4, 1);
-          g.fillCircle(0, 0, 30);
-          g.lineStyle(2, 0xc9a24a, 1);
-          g.strokeCircle(0, 0, 30);
-          // centro (arranjo)
-          g.fillStyle(0xe48aa6, 1);
-          g.fillCircle(0, 0, 8);
+          // toalha: saia (drapeado) + tampo
+          g.fillStyle(0xe7dcc8, 1); g.fillCircle(0, 6, CLOTH + 4);     // saia/sombra da toalha
+          g.fillStyle(0xffffff, 1); g.fillCircle(0, 0, CLOTH);          // tampo branco
+          g.fillStyle(0xf3eee4, 1); g.fillCircle(0, 0, CLOTH - 6);      // leve creme interno
+          g.lineStyle(2, 0xd9cdb4, 1); g.strokeCircle(0, 0, CLOTH);
+          // arranjo de flores central (folhas + flores)
+          g.fillStyle(0x4f8a4a, 1);
+          for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2; g.fillCircle(Math.cos(a) * 12, Math.sin(a) * 12, 6); }
+          const petals = [0xe77aa0, 0xf4c0d2, 0xe9b949, 0xffffff];
+          for (let i = 0; i < 7; i++) { const a = (i / 7) * Math.PI * 2; g.fillStyle(petals[i % petals.length], 1); g.fillCircle(Math.cos(a) * 8, Math.sin(a) * 8, 5); }
+          g.fillStyle(0xf6d94e, 1); g.fillCircle(0, 0, 5);
           c.add(g);
-          const t = scene.add
-            .text(0, 1, label, { fontFamily: "monospace", fontSize: "16px", color: "#5a3d2b", fontStyle: "bold" })
-            .setOrigin(0.5);
-          c.add(t);
+          // plaquinha com o nome (fonte do jogo, não monoespaçada)
+          if (label) {
+            const font = (typeof document !== "undefined" && getComputedStyle(document.documentElement).getPropertyValue("--font-caveat").trim()) || "Georgia, serif";
+            const plate = scene.add.graphics();
+            const pw = Math.max(64, label.length * 11 + 22), py0 = CLOTH + 16;
+            plate.fillStyle(0x000000, 0.12); plate.fillRoundedRect(-pw / 2 + 2, py0 + 2, pw, 30, 8);
+            plate.fillStyle(0xfffdf7, 1); plate.fillRoundedRect(-pw / 2, py0, pw, 30, 8);
+            plate.lineStyle(2, 0xd8b06a, 1); plate.strokeRoundedRect(-pw / 2, py0, pw, 30, 8);
+            c.add(plate);
+            const t = scene.add
+              .text(0, py0 + 15, label, { fontFamily: font, fontSize: "22px", color: "#5a3d2b", fontStyle: "bold" })
+              .setOrigin(0.5);
+            c.add(t);
+          }
           c.setDepth(y);
           if (highlight) {
-            const ring = scene.add.circle(x, y, 52, 0xffd24a, 0.18).setStrokeStyle(3, 0xffd24a, 0.9);
+            const ring = scene.add.circle(x, y, CHAIR_R + 8, 0xffd24a, 0.16).setStrokeStyle(4, 0xffd24a, 0.9);
             ring.setDepth(y - 1);
-            scene.tweens.add({ targets: ring, scale: { from: 0.9, to: 1.15 }, alpha: { from: 0.9, to: 0.3 }, duration: 800, yoyo: true, repeat: -1 });
+            scene.tweens.add({ targets: ring, scale: { from: 0.92, to: 1.12 }, alpha: { from: 0.9, to: 0.3 }, duration: 800, yoyo: true, repeat: -1 });
           }
           return c;
         }
@@ -386,7 +412,7 @@ export function GameCanvas({
           // então ainda dá pra chegar perto e interagir.
           (cfg.interactables ?? []).forEach((it) => {
             if (it.kind !== "table" && it.kind !== "pedestal") return;
-            const rad = it.kind === "table" ? 44 : 22;
+            const rad = it.kind === "table" ? 62 : 22;
             const body = scene.add.circle(it.x, it.y, rad, 0xff2bff, cfg.debug ? 0.25 : 0);
             scene.physics.add.existing(body, true);
             body.body.setCircle(rad);

@@ -150,19 +150,22 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
   },
 };
 
-// Grade automática das mesas no piso livre do salão (até 10). Evita altar
-// (topo-centro), buffet (topo-esq), bolo (topo-dir) e a entrada (baixo-centro).
+// Grade automática das mesas, DISTRIBUÍDA pelo piso do salão (item 37 — antes
+// ficavam todas no topo com o centro vazio). Grade centrada em (768,560), cada
+// linha centrada; evita altar (topo), buffet/bolo (cantos) e a entrada (baixo).
 export function tableGrid(count: number): Point[] {
-  const cols = 5;
-  const x0 = 300;
-  const y0 = 380;
-  const dx = 235;
-  const dy = 250;
+  const n = Math.min(count, 10);
+  const cols = Math.min(4, Math.max(1, Math.ceil(Math.sqrt(n))));
+  const rows = Math.ceil(n / cols);
+  const dx = 300, dy = 220, cx = 768, cy = 560;
+  const gridH = (rows - 1) * dy;
   const out: Point[] = [];
-  for (let i = 0; i < Math.min(count, 10); i++) {
-    const c = i % cols;
+  for (let i = 0; i < n; i++) {
     const r = Math.floor(i / cols);
-    out.push({ x: x0 + c * dx, y: y0 + r * dy });
+    const col = i % cols;
+    const rowCount = Math.min(cols, n - r * cols);
+    const rowW = (rowCount - 1) * dx;
+    out.push({ x: cx - rowW / 2 + col * dx, y: cy - gridH / 2 + r * dy });
   }
   return out;
 }

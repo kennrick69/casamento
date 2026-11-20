@@ -269,7 +269,7 @@ export function MapaClient(props: MapaClientProps) {
         // "!" flutuante sobre a MINHA mesa (vira "✓" ao encontrar) — item 29
         glyph: t.id === props.myTableId ? (progress.phase3 ? "check" : "bang") : undefined,
         done: t.id === props.myTableId && progress.phase3,
-        radius: 70,
+        radius: 110, // mesa grande (item 37): alcance de interação > raio do corpo
       }));
       npcs = [
         { x: phase.anchors.brideStand.x, y: phase.anchors.brideStand.y, atlasUrl: props.brideAtlas, facing: "down" },
