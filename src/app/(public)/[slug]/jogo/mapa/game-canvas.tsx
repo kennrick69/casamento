@@ -657,8 +657,15 @@ export function GameCanvas({
               neighborsOf(currentNode).forEach((other) => {
                 const path = pathBetween(currentNode, other);
                 if (!path || path.length < 2) return;
-                const nx = path[1].x - here.x;
-                const ny = path[1].y - here.y;
+                // direção dos primeiros ~40px da trilha (não só o 1º waypoint, que
+                // é ruidoso): acumula o comprimento até ~40px (item 35).
+                let acc = 0, tx = path[path.length - 1].x, ty = path[path.length - 1].y;
+                for (let k = 1; k < path.length; k++) {
+                  acc += Math.hypot(path[k].x - path[k - 1].x, path[k].y - path[k - 1].y);
+                  if (acc >= 40) { tx = path[k].x; ty = path[k].y; break; }
+                }
+                const nx = tx - here.x;
+                const ny = ty - here.y;
                 const len = Math.hypot(nx, ny) || 1;
                 const dot = (nx / len) * want!.x + (ny / len) * want!.y;
                 if (dot > bestDot) {

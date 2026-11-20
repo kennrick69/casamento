@@ -1,7 +1,8 @@
 import numpy as np, heapq, json, math
 from PIL import Image, ImageDraw
 from scipy import ndimage
-SCRATCH="/tmp/claude-1000/-mnt-g-Projetos-casamento/dfbe568b-850c-48ef-8105-10aed9118fad/scratchpad"
+import os
+SCRATCH=os.environ.get("SCRATCH", "docs/screens-jogo")  # overlay de conferência + world-trail.json
 im = Image.open("public/game/mapas/mundi.png").convert("RGB")
 a = np.asarray(im).astype(np.int16); H,W=a.shape[:2]
 R,G,B=a[...,0],a[...,1],a[...,2]
@@ -35,14 +36,18 @@ np.save(f"{SCRATCH}/trail_mask.npy", mask)
 
 # ─── A* com custo que segue o CENTRO da trilha ───
 S=2
-m2=ndimage.binary_dilation(mask[::S,::S], iterations=1)  # restaura corredores finos
+m2d=ndimage.binary_dilation(mask[::S,::S], iterations=1)  # restaura corredores finos
+# Item 33: EROSÃO antes do A* — afasta ~8px das bordas pra o caminho seguir o
+# CENTRO de pontes/escadas (antes ele rentava o corrimão). dt2 do mapa erodido
+# reforça o custo central. nearest_ok re-ancora os nós no mapa erodido.
+m2=ndimage.binary_erosion(m2d, iterations=2)
 dt2=ndimage.distance_transform_edt(m2); H2,W2=m2.shape
 lbl2,_=ndimage.label(m2)
 print("labels (stride2):",[lbl2[y//S,x//S] for (x,y) in nodes])
 maxdt=dt2.max() or 1.0
 def ok(x,y): return 0<=x<W2 and 0<=y<H2 and m2[y,x]
-def cost(x,y):   # barato no centro, caro na borda
-    return 1.0 + 6.0*(1.0 - min(dt2[y,x],8.0)/8.0)
+def cost(x,y):   # barato no centro, MUITO caro na borda (item 33)
+    return 1.0 + 12.0*(1.0 - min(dt2[y,x],8.0)/8.0)
 def nearest_ok(x,y):
     if ok(x,y): return (x,y)
     best=None;bd=1e9
