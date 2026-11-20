@@ -17,7 +17,11 @@ import type { Dir, Point, WorldEdge } from "@/lib/game/world";
 // por cima do <canvas>.
 
 const PHASER_SRC = "/game/vendor/phaser-3.88.2.min.js";
-const SPEED = 165;
+const SPEED = 195;
+// Escala do avatar: a arte LPC rende o personagem ~22px; a 1.5x fica ~33px,
+// ≈75-80% da altura das portas da arte (item 28). Nearest-neighbor (pixelArt),
+// sem borrar. Aplicada ao avatar e aos NPCs (noivos no altar).
+const AVATAR_SCALE = 1.5;
 const FRAMES_PER_DIR = 9; // sheets LPC: 9 colunas × 4 linhas
 const ROW: Record<Dir, number> = { up: 0, left: 1, down: 2, right: 3 };
 
@@ -316,13 +320,17 @@ export function GameCanvas({
           (cfg.npcs ?? []).forEach((n, i) => {
             addWalkAnims(scene, `npc${i}`, `npc${i}`);
             const s = scene.add.sprite(n.x, n.y, `npc${i}`, ROW[n.facing] * FRAMES_PER_DIR);
+            s.setScale(AVATAR_SCALE);
             s.setDepth(n.y);
           });
 
           // ── avatar ──
           player = scene.physics.add.sprite(cfg.spawn.x, cfg.spawn.y, "player", ROW[cfg.spawn.facing] * FRAMES_PER_DIR);
+          player.setScale(AVATAR_SCALE);
           player.setCollideWorldBounds(true);
-          player.body.setSize(22, 16).setOffset(21, 46); // pés
+          // hitbox só nos PÉS (item 27): corpo pequeno na base do sprite. Em
+          // coords do frame (Phaser multiplica pela escala).
+          player.body.setSize(22, 12).setOffset(21, 50);
           player.setDepth(cfg.spawn.y);
           if (scene._walls) scene.physics.add.collider(player, scene._walls);
           scene.cameras.main.startFollow(player, true, 0.14, 0.14);
