@@ -64,7 +64,11 @@ export interface PhaseConfig {
   map: string;
   w: number;
   h: number;
-  collision: string; // url do .colisao.json
+  collision?: string; // url do .colisao.json (grande-dia); vila/bosque usam walkMask
+  // Máscara caminhável (PNG alpha): o avatar só anda no piso pintado (calçamento
+  // da vila / trilha+ponte do bosque) + folga. Substitui colisão+overlays nessas
+  // fases (feedback JOs 40/42). Gerada por scripts/game/walk_mask.py.
+  walkMask?: string;
   spawn: { x: number; y: number; facing: Dir };
   anchors: Record<string, Point>; // âncoras fixas de interação (NPC, portão, altar…)
   pedestals?: Point[]; // bosque: posições dos pedestais de memória
@@ -81,29 +85,15 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
     map: "/game/mapas/vila.webp",
     w: 1536,
     h: 1024,
-    collision: "/game/mapas/vila.colisao.json",
+    // Vila: anda ESTRITAMENTE no calçamento (máscara); postes/bancos/caixa/canteiros
+    // sobre a pedra viram obstáculos sólidos (buracos na máscara). SEM overlays de
+    // profundidade — o boneco nunca fica atrás de nada (decisão JOs 41/42).
+    walkMask: "/game/mapas/vila.walk.png",
     spawn: { x: 130, y: 470, facing: "right" },
     anchors: {
-      npc: { x: 695, y: 560 }, // frente da caixa de correio / quadro de avisos
+      npc: { x: 695, y: 610 }, // calçada em frente à caixa de correio / quadro
       gate: { x: 1380, y: 380 }, // portão de flores à direita (saída)
     },
-    overlays: [
-      // ── Postes (lampião): topo passa à frente quando o boneco está atrás ──
-      { cx: 554, cy: 182, cw: 46, ch: 140, baseY: 320 }, // poste cima-esq
-      { cx: 856, cy: 182, cw: 46, ch: 140, baseY: 320 }, // poste cima
-      { cx: 406, cy: 440, cw: 48, ch: 205, baseY: 644 }, // poste centro-esq
-      { cx: 1006, cy: 478, cw: 48, ch: 168, baseY: 644 }, // poste centro-dir
-      // ── Telhados: a copa do telhado cobre o boneco ao chegar na parede ──
-      { cx: 150, cy: 0, cw: 420, ch: 210, baseY: 208 }, // casa esquerda
-      { cx: 952, cy: 0, cw: 398, ch: 240, baseY: 236 }, // casa direita
-      // ── Arco de rosas (direita): roseiral + pilares ──
-      { cx: 1294, cy: 326, cw: 224, ch: 232, baseY: 556 },
-      // ── Árvores: copa + tronco cobrem o boneco atrás do tronco ──
-      { cx: 0, cy: 6, cw: 182, ch: 282, baseY: 286 }, // cerejeira topo-esq
-      { cx: 1352, cy: 16, cw: 184, ch: 252, baseY: 266 }, // árvore amarela topo-dir
-      { cx: 24, cy: 520, cw: 300, ch: 252, baseY: 770 }, // cerejeira campo-esq
-      { cx: 1120, cy: 532, cw: 296, ch: 248, baseY: 778 }, // árvore amarela campo-dir
-    ],
   },
   bosque: {
     id: "bosque",
@@ -111,7 +101,9 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
     map: "/game/mapas/bosque.webp",
     w: 1536,
     h: 1024,
-    collision: "/game/mapas/bosque.colisao.json",
+    // Bosque: anda SÓ na trilha de terra + ponte + recuo nos pedestais (máscara).
+    // Grama, água, canteiros e árvores bloqueados (item 40).
+    walkMask: "/game/mapas/bosque.walk.png",
     spawn: { x: 130, y: 560, facing: "right" },
     anchors: {
       exit: { x: 1360, y: 470 }, // fim da trilha → volta ao mapa

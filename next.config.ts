@@ -6,6 +6,11 @@ import { withSentryConfig } from "@sentry/nextjs";
 const withNextIntl = createNextIntlPlugin("./src/lib/i18n/index.ts");
 const withBundleAnalyzer = withBundleAnalyzerFactory({ enabled: process.env.ANALYZE === "true" });
 
+// Em DEV, o React usa eval() para debugging; sem 'unsafe-eval' o CSP bloqueia e o
+// Next mostra o selo "1 Issue" (que cobria o D-pad — item 34). Produção mantém o
+// CSP estrito (sem unsafe-eval).
+const DEV = process.env.NODE_ENV !== "production";
+
 // CSP directive sources
 const CSP_DIRECTIVES = [
   // Default fallback
@@ -13,7 +18,7 @@ const CSP_DIRECTIVES = [
   // Scripts: own bundle + Next.js inline hydration + Cloudflare Turnstile
   // 'unsafe-inline' is required for Next.js App Router inline <script> hydration payloads.
   // Upgrade to nonce-based CSP when Middleware nonce support is stable.
-  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
+  `script-src 'self' 'unsafe-inline'${DEV ? " 'unsafe-eval'" : ""} https://challenges.cloudflare.com`,
   // Styles: own bundle + Next.js critical CSS injection
   "style-src 'self' 'unsafe-inline'",
   // Fonts: next/font/google self-hosts all fonts as static assets under /_next/static/
@@ -66,6 +71,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Esconde o selo de dev do Next (cobria o botão ↓ do D-pad no jogo). Só afeta
+  // o dev; erros de build/runtime continuam aparecendo. (Feedback JOs, item 34.)
+  devIndicators: false,
   serverExternalPackages: ["@prisma/client"],
   images: {
     remotePatterns: [

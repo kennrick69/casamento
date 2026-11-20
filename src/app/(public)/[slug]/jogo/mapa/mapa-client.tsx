@@ -251,6 +251,7 @@ export function MapaClient(props: MapaClientProps) {
       atlasUrl,
       spawn: spawnOverride ? { ...phase.spawn, ...spawnOverride } : phase.spawn,
       collisionUrl: phase.collision,
+      walkMaskUrl: phase.walkMask,
       interactables,
       npcs,
       overlays: phase.overlays,

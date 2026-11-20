@@ -99,6 +99,10 @@ export interface SceneConfig {
   spawn: { x: number; y: number; facing: Dir };
   zoom?: number;
   collisionUrl?: string;
+  // Máscara caminhável (PNG alpha): o avatar só anda onde o pixel é opaco
+  // (calçamento da vila / trilha do bosque + folga). Substitui os retângulos de
+  // colisão nessas fases (feedback JOs, itens 40/42). cfg.map resolution.
+  walkMaskUrl?: string;
   interactables: Interactable[];
   // world:
   nodes?: Point[];
@@ -175,8 +179,12 @@ export function GameCanvas({
         // ── estado da cena ──
         let player: any;
         let keys: any;
+        // máscara caminhável lida em pixels (closure — updatePhase não recebe scene)
+        let walkMask: { data: Uint8Array; w: number; h: number; sx: number; sy: number } | null = null;
         let facing: Dir = cfg.spawn.facing;
         let nearId: string | null = null;
+        // última posição válida (dentro da máscara caminhável) p/ reverter o passo
+        let lastGood = { x: cfg.spawn.x, y: cfg.spawn.y };
         const markerSprites: Record<string, any> = {};
         let hudText: any;
         // world mode
@@ -201,6 +209,7 @@ export function GameCanvas({
 
         function preload(this: any) {
           this.load.image("map", cfg.map);
+          if (cfg.walkMaskUrl) this.load.image("walkmask", cfg.walkMaskUrl);
           this.load.spritesheet("player", cfg.atlasUrl, { frameWidth: 64, frameHeight: 64 });
           if (cfg.collisionUrl) this.load.json("col", cfg.collisionUrl);
           (cfg.npcs ?? []).forEach((n, i) => {
@@ -356,6 +365,21 @@ export function GameCanvas({
           }
           scene._walls = scene._walls ?? [];
 
+          // ── máscara caminhável (vila/bosque): lê os pixels do PNG pra um array
+          // alpha (opaco = caminhável). O avatar fica preso dentro dela (itens 40/42).
+          if (scene.textures.exists("walkmask")) {
+            const src = scene.textures.get("walkmask").getSourceImage() as HTMLImageElement;
+            const mw = src.width, mh = src.height;
+            const cnv = document.createElement("canvas");
+            cnv.width = mw; cnv.height = mh;
+            const ctx2 = cnv.getContext("2d", { willReadFrequently: true })!;
+            ctx2.drawImage(src, 0, 0);
+            const alpha = ctx2.getImageData(0, 0, mw, mh).data;
+            const arr = new Uint8Array(mw * mh);
+            for (let i = 0; i < mw * mh; i++) arr[i] = alpha[i * 4 + 3] > 80 ? 1 : 0;
+            walkMask = { data: arr, w: mw, h: mh, sx: mw / W, sy: mh / H };
+          }
+
           // Sólidos desenhados pelo jogo (mesas do salão, pedestais do bosque):
           // não estão no .colisao.json, então viram corpos circulares estáticos
           // para o avatar não os atravessar. Raio < 72 (alcance de interação),
@@ -463,7 +487,35 @@ export function GameCanvas({
           };
         }
 
+        // true se o ponto (coords do mundo) é caminhável na máscara (ou se não há
+        // máscara nesta fase). Fora dos limites = não caminhável.
+        function walkableAt(wx: number, wy: number): boolean {
+          const wk = walkMask;
+          if (!wk) return true;
+          const mx = Math.floor(wx * wk.sx), my = Math.floor(wy * wk.sy);
+          if (mx < 0 || my < 0 || mx >= wk.w || my >= wk.h) return false;
+          return wk.data[my * wk.w + mx] === 1;
+        }
+
         function updatePhase() {
+          // ── restrição à máscara caminhável: se os pés saíram da máscara, reverte
+          // (tentando deslizar por um eixo antes de parar de vez) ──
+          if (walkMask && player) {
+            // testa os PÉS (body.center): a máscara é o CHÃO/piso da arte, onde os
+            // pés pisam. As stamps da máscara ficam no nível dos pés (y+~36).
+            const fx = player.body.center.x, fy = player.body.center.y;
+            if (walkableAt(fx, fy)) {
+              lastGood = { x: player.x, y: player.y };
+            } else {
+              const dx = player.x - lastGood.x, dy = player.y - lastGood.y;
+              if (dx !== 0 && walkableAt(fx - dx, fy)) player.setPosition(lastGood.x, player.y);
+              else if (dy !== 0 && walkableAt(fx, fy - dy)) player.setPosition(player.x, lastGood.y);
+              else player.setPosition(lastGood.x, lastGood.y);
+              player.body.setVelocity(0, 0);
+              lastGood = { x: player.x, y: player.y };
+            }
+          }
+
           const d = readDir();
           let vx = 0;
           let vy = 0;
