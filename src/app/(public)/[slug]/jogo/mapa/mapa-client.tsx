@@ -231,6 +231,7 @@ export function MapaClient(props: MapaClientProps) {
       collisionUrl: phase.collision,
       interactables,
       npcs,
+      overlays: phase.overlays,
       debug,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

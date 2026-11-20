@@ -106,6 +106,10 @@ export interface SceneConfig {
   startNode?: number;
   // phase:
   npcs?: NpcAvatar[];
+  // Overlays de profundidade (item 27): recortes da arte (topo de poste, copa de
+  // árvore) desenhados ACIMA do avatar quando ele está atrás (depth = baseY = a
+  // linha do chão do objeto). cx/cy/cw/ch = região recortada do mapa.
+  overlays?: { cx: number; cy: number; cw: number; ch: number; baseY: number }[];
   debug?: boolean;
 }
 
@@ -283,6 +287,22 @@ export function GameCanvas({
 
           const bg = scene.add.image(0, 0, "map").setOrigin(0, 0);
           bg.setDepth(0);
+
+          // Overlays de profundidade (item 27): cada um é uma cópia recortada do
+          // mapa, posicionada igual ao fundo, com depth = baseY. Quando o avatar
+          // (depth = player.y) está acima da linha do chão do objeto, o overlay
+          // o cobre (parece estar atrás); abaixo, o avatar fica na frente.
+          (cfg.overlays ?? []).forEach((o) => {
+            const img = scene.add.image(0, 0, "map").setOrigin(0, 0);
+            img.setCrop(o.cx, o.cy, o.cw, o.ch);
+            img.setDepth(o.baseY);
+            if (cfg.debug) {
+              scene.add
+                .rectangle(o.cx + o.cw / 2, o.cy + o.ch / 2, o.cw, o.ch)
+                .setStrokeStyle(2, 0x33ddff, 0.9)
+                .setDepth(95000);
+            }
+          });
 
           scene.physics.world.setBounds(0, 0, W, H);
           scene.cameras.main.setBounds(0, 0, W, H);

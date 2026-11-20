@@ -68,6 +68,10 @@ export interface PhaseConfig {
   spawn: { x: number; y: number; facing: Dir };
   anchors: Record<string, Point>; // âncoras fixas de interação (NPC, portão, altar…)
   pedestals?: Point[]; // bosque: posições dos pedestais de memória
+  // Overlays de profundidade (item 27): recortes da arte (topo de poste, copa de
+  // árvore) que passam À FRENTE do avatar quando ele está atrás. baseY = linha
+  // do chão do objeto. Os objetos têm colisão só na base (.colisao.json).
+  overlays?: { cx: number; cy: number; cw: number; ch: number; baseY: number }[];
 }
 
 export const PHASES: Record<LevelId, PhaseConfig> = {
@@ -83,6 +87,12 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
       npc: { x: 695, y: 560 }, // frente da caixa de correio / quadro de avisos
       gate: { x: 1380, y: 380 }, // portão de flores à direita (saída)
     },
+    overlays: [
+      { cx: 554, cy: 182, cw: 46, ch: 140, baseY: 320 }, // poste cima-esq
+      { cx: 856, cy: 182, cw: 46, ch: 140, baseY: 320 }, // poste cima
+      { cx: 406, cy: 440, cw: 48, ch: 205, baseY: 644 }, // poste centro-esq
+      { cx: 1006, cy: 478, cw: 48, ch: 168, baseY: 644 }, // poste centro-dir
+    ],
   },
   bosque: {
     id: "bosque",
@@ -103,6 +113,9 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
       { x: 560, y: 720 },
       { x: 1180, y: 560 },
       { x: 1290, y: 360 },
+    ],
+    overlays: [
+      { cx: 338, cy: 428, cw: 448, ch: 250, baseY: 716 }, // copa das cerejeiras centrais
     ],
   },
   "grande-dia": {
