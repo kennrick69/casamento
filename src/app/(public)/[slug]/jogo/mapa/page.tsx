@@ -96,8 +96,14 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
   const groomAtlas = `/${slug}/jogo/personagem/sheet?${specToQuery(GROOM_SPEC)}`;
 
   return (
-    <MapaClient
-      slug={slug}
+    <>
+      {/* Preload dos assets do jogo (mata o waterfall: Phaser + mapa inicial +
+          atlas baixam em paralelo com o JS, não depois dele). Next hasteia no head. */}
+      <link rel="preload" as="script" href="/game/vendor/phaser-3.88.2.min.js" />
+      <link rel="preload" as="image" href="/game/mapas/mundi.webp" />
+      <link rel="preload" as="image" href={atlasUrl} />
+      <MapaClient
+        slug={slug}
       coupleNames={event.coupleNames}
       playerName={guest.playerName ?? "você"}
       atlasUrl={atlasUrl}
@@ -111,6 +117,7 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
       brideAtlas={brideAtlas}
       groomAtlas={groomAtlas}
       progress={parseProgress(character.gameProgress)}
-    />
+      />
+    </>
   );
 }

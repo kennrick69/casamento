@@ -18,7 +18,7 @@ export interface Point {
 // Cada aresta tem `via`: a sequência de waypoints (de a→b) sobre a trilha de
 // terra desenhada na arte (curvas, pontes, escadas). O avatar caminha por esses
 // pontos — nunca em linha reta por cima da grama/penhasco (feedback do JOs,
-// itens 12 e 20). Coordenadas medidas sobre public/game/mapas/mundi.png (grade).
+// itens 12 e 20). Coordenadas medidas sobre public/game/mapas/mundi.webp (grade).
 export interface WorldEdge {
   a: number;
   b: number;
@@ -34,7 +34,7 @@ export interface WorldConfig {
 }
 
 export const WORLD: WorldConfig = {
-  map: "/game/mapas/mundi.png",
+  map: "/game/mapas/mundi.webp",
   w: 1536,
   h: 1024,
   // Nós = os 3 marcadores (Vila, Bosque, Grande Dia) sobre as plataformas de
@@ -78,7 +78,7 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
   vila: {
     id: "vila",
     title: "A Vila",
-    map: "/game/mapas/vila.png",
+    map: "/game/mapas/vila.webp",
     w: 1536,
     h: 1024,
     collision: "/game/mapas/vila.colisao.json",
@@ -108,7 +108,7 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
   bosque: {
     id: "bosque",
     title: "O Bosque",
-    map: "/game/mapas/bosque.png",
+    map: "/game/mapas/bosque.webp",
     w: 1536,
     h: 1024,
     collision: "/game/mapas/bosque.colisao.json",
@@ -142,7 +142,7 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
   "grande-dia": {
     id: "grande-dia",
     title: "O Grande Dia",
-    map: "/game/mapas/grande-dia.png",
+    map: "/game/mapas/grande-dia.webp",
     w: 1536,
     h: 1024,
     collision: "/game/mapas/grande-dia.colisao.json",
