@@ -77,67 +77,35 @@ export function CriadorClient({
   }
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-neutral-100 flex flex-col items-center px-4 py-8 gap-6">
-      <header className="text-center">
-        <h1 className="text-2xl font-bold">Crie seu personagem</h1>
-        <p className="text-sm text-neutral-400">Olá, {playerName}! Monte seu boneco para a festa.</p>
-      </header>
-
-      <div className="grid gap-6 w-full max-w-3xl md:grid-cols-[220px_1fr]">
-        {/* Preview */}
-        <div className="flex flex-col items-center gap-3 md:sticky md:top-4 md:self-start">
-          <div className="relative flex size-[200px] items-center justify-center rounded-xl bg-gradient-to-b from-sky-200 to-sky-400 p-4 shadow-inner">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              key={previewUrl}
-              src={previewUrl}
-              alt="Prévia do personagem"
-              width={192}
-              height={192}
-              onError={(e) => {
-                // prévia nunca derruba a página: se falhar, mostra o alt (item 9)
-                e.currentTarget.style.visibility = "hidden";
-              }}
-              onLoad={(e) => {
-                e.currentTarget.style.visibility = "visible";
-              }}
-              style={{ imageRendering: "pixelated", width: 192, height: 192 }}
-            />
-          </div>
-
-          {saved ? (
-            <>
-              <p className="flex items-center gap-1.5 text-sm font-semibold text-emerald-400">
-                <Check className="size-4" aria-hidden /> Personagem salvo!
-              </p>
-              <Link
-                href={`/${slug}/jogo/mapa`}
-                className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-lg font-bold text-white shadow-lg ring-1 ring-emerald-300 hover:bg-emerald-500"
-              >
-                <Play className="size-5" aria-hidden /> Entrar no jogo
-              </Link>
-              <button onClick={() => setSaved(false)} className="text-xs text-neutral-400 underline hover:text-neutral-200">
-                Continuar editando
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={onSave}
-              disabled={pending}
-              className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-emerald-400 bg-emerald-600 text-lg font-bold text-white shadow-lg hover:bg-emerald-500 disabled:opacity-60"
-            >
-              {pending ? <Loader2 className="size-5 animate-spin" aria-hidden /> : <Check className="size-5" aria-hidden />}
-              Salvar personagem
-            </button>
-          )}
-          {error && (
-            <p className="rounded-lg bg-red-950/60 px-3 py-2 text-center text-xs text-red-300" role="alert">
-              {error}
-            </p>
-          )}
+    <div className="relative flex min-h-screen flex-col bg-neutral-900 text-neutral-100">
+      {/* Prévia FIXA no topo (sticky) — fica visível enquanto rola as opções (item 21) */}
+      <div className="sticky top-0 z-20 flex flex-col items-center gap-2 border-b border-neutral-800 bg-neutral-900/95 px-4 pb-3 pt-4 backdrop-blur">
+        <div className="text-center">
+          <h1 className="text-lg font-bold leading-tight">Crie seu personagem</h1>
+          <p className="text-xs text-neutral-400">Olá, {playerName}! Monte seu boneco e salve no fim.</p>
         </div>
+        <div className="relative flex size-[132px] items-center justify-center rounded-xl bg-gradient-to-b from-sky-200 to-sky-400 p-2 shadow-inner">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            key={previewUrl}
+            src={previewUrl}
+            alt="Prévia do personagem"
+            width={116}
+            height={116}
+            onError={(e) => {
+              // prévia nunca derruba a página: se falhar, mostra o alt (item 9)
+              e.currentTarget.style.visibility = "hidden";
+            }}
+            onLoad={(e) => {
+              e.currentTarget.style.visibility = "visible";
+            }}
+            style={{ imageRendering: "pixelated", width: 116, height: 116 }}
+          />
+        </div>
+      </div>
 
-        {/* Pickers */}
+      {/* Opções (rolam sob a prévia); pb extra p/ não ficar atrás da barra fixa */}
+      <div className="mx-auto w-full max-w-2xl px-4 py-6 pb-36">
         <div className="flex flex-col gap-5">
           <Group label="Corpo">
             {BODIES.map((o) => (
@@ -204,6 +172,46 @@ export function CriadorClient({
               </Pick>
             ))}
           </Group>
+        </div>
+      </div>
+
+      {/* Barra FIXA embaixo: Salvar / Entrar no jogo — o botão fica POR ÚLTIMO,
+          depois de todas as escolhas (item 21). */}
+      <div
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-neutral-800 bg-neutral-900/97 px-4 py-3 backdrop-blur"
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
+      >
+        <div className="mx-auto flex w-full max-w-2xl flex-col gap-2">
+          {error && (
+            <p className="rounded-lg bg-red-950/60 px-3 py-2 text-center text-xs text-red-300" role="alert">
+              {error}
+            </p>
+          )}
+          {saved ? (
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/${slug}/jogo/mapa`}
+                className="inline-flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-lg font-bold text-white shadow-lg ring-1 ring-emerald-300 hover:bg-emerald-500"
+              >
+                <Play className="size-5" aria-hidden /> Entrar no jogo
+              </Link>
+              <button
+                onClick={() => setSaved(false)}
+                className="h-14 rounded-xl border border-neutral-600 px-4 text-sm text-neutral-300 hover:bg-neutral-800"
+              >
+                Editar
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onSave}
+              disabled={pending}
+              className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl border-2 border-emerald-400 bg-emerald-600 text-lg font-bold text-white shadow-lg hover:bg-emerald-500 disabled:opacity-60"
+            >
+              {pending ? <Loader2 className="size-5 animate-spin" aria-hidden /> : <Check className="size-5" aria-hidden />}
+              Salvar personagem
+            </button>
+          )}
         </div>
       </div>
     </div>
