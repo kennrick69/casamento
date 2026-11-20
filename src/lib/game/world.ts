@@ -44,7 +44,7 @@ export const WORLD: WorldConfig = {
   nodes: [
     { x: 290, y: 885 }, // 0 A Vila
     { x: 595, y: 760 }, // 1 O Bosque
-    { x: 1210, y: 575 }, // 2 O Grande Dia
+    { x: 1200, y: 590 }, // 2 O Grande Dia (centro da pedra sob a estufa)
   ],
   edges: [
     { a: 0, b: 1, via: [{ x: 304, y: 884 }, { x: 314, y: 884 }, { x: 324, y: 888 }, { x: 334, y: 892 }, { x: 344, y: 892 }, { x: 354, y: 891 }, { x: 364, y: 889 }, { x: 374, y: 886 }, { x: 384, y: 883 }, { x: 394, y: 877 }, { x: 402, y: 870 }, { x: 410, y: 862 }, { x: 418, y: 854 }, { x: 426, y: 848 }, { x: 436, y: 846 }, { x: 446, y: 846 }, { x: 456, y: 843 }, { x: 466, y: 838 }, { x: 474, y: 832 }, { x: 484, y: 825 }, { x: 494, y: 819 }, { x: 504, y: 816 }, { x: 514, y: 813 }, { x: 524, y: 810 }, { x: 534, y: 808 }, { x: 544, y: 805 }, { x: 554, y: 800 }, { x: 562, y: 792 }, { x: 570, y: 784 }, { x: 578, y: 776 }, { x: 586, y: 768 }] },
@@ -107,12 +107,14 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
     },
     // 5 pedestais ao longo da trilha (sobre a areia). A memória nº i usa o
     // pedestal i; se houver menos de 5 memórias, sobra pedestal vazio (ignorado).
+    // Centralizados sobre as 5 plataformas de pedra da arte (item 22), em ordem
+    // pela trilha: esquerda → centro → direita.
     pedestals: [
-      { x: 330, y: 600 },
-      { x: 540, y: 360 },
-      { x: 560, y: 720 },
-      { x: 1180, y: 560 },
-      { x: 1290, y: 360 },
+      { x: 255, y: 560 },
+      { x: 540, y: 330 },
+      { x: 505, y: 655 },
+      { x: 1090, y: 330 },
+      { x: 1375, y: 520 },
     ],
     overlays: [
       { cx: 338, cy: 428, cw: 448, ch: 250, baseY: 716 }, // copa das cerejeiras centrais
