@@ -131,3 +131,33 @@ o **mais simples**, anotar aqui e seguir. JOs ajusta depois.
   render-permissiva. O filtro `outfitsFor(body, canRestricted)` é o mesmo nos dois
   lados. Falta só o screenshot do criador logado como organizador (precisa de
   login admin real).
+
+---
+
+## Rodada 2 de feedback do JOs (2026-11-19 noite, itens 21-32)
+
+- **Visitante joga tudo (31):** decisão do JOs — visitante entra com todas as
+  fases liberadas (`isVisitor`/`isOrganizer` → `freeRoam`); missões não travam.
+  Missão alternativa da vila: "deixe um recado para os noivos" (Guest.message),
+  sem RSVP. ?start= funciona p/ qualquer um no dev.
+- **Trilha por A* (26):** `scripts/game/trail_mask.py` gera a máscara da trilha
+  (areia por limiar de cor + pontes/escadas por retângulos + discos nos nós),
+  limpa com morfologia (closing+dilation), roda A* com custo que prefere o CENTRO
+  (distance transform) e densifica (~10px). **Decisão:** 3 nós (só os marcadores);
+  rota pela ponte INFERIOR (a areia conecta melhor por ali que pela superior).
+  Regenerar: `python3 scripts/game/trail_mask.py` → cola os waypoints no world.ts.
+- **Escala (28):** avatar 1.5x (`AVATAR_SCALE`), nearest. SPEED 165→195.
+- **Profundidade (27):** sistema de **overlay** — recortes da arte (`setCrop`)
+  desenhados em depth=baseY; o avatar (depth=y) passa atrás/na frente por Y.
+  Colisão dos objetos altos reduzida à base. **Decisão:** sem gerar sprites por
+  objeto — reusa o próprio mapa recortado (zero arte nova). Cobri postes da vila
+  + copa central do bosque (extensível via `overlays` no world.ts).
+- **Indicador de missão (29):** glyph "bang" (!) em pixel-art, maior (u=6) e com
+  contorno escuro; vira "check" ao concluir. Sobre NPC/pedestais/minha-mesa.
+- **Criador (21):** prévia sticky no topo + barra fixa embaixo com o botão.
+- **Identidade (24):** botão "Continuar jogando"; `characterClaimed` passa a
+  considerar ter GameCharacter (salvar personagem seta `characterClaimedAt`).
+- **Controles touch (25):** semitransparentes (opacidade baixa, mais opacos ao
+  tocar), menores; "A" virou botão "Entrar" com ícone.
+- **Pedestais/nós (22, 32b):** âncoras do bosque e nó do Grande Dia centralizados
+  nas plataformas de pedra (medidos sobre a arte).
