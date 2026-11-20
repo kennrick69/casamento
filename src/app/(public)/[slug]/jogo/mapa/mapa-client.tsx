@@ -128,6 +128,17 @@ export function MapaClient(props: MapaClientProps) {
     }
   }, []);
 
+  // Item 43: ao trocar de fase/cena (ou voltar ao mapa), fecha TODOS os diálogos/
+  // modais da cena anterior — senão uma memória/recado/mesa aberta fica por cima.
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setDialog(null);
+    setActiveMemory(null);
+    setTableMsg(null);
+    setNear(null);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [view]);
+
   const showToast = useCallback((msg: string) => {
     setToast(msg);
     window.setTimeout(() => setToast(null), 2600);
