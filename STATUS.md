@@ -67,13 +67,13 @@ Windows, logado) — provas em `docs/screens-jogo/`. `tsc` 0 erros, `eslint` 0.
 - **Produção (`joseeleticia.com`, Railway, deploy da `main`):** apenas S0–S2. O
   modo clássico e o gate de experiência. **Nenhuma migration do jogo foi aplicada.**
 - **Só no branch `feat/s3-personagem` (não aplicado em produção):**
-  - Todo o criador + jogo (S3).
-  - Migration aditiva do progresso — **só rodada no voem-dev**:
-    ```sql
-    ALTER TABLE "GameCharacter" ADD COLUMN "gameProgress" JSONB;
-    ```
-  - Dados de teste **dev-only no demo/voem-dev**: convidada-câmera `amanda`
-    (Fases 1–2 liberadas), 5 memórias, 4 mesas, alocação da amanda. Não afeta prod.
+  - Todo o criador + jogo (S3) + painel de Recados do jogo.
+  - **4 migrations aditivas** (só rodadas no voem-dev) — SQL exato em
+    **`docs/PLANO-MERGE.md`**: `add_game_character_roles` (cria GameCharacter,
+    EventRole, GuestRoleClaim), `add_locked_role_fk`, `add_character_appearance`,
+    `add_game_progress`.
+  - Dados de teste **dev-only no demo/voem-dev**: `amanda` (Fases 1–2), 5 memórias,
+    4 mesas; 3 visitantes com recado (`seed-recados-dev.ts`). Não afeta prod.
 
 ### ✅ Pendência nº 1 — profundidade estendida (FEITA, 2026-11-20, commitada)
 Estendida a profundidade (overlay + colisão na base) a **todas** as árvores,
@@ -86,18 +86,30 @@ altar em `docs/DECISOES-JOGO.md` (seção "Profundidade estendida").
   base (o Bosque era o que faltava: blocos grandes de canto → caixas de tronco).
 - `src/app/(public)/[slug]/jogo/mapa/mapa-client.tsx` — tool de dev `?px=&py=`.
 
+### ✅ Rodada 3 — missão autônoma (FEITA, 2026-11-20, commitada)
+Detalhes em **`docs/RELATORIO-RODADA3.md`**. Resumo:
+- **Colisões refinadas** (`51cbf15`): mesas e pedestais sólidos; água do bosque
+  selada; bordas conferidas; debug em magenta.
+- **Recados do jogo no painel** (`eff0003`): *Acessos ao jogo* mostra os recados
+  dos visitantes com avatar real e sem emoji.
+- **Regressão completa** (`69a104b`): visitante + organizador, 1280 e 390 — sem bug.
+- **Desempenho**: carregamento do jogo no 4G de ~7 s → **~4,7 s** (mapas WebP +
+  preload). Build de produção compila.
+- **`docs/PLANO-MERGE.md`** escrito (migrations, riscos, rollback, teste em prod).
+
 ---
 
 ## Pendências (em ordem)
 
-1. **Ajuste fino das colisões** das 3 fases (bancos, postes, canteiros menores
-   ainda atravessáveis) e centralização das âncoras (NPC, pedestais, portão, altar)
-   usando `?debug=1`.
+1. **Merge para produção**: seguir `docs/PLANO-MERGE.md`, **só com aprovação do JOs**.
 2. **Decisão de escala** — o JOs vai jogar: validar tamanho do boneco, zoom e
    velocidade (`SPEED`/`zoom` em `game-canvas.tsx`) com ele jogando de verdade.
-3. **Merge para produção só com aprovação do JOs.** Antes do merge: mostrar o SQL
-   da migration aditiva, conferir backup de produção verificado (produção recebe a
-   migration no `migrate deploy` do build).
+3. **Ajuste fino residual** de colisões menores (canteiros/bancos) e âncoras, se o
+   JOs quiser, com `?debug=1` (o grosso já foi feito na rodada 3).
+
+> Antes de qualquer merge: `tsc`+`eslint`+`vitest` verdes, mostrar o SQL das
+> migrations, conferir backup de produção verificado (produção aplica as migrations
+> no `migrate deploy` do build). Tudo detalhado em `docs/PLANO-MERGE.md`.
 
 ---
 
@@ -107,6 +119,8 @@ altar em `docs/DECISOES-JOGO.md` (seção "Profundidade estendida").
 - `docs/FEEDBACK-JOS-2026-11-19-rodada2.md` — feedback rodada 2 (itens 21–32).
 - `docs/DECISOES-JOGO.md` — decisões de arquitetura e design do jogo.
 - `docs/RELATORIO-JOGO.md` — relatório do jogo completo + como testar + SQL pré-merge.
+- `docs/RELATORIO-RODADA3.md` — rodada 3 (colisões, recados, regressão, perf, plano).
+- `docs/PLANO-MERGE.md` — plano de merge: migrations/SQL, riscos, rollback, teste prod.
 - `docs/screens-jogo/` — provas visuais (screenshots) de cada item.
 - `scripts/game/screenshot.mjs` — tool de screenshot (Chrome/Playwright do Windows).
 - `scripts/game/trail_mask.py` — máscara A* da trilha do mapa-múndi.
