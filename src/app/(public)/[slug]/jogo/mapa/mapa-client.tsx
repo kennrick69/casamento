@@ -174,7 +174,15 @@ export function MapaClient(props: MapaClientProps) {
 
     if (view === "vila") {
       interactables = [
-        { id: "npc", x: phase.anchors.npc.x, y: phase.anchors.npc.y, kind: "npc", glyph: "mail", label: "Recepcionista" },
+        {
+          id: "npc",
+          x: phase.anchors.npc.x,
+          y: phase.anchors.npc.y,
+          kind: "npc",
+          glyph: progress.phase1 ? "check" : "bang", // missão "!" sobre o NPC (item 29)
+          done: progress.phase1,
+          label: "Recepcionista",
+        },
         {
           id: "gate",
           x: phase.anchors.gate.x,
@@ -192,7 +200,7 @@ export function MapaClient(props: MapaClientProps) {
         x: peds[i].x,
         y: peds[i].y,
         kind: "pedestal",
-        glyph: progress.memoriesSeen.includes(mem.id) ? "check" : "book",
+        glyph: progress.memoriesSeen.includes(mem.id) ? "check" : "bang", // "!" da missão (item 29)
         done: progress.memoriesSeen.includes(mem.id),
         label: mem.title,
       }));
@@ -213,6 +221,9 @@ export function MapaClient(props: MapaClientProps) {
         kind: "table" as const,
         tableLabel: t.name,
         highlight: t.id === props.myTableId,
+        // "!" flutuante sobre a MINHA mesa (vira "✓" ao encontrar) — item 29
+        glyph: t.id === props.myTableId ? (progress.phase3 ? "check" : "bang") : undefined,
+        done: t.id === props.myTableId && progress.phase3,
         radius: 70,
       }));
       npcs = [

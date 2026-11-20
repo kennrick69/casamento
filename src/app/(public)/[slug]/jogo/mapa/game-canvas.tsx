@@ -36,8 +36,9 @@ function computeZoom(vw: number, vh: number, mapW: number, mapH: number): number
 // ─── Ícones em pixel-art (sem emoji — feedback do JOs, item 6) ───────────────
 // Pequenos bitmaps desenhados com retângulos (cada caractere ≠ '.' vira um
 // bloco). Substituem os emoji flutuantes dos marcadores (cadeado, estrela…).
-type GlyphName = "lock" | "star" | "pin" | "mail" | "flower" | "book" | "check" | "door";
+type GlyphName = "lock" | "star" | "pin" | "mail" | "flower" | "book" | "check" | "door" | "bang";
 const GLYPHS: Record<GlyphName, string[]> = {
+  bang: [".##.", ".##.", ".##.", ".##.", ".##.", "....", ".##."], // "!" da missão
   lock: ["..###..", ".#...#.", ".#...#.", ".#...#.", "#######", "##.#.##", "#######", "#######"],
   star: ["...#...", "...#...", "#######", ".#####.", "..###..", ".##.##.", "##...##"],
   pin: [".#####.", "#.....#", "#..#..#", "#.....#", ".#...#.", "..#.#..", "...#...", "...#..."],
@@ -47,10 +48,9 @@ const GLYPHS: Record<GlyphName, string[]> = {
   check: [".....##", "....##.", "#..##..", "##.##..", ".###...", "..#...."],
   door: ["#######", "#.....#", "#.....#", "#....##", "#.....#", "#.....#", "#######"],
 };
-function paintGlyph(scene: any, container: any, cx: number, cy: number, name: GlyphName, color: number, alpha: number, off: number) {
+function paintGlyph(scene: any, container: any, cx: number, cy: number, name: GlyphName, color: number, alpha: number, off: number, u = 3) {
   const g = scene.add.graphics();
   const rows = GLYPHS[name];
-  const u = 3;
   const w = rows[0].length;
   const ox = cx - (w * u) / 2 + off;
   const oy = cy - (rows.length * u) / 2 + off;
@@ -254,24 +254,43 @@ export function GameCanvas({
           // ícone pixel-art flutuante (cadeado, estrela, etc. — nunca emoji)
           const glyph: GlyphName =
             it.glyph ?? (it.locked ? "lock" : it.done ? (it.kind === "pedestal" ? "check" : "star") : "pin");
-          const glyphColor = it.locked ? 0xb9bdc2 : it.done ? 0xffd24a : 0xffe58a;
-          const gy = it.y - 46;
-          const iconLayer = scene.add.container(0, 0);
-          paintGlyph(scene, iconLayer, it.x, gy, glyph, 0x201208, 0.55, 1.5); // sombra
-          paintGlyph(scene, iconLayer, it.x, gy, glyph, glyphColor, 1, 0);
-          iconLayer.setDepth(100001);
-          scene.tweens.add({ targets: iconLayer, y: -7, duration: 900, yoyo: true, repeat: -1 });
+          // missão ("!") em dourado forte p/ destacar no fundo; demais em creme
+          const glyphColor = it.locked ? 0xb9bdc2 : it.done ? 0xffd24a : glyph === "bang" ? 0xffcf1a : 0xffe58a;
+          const iconLayer = floatGlyph(scene, it.x, it.y - (glyph === "bang" ? 54 : 46), glyph, glyphColor);
           const c = scene.add.container(0, 0, [ring, iconLayer]);
           c.setDepth(100000);
           return c;
         }
 
+        // glyph pixel-art flutuante + piscando (sombra + cor), p/ marcadores e
+        // para o indicador de missão "!" sobre a mesa do convidado (item 29).
+        function floatGlyph(scene: any, x: number, baseY: number, glyph: GlyphName, color: number) {
+          const u = glyph === "bang" ? 6 : 3; // "!" da missão maior e mais claro
+          const layer = scene.add.container(0, 0);
+          // contorno escuro em 4 direções → o ícone destaca em qualquer fundo
+          for (const [dx, dy] of [[-2, 0], [2, 0], [0, -2], [0, 2], [2, 2]])
+            paintGlyph(scene, layer, x + dx, baseY + dy, glyph, 0x201208, 0.9, 0, u);
+          paintGlyph(scene, layer, x, baseY, glyph, color, 1, 0, u);
+          layer.setDepth(100001);
+          scene.tweens.add({ targets: layer, y: -9, duration: 780, yoyo: true, repeat: -1 });
+          return layer;
+        }
+
         function buildInteractables(scene: any) {
-          Object.values(markerSprites).forEach((m) => m.destroy());
+          Object.values(markerSprites).forEach((m) =>
+            Array.isArray(m) ? m.forEach((x: any) => x.destroy()) : m.destroy(),
+          );
           for (const k of Object.keys(markerSprites)) delete markerSprites[k];
           cfgRef.current.interactables.forEach((it) => {
             if (it.kind === "table") {
-              markerSprites[it.id] = drawTable(scene, it.x, it.y, it.tableLabel ?? "", !!it.highlight);
+              const tbl = drawTable(scene, it.x, it.y, it.tableLabel ?? "", !!it.highlight);
+              // indicador de missão "!" (ou "✓" quando já encontrou) sobre a mesa
+              if (it.glyph) {
+                const g = floatGlyph(scene, it.x, it.y - 64, it.glyph, it.done ? 0xffd24a : 0xffe58a);
+                markerSprites[it.id] = [tbl, g];
+              } else {
+                markerSprites[it.id] = tbl;
+              }
             } else {
               markerSprites[it.id] = drawMarker(scene, it);
             }
