@@ -111,7 +111,7 @@ export function CriadorClient({
                 <Check className="size-4" aria-hidden /> Personagem salvo!
               </p>
               <Link
-                href={`/${slug}/jogo`}
+                href={`/${slug}/jogo/mapa`}
                 className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-lg font-bold text-white shadow-lg ring-1 ring-emerald-300 hover:bg-emerald-500"
               >
                 <Play className="size-5" aria-hidden /> Entrar no jogo

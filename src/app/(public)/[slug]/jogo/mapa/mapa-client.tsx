@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Loader2, Info, MapPin, X, Lock } from "lucide-react";
 import { WORLD, PHASES, tableGrid, type LevelId } from "@/lib/game/world";
 import type { Controls, Interactable, SceneConfig, NpcAvatar } from "./game-canvas";
+import { leaveMessageForCouple } from "../actions";
 
 // Phaser roda só no cliente (sem SSR). ssr:false exige Client Component (Next 16).
 const GameCanvas = dynamic(() => import("./game-canvas").then((m) => m.GameCanvas), {
@@ -87,27 +88,33 @@ export function MapaClient(props: MapaClientProps) {
   const [goingToRsvp, setGoingToRsvp] = useState(false);
   const [debugPoint, setDebugPoint] = useState<{ x: number; y: number } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  // Recado do visitante para os noivos (missão alternativa da vila — item 30/31)
+  const [recadoText, setRecadoText] = useState("");
+  const [recadoSending, setRecadoSending] = useState(false);
+  const [recadoSent, setRecadoSent] = useState(false);
 
+  // Item 31 (decisão do JOs): VISITANTE entra com TODAS as fases liberadas desde
+  // o início — as missões continuam, mas não travam nada para ele. Convidado da
+  // lista segue a progressão normal (missão → libera a próxima).
   const unlocked = useMemo(
     () => ({
       vila: true,
-      bosque: progress.phase1,
-      "grande-dia": progress.phase2,
+      bosque: isVisitor || progress.phase1,
+      "grande-dia": isVisitor || progress.phase2,
     }),
-    [progress.phase1, progress.phase2],
+    [progress.phase1, progress.phase2, isVisitor],
   );
 
-  // Lê ?debug=1 e ?start=<fase> só no cliente (deep-link / ferramenta de dev).
-  // ?start só pula para fases já desbloqueadas; senão fica no mapa.
+  // Lê ?debug=1 e ?start=<fase> só no cliente. ?start é atalho de teste (dev):
+  // pula direto para a fase, para qualquer usuário (item 30).
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (q.get("debug") === "1") setDebug(true);
     const start = q.get("start") as LevelId | null;
-    if (start && (start === "vila" || start === "bosque" || start === "grande-dia") && unlocked[start]) {
+    if (start && (start === "vila" || start === "bosque" || start === "grande-dia")) {
       setView(start);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const showToast = useCallback((msg: string) => {
@@ -173,8 +180,8 @@ export function MapaClient(props: MapaClientProps) {
           x: phase.anchors.gate.x,
           y: phase.anchors.gate.y,
           kind: "gate",
-          glyph: progress.phase1 ? "flower" : "lock",
-          locked: !progress.phase1,
+          glyph: progress.phase1 || isVisitor ? "flower" : "lock",
+          locked: !progress.phase1 && !isVisitor,
           label: "Portão de flores",
         },
       ];
@@ -248,7 +255,7 @@ export function MapaClient(props: MapaClientProps) {
       // Vila
       if (view === "vila") {
         if (id === "npc") setDialog("npc");
-        if (id === "gate" && progress.phase1) {
+        if (id === "gate" && (progress.phase1 || isVisitor)) {
           const next = { ...progress, phase1: true };
           setProgress(next);
           persist(next);
@@ -298,11 +305,35 @@ export function MapaClient(props: MapaClientProps) {
         return;
       }
     },
-    [view, unlocked, progress, props.memories, props.tables, props.myTableId, persist, showToast],
+    [view, unlocked, progress, isVisitor, props.memories, props.tables, props.myTableId, persist, showToast],
   );
 
   const press = (key: keyof Controls, value: boolean) => {
     controls.current[key] = value;
+  };
+
+  // Visitante deixa um recado → conclui a Vila (sem RSVP) e guarda a mensagem.
+  const sendRecado = () => {
+    if (!recadoText.trim() || recadoSending) return;
+    setRecadoSending(true);
+    leaveMessageForCouple(slug, recadoText)
+      .then((r) => {
+        setRecadoSending(false);
+        if (!r.ok) {
+          showToast(r.message);
+          return;
+        }
+        setRecadoSent(true);
+        if (!progress.phase1) {
+          const next = { ...progress, phase1: true };
+          setProgress(next);
+          persist(next);
+        }
+      })
+      .catch(() => {
+        setRecadoSending(false);
+        showToast("Não deu para enviar agora. Tente de novo.");
+      });
   };
 
   const areaTitle = view === "world" ? "Mapa da festa" : PHASES[view].title;
@@ -357,20 +388,20 @@ export function MapaClient(props: MapaClientProps) {
           onDebugPoint={debug ? setDebugPoint : undefined}
         />
 
-        {/* Dica de proximidade (rótulo legível — item 19) */}
+        {/* Dica de proximidade (linha única, sem cortar na borda — itens 19/32a) */}
         {near && !dialog && (
-          <div className="pointer-events-none absolute left-1/2 top-3 flex max-w-[92%] -translate-x-1/2 items-center gap-2 rounded-lg bg-black/80 px-4 py-2 text-center text-sm shadow-lg">
+          <div className="pointer-events-none absolute left-1/2 top-4 flex max-w-[92%] -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-lg bg-black/80 px-4 py-2 text-sm shadow-lg">
             {near.locked ? (
               <>
                 <Lock className="size-4 shrink-0 text-neutral-300" aria-hidden />
-                <span className="font-semibold">{near.label}</span>
-                <span className="text-neutral-400">— bloqueado</span>
+                <span className="truncate font-semibold">{near.label}</span>
+                <span className="shrink-0 text-neutral-400">— bloqueado</span>
               </>
             ) : (
               <>
-                <span className="font-semibold">{near.label}</span>
-                <span className="text-neutral-300">· aperte</span>
-                <kbd className="rounded bg-neutral-700 px-1.5 py-0.5 text-xs">{isTouch ? "A" : "⏎"}</kbd>
+                <span className="truncate font-semibold">{near.label}</span>
+                <span className="shrink-0 text-neutral-300">· aperte</span>
+                <kbd className="shrink-0 rounded bg-neutral-700 px-1.5 py-0.5 text-xs">{isTouch ? "A" : "⏎"}</kbd>
               </>
             )}
           </div>
@@ -418,15 +449,45 @@ export function MapaClient(props: MapaClientProps) {
       {dialog === "npc" && (
         <DialogBox title="Recepcionista" onClose={() => setDialog(null)}>
           {isVisitor ? (
-            <>
-              <p className="text-sm">
-                Olá, {playerName}! Visitantes não confirmam presença — mas fique à vontade para explorar a festa de{" "}
-                {coupleNames}.
-              </p>
-              <DialogActions>
-                <GhostBtn onClick={() => setDialog(null)}>Fechar</GhostBtn>
-              </DialogActions>
-            </>
+            recadoSent ? (
+              <>
+                <p className="text-sm">
+                  Que carinho, {playerName}! Seu recado foi guardado para {coupleNames}. A festa toda está liberada —
+                  aproveite cada fase!
+                </p>
+                <DialogActions>
+                  <PrimaryBtn onClick={() => setDialog(null)}>
+                    <Check className="mr-1 inline size-4" aria-hidden /> Oba!
+                  </PrimaryBtn>
+                </DialogActions>
+              </>
+            ) : (
+              <>
+                <p className="text-sm">
+                  Olá, {playerName}! Visitantes não confirmam presença, mas que tal deixar um carinho para {coupleNames}?
+                  Você já pode explorar todas as fases.
+                </p>
+                <textarea
+                  value={recadoText}
+                  onChange={(e) => setRecadoText(e.target.value)}
+                  maxLength={500}
+                  rows={3}
+                  placeholder="Escreva seu recado para os noivos…"
+                  className="mt-2 w-full resize-none rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-emerald-400 focus:outline-none"
+                />
+                <DialogActions>
+                  <GhostBtn onClick={() => setDialog(null)}>Agora não</GhostBtn>
+                  <PrimaryBtn disabled={recadoSending || !recadoText.trim()} onClick={sendRecado}>
+                    {recadoSending ? (
+                      <Loader2 className="size-4 animate-spin" aria-hidden />
+                    ) : (
+                      <Check className="size-4" aria-hidden />
+                    )}
+                    Enviar recado
+                  </PrimaryBtn>
+                </DialogActions>
+              </>
+            )
           ) : progress.phase1 ? (
             <>
               <p className="text-sm">
