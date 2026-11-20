@@ -191,3 +191,33 @@ só é alcançável colado na parede do topo, acima de todos — onde o jogador 
 Mantive o overlay (inofensivo, satisfaz "incluir o arco do altar"); um efeito real
 exigiria desacoplar a profundidade do casal da âncora (fica como ajuste futuro).
 A classe "arcos" está bem provada pelo **arco de rosas da Vila**.
+
+---
+
+## Refino de colisões — rodada 3 (2026-11-20)
+
+Varri as 3 fases com `?debug=1` (dirigindo o avatar contra sólidos e bordas por
+screenshot). Provas: `_c3-*` (mapas de colisão), `_c4-grande` (mesas), `r4-*`.
+
+- **Debug mais legível:** a colisão no `?debug=1` passou de vermelho (0xff3344,
+  confundia com telhados/flores) para **magenta** (0xff2bff, raro nessa arte).
+  Só no modo debug; produção inalterada.
+- **Mesas e pedestais viraram sólidos:** eram desenhados pelo jogo (não estão no
+  `.colisao.json`), então o avatar os atravessava. Agora ganham **corpo circular
+  estático** (mesa r=44, pedestal r=22) no `game-canvas.tsx`. Raio < 72 (alcance
+  de interação) → ainda dá pra chegar perto e interagir. Prova: `r4-grande-mesa-block`.
+- **Bosque — lago:** alarguei o box do lago para a esquerda (`686→600`, `w 380→480`)
+  pra cobrir o lobo esquerdo da água. Aproximando de fora, a água bloqueia na ponte
+  e nas margens (`r4-agua-centro`, `r4-agua-esq2`). Troncos das árvores já eram
+  caixas de base (pendência #1).
+- **Bordas:** conferidas nas 3 fases (vila esq/dir/baixo, grande topo, bosque via
+  água/arbustos). O avatar para no limite e não sai do mapa.
+- **Decisão — estrado do altar (Grande Dia):** é **piso caminhável**; o convidado
+  pode subir e chegar perto do casal (não há interação lá). **Mais simples** que
+  barrar e não viola as regras (não é sólido atravessado nem prende o jogador).
+  Testei uma barreira entre as colunas, mas ela caía atrás do casal (profundidade
+  do casal pela âncora y=150) — removida.
+- **Decisão — canteiros de flores baixos (Vila):** tratados como **forração
+  caminhável** (ground cover), não sólidos. Só os objetos claramente sólidos —
+  casas, bancos, postes, mural/caixa-de-correio, troncos, arcos, água, mesas —
+  bloqueiam. Evita criar bolsões onde o jogador ficaria preso entre canteiro e banco.

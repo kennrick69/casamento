@@ -345,13 +345,30 @@ export function GameCanvas({
             const col = scene.cache.json.get("col") as { blocks: { x: number; y: number; w: number; h: number }[] } | null;
             const walls: any[] = [];
             (col?.blocks ?? []).forEach((b) => {
-              const r = scene.add.rectangle(b.x + b.w / 2, b.y + b.h / 2, b.w, b.h, 0xff3344, cfg.debug ? 0.28 : 0);
+              // Debug: magenta (0xff2bff) — cor rara nessa arte (telhados/flores
+              // vermelhos confundiam o 0xff3344), fácil de conferir cobertura.
+              const r = scene.add.rectangle(b.x + b.w / 2, b.y + b.h / 2, b.w, b.h, 0xff2bff, cfg.debug ? 0.25 : 0);
               scene.physics.add.existing(r, true);
-              if (cfg.debug) r.setStrokeStyle(2, 0xff3344, 0.9).setDepth(90000);
+              if (cfg.debug) r.setStrokeStyle(3, 0xff2bff, 1).setDepth(90000);
               walls.push(r);
             });
             scene._walls = walls;
           }
+          scene._walls = scene._walls ?? [];
+
+          // Sólidos desenhados pelo jogo (mesas do salão, pedestais do bosque):
+          // não estão no .colisao.json, então viram corpos circulares estáticos
+          // para o avatar não os atravessar. Raio < 72 (alcance de interação),
+          // então ainda dá pra chegar perto e interagir.
+          (cfg.interactables ?? []).forEach((it) => {
+            if (it.kind !== "table" && it.kind !== "pedestal") return;
+            const rad = it.kind === "table" ? 44 : 22;
+            const body = scene.add.circle(it.x, it.y, rad, 0xff2bff, cfg.debug ? 0.25 : 0);
+            scene.physics.add.existing(body, true);
+            body.body.setCircle(rad);
+            if (cfg.debug) body.setStrokeStyle(3, 0xff2bff, 1).setDepth(90000);
+            scene._walls.push(body);
+          });
 
           // ── mesas / pedestais / NPCs decorativos ──
           buildInteractables(scene);
