@@ -221,3 +221,29 @@ screenshot). Provas: `_c3-*` (mapas de colisão), `_c4-grande` (mesas), `r4-*`.
   caminhável** (ground cover), não sólidos. Só os objetos claramente sólidos —
   casas, bancos, postes, mural/caixa-de-correio, troncos, arcos, água, mesas —
   bloqueiam. Evita criar bolsões onde o jogador ficaria preso entre canteiro e banco.
+
+---
+
+## Rodada de feedback 20/11 (itens 33–43) — decisões
+
+- **Máscara caminhável (40/42):** vila e bosque deixaram de usar colisão por
+  retângulos + overlays e passaram a usar uma **máscara de piso** (PNG alpha): o
+  avatar só anda onde há calçamento (vila) / trilha+ponte (bosque), com folga
+  pequena. Gerada da arte por `scripts/game/walk_mask.py` (threshold de cor +
+  morfologia + erosão; estende ~32px pra baixo p/ cobrir o nível dos pés).
+  Obstáculos sobre o piso viram buracos naturais na máscara. **Mais simples e
+  robusto** que mapear cada retângulo, e cumpre "andar só no piso".
+- **Overlays da vila removidos (41/42):** como o avatar nunca sai do calçamento,
+  não fica atrás de nada → removi os overlays de profundidade da vila (o do poste
+  estava com recorte retangular feio). Grande-dia mantém colisão por retângulos.
+- **Altar (38):** bloqueei o estrado inteiro (o jogador admira o casal da frente,
+  não sobe no estrado). Mais simples que recortar "frente sim, atrás não".
+- **Mesas (37):** desenhadas com Phaser Graphics (toalha+sombra, flores, cadeiras
+  de madeira com encosto), nome em **Caveat** (fonte do jogo, lida via `--font-caveat`).
+  `tableGrid` distribui em grade centrada no salão.
+- **Controles (39):** par A/B estilo GBA no mobile; no PC Enter/E/Z = A, Esc/X = B.
+- **Selo de dev (34):** `devIndicators:false` + `'unsafe-eval'` no CSP **só em dev**
+  (o React dev quebrava no CSP e gerava o selo "1 Issue"). Produção = CSP estrito.
+- **Trilha do mapa (33):** `trail_mask.py` erode a máscara antes do A* → caminho
+  pelo centro de pontes/escadas. **Setas (35):** direção pelos primeiros ~40px da
+  trilha (não só o 1º waypoint), casando com a direção na tela.
