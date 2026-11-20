@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { storage } from "@/lib/storage";
 import { getGameEvent } from "@/lib/game/identity";
 import { getCurrentGuest } from "@/lib/auth/guest";
+import { isEventOrganizer } from "@/lib/game/character/organizer";
 import { DEFAULT_SPEC, type CharacterSpec, type BodyType } from "@/lib/game/character/catalog";
 import { MapaClient, type Memory, type TableInfo, type GameProgress } from "./mapa-client";
 
@@ -106,6 +107,9 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
   const tables: TableInfo[] = seatingTables.map((t) => ({ id: t.id, name: t.name, capacity: t.capacity }));
   const myTableId = myAssignment?.tableId ?? null;
 
+  // Organizador logado (noivo/noiva) joga com tudo liberado — modo de teste (item 31).
+  const isOrganizer = await isEventOrganizer(event.id);
+
   const atlasUrl = `/${slug}/jogo/personagem/sheet?${specToQuery(spec)}`;
   const brideAtlas = `/${slug}/jogo/personagem/sheet?${specToQuery(BRIDE_SPEC)}`;
   const groomAtlas = `/${slug}/jogo/personagem/sheet?${specToQuery(GROOM_SPEC)}`;
@@ -117,6 +121,7 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
       playerName={guest.playerName ?? "você"}
       atlasUrl={atlasUrl}
       isVisitor={guest.isVisitor}
+      isOrganizer={isOrganizer}
       rsvpConfirmed={guest.rsvpStatus === "CONFIRMED"}
       memories={memories}
       tables={tables}

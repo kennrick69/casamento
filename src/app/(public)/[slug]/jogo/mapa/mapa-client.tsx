@@ -45,6 +45,7 @@ export interface MapaClientProps {
   playerName: string;
   atlasUrl: string;
   isVisitor: boolean;
+  isOrganizer: boolean;
   rsvpConfirmed: boolean;
   memories: Memory[];
   tables: TableInfo[];
@@ -59,6 +60,8 @@ type View = "world" | LevelId;
 
 export function MapaClient(props: MapaClientProps) {
   const { slug, coupleNames, playerName, atlasUrl, isVisitor, rsvpConfirmed } = props;
+  // Visitante (item 31) e organizador logado em dev jogam com tudo liberado.
+  const freeRoam = isVisitor || props.isOrganizer;
   const router = useRouter();
   const controls = useRef<Controls>({ up: false, down: false, left: false, right: false, interact: false });
 
@@ -99,10 +102,10 @@ export function MapaClient(props: MapaClientProps) {
   const unlocked = useMemo(
     () => ({
       vila: true,
-      bosque: isVisitor || progress.phase1,
-      "grande-dia": isVisitor || progress.phase2,
+      bosque: freeRoam || progress.phase1,
+      "grande-dia": freeRoam || progress.phase2,
     }),
-    [progress.phase1, progress.phase2, isVisitor],
+    [progress.phase1, progress.phase2, freeRoam],
   );
 
   // Lê ?debug=1 e ?start=<fase> só no cliente. ?start é atalho de teste (dev):
@@ -188,8 +191,8 @@ export function MapaClient(props: MapaClientProps) {
           x: phase.anchors.gate.x,
           y: phase.anchors.gate.y,
           kind: "gate",
-          glyph: progress.phase1 || isVisitor ? "flower" : "lock",
-          locked: !progress.phase1 && !isVisitor,
+          glyph: progress.phase1 || freeRoam ? "flower" : "lock",
+          locked: !progress.phase1 && !freeRoam,
           label: "Portão de flores",
         },
       ];
@@ -267,7 +270,7 @@ export function MapaClient(props: MapaClientProps) {
       // Vila
       if (view === "vila") {
         if (id === "npc") setDialog("npc");
-        if (id === "gate" && (progress.phase1 || isVisitor)) {
+        if (id === "gate" && (progress.phase1 || freeRoam)) {
           const next = { ...progress, phase1: true };
           setProgress(next);
           persist(next);
@@ -317,7 +320,7 @@ export function MapaClient(props: MapaClientProps) {
         return;
       }
     },
-    [view, unlocked, progress, isVisitor, props.memories, props.tables, props.myTableId, persist, showToast],
+    [view, unlocked, progress, freeRoam, props.memories, props.tables, props.myTableId, persist, showToast],
   );
 
   const press = (key: keyof Controls, value: boolean) => {
