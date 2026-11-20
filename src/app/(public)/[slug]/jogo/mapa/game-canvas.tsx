@@ -453,6 +453,8 @@ export function GameCanvas({
             d: Phaser.Input.Keyboard.KeyCodes.D,
             interact: Phaser.Input.Keyboard.KeyCodes.SPACE,
             enter: Phaser.Input.Keyboard.KeyCodes.ENTER,
+            e: Phaser.Input.Keyboard.KeyCodes.E, // ação (A) no PC
+            z: Phaser.Input.Keyboard.KeyCodes.Z, // ação (A) estilo GBA no PC
           });
 
           // atualiza marcadores/mesas sem recriar a cena (ex.: portão libera,
@@ -483,7 +485,11 @@ export function GameCanvas({
             up: keys.up.isDown || keys.w.isDown || c.up,
             down: keys.down.isDown || keys.s.isDown || c.down,
             interact:
-              Phaser.Input.Keyboard.JustDown(keys.interact) || Phaser.Input.Keyboard.JustDown(keys.enter) || c.interact,
+              Phaser.Input.Keyboard.JustDown(keys.interact) ||
+              Phaser.Input.Keyboard.JustDown(keys.enter) ||
+              Phaser.Input.Keyboard.JustDown(keys.e) ||
+              Phaser.Input.Keyboard.JustDown(keys.z) ||
+              c.interact,
           };
         }
 

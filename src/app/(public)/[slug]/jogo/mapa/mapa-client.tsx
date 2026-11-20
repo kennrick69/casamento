@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Loader2, Info, MapPin, X, Lock, MessageSquare } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Info, MapPin, X, Lock } from "lucide-react";
 import { WORLD, PHASES, tableGrid, type LevelId } from "@/lib/game/world";
 import type { Controls, Interactable, SceneConfig, NpcAvatar } from "./game-canvas";
 import { leaveMessageForCouple } from "../actions";
@@ -144,6 +144,28 @@ export function MapaClient(props: MapaClientProps) {
     window.setTimeout(() => setToast(null), 2600);
   }, []);
 
+  // Botão B / Esc / X: voltar. Fecha o diálogo aberto; senão, sai da fase para o
+  // mapa-múndi (item 39). No mapa-múndi não faz nada.
+  const goBack = useCallback(() => {
+    if (dialog) {
+      setDialog(null);
+      return;
+    }
+    if (view !== "world") setView("world");
+  }, [dialog, view]);
+
+  // PC: Esc/X = voltar (B). (Enter/E/Z = ação são tratados no canvas.)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" || e.key === "x" || e.key === "X") {
+        e.preventDefault();
+        goBack();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [goBack]);
+
   // ── persiste o progresso no servidor (fire-and-forget) ──
   const persist = useCallback(
     (next: GameProgress) => {
@@ -241,6 +263,7 @@ export function MapaClient(props: MapaClientProps) {
         x: grid[i].x,
         y: grid[i].y,
         kind: "table" as const,
+        label: t.name, // nome da mesa no hint do topo (corrige o "· aperte" cortado — item 39)
         tableLabel: t.name,
         highlight: t.id === props.myTableId,
         // "!" flutuante sobre a MINHA mesa (vira "✓" ao encontrar) — item 29
@@ -434,9 +457,10 @@ export function MapaClient(props: MapaClientProps) {
               </>
             ) : (
               <>
-                <span className="truncate font-semibold">{near.label}</span>
+                <span className="truncate font-semibold">{near.label || "Interagir"}</span>
                 <span className="shrink-0 text-neutral-300">· aperte</span>
-                <kbd className="shrink-0 rounded bg-neutral-700 px-1.5 py-0.5 text-xs">{isTouch ? "A" : "⏎"}</kbd>
+                <kbd className="shrink-0 rounded bg-neutral-700 px-1.5 py-0.5 text-xs">{isTouch ? "A" : "Enter"}</kbd>
+                {!isTouch && <span className="shrink-0 text-xs text-neutral-400">ou E</span>}
               </>
             )}
           </div>
@@ -465,18 +489,32 @@ export function MapaClient(props: MapaClientProps) {
             >
               <DPad onPress={press} />
             </div>
-            <button
-              type="button"
-              aria-label="Interagir"
-              onPointerDown={() => {
-                controls.current.interact = true;
-              }}
-              className="absolute bottom-10 right-6 flex size-16 select-none flex-col items-center justify-center rounded-full border border-emerald-300/70 bg-emerald-600/40 text-xs font-bold text-white shadow-md backdrop-blur-sm transition active:scale-95 active:bg-emerald-600/90"
+            {/* Botões A/B estilo GBA (item 39): à direita, opostos ao D-pad, em
+                diagonal. A = ação (interagir); B = voltar/cancelar. Pixel-art,
+                semitransparentes. */}
+            <div
+              className="absolute bottom-10 right-5 z-30 select-none"
               style={{ bottom: "calc(2.5rem + env(safe-area-inset-bottom, 0px))" }}
             >
-              <MessageSquare className="size-5" aria-hidden />
-              Entrar
-            </button>
+              <button
+                type="button"
+                aria-label="B — voltar"
+                onPointerDown={goBack}
+                className="absolute bottom-10 right-16 flex size-14 items-center justify-center rounded-full border-2 border-indigo-200/60 bg-indigo-700/40 text-lg font-black text-white shadow-md backdrop-blur-sm transition active:scale-95 active:bg-indigo-700/90"
+              >
+                B
+              </button>
+              <button
+                type="button"
+                aria-label="A — ação"
+                onPointerDown={() => {
+                  controls.current.interact = true;
+                }}
+                className="flex size-16 items-center justify-center rounded-full border-2 border-rose-200/60 bg-rose-700/45 text-xl font-black text-white shadow-md backdrop-blur-sm transition active:scale-95 active:bg-rose-700/90"
+              >
+                A
+              </button>
+            </div>
           </>
         )}
       </div>
