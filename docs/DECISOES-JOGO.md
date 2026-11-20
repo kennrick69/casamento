@@ -161,3 +161,33 @@ o **mais simples**, anotar aqui e seguir. JOs ajusta depois.
   tocar), menores; "A" virou botão "Entrar" com ícone.
 - **Pedestais/nós (22, 32b):** âncoras do bosque e nó do Grande Dia centralizados
   nas plataformas de pedra (medidos sobre a arte).
+
+---
+
+## Profundidade estendida — pendência #1 (2026-11-20)
+
+Fechei a pendência #1 do STATUS: estender a profundidade (overlay + colisão na
+base) a **todas** as árvores, telhados, arcos, postes e o arco do altar.
+
+- **Vila:** overlays agora cobrem os 2 telhados, o arco de rosas (direita), os 4
+  postes e as 4 árvores; colisões reduzidas à base (parede baixa das casas, tronco
+  das árvores) via WIP anterior. Provas: `z3-telhado-atras.png` × `z3-telhado-frente.png`
+  (o boneco some atrás da casa e reaparece na frente), `z3-vila-arvore-atras.png`,
+  `r3-vila-arco-atras.png`.
+- **Bosque:** 7 overlays de árvore (copa+tronco) no lugar da única copa central.
+  **Colisão reduzida à base** (o que faltava): troquei os 4 blocos grandes de canto
+  por caixas de tronco pequenas (derivadas do centro de cada copa no `baseY`),
+  mantendo água (córrego + lago) e arbustos. Agora o boneco sobe atrás da copa.
+  Provas: `_d3-bosque-debug2.png` (troncos alinhados), `z3-bosque-arvore-atras.png`.
+- **Ferramenta de dev `?px=&py=`:** spawn do avatar num ponto exato da fase (WIP),
+  usada pra provar a oclusão por screenshot sem precisar andar até cada objeto.
+
+### Arco do altar (Grande Dia) — limitação honesta
+Overlay presente e **na ordem correta** (fica atrás do casal, não os cobre). Mas o
+efeito de "passar atrás do arco" **não é demonstrável em jogo normal**: os avatares
+do casal têm profundidade pela âncora `y=150`, enquanto visualmente pisam bem mais
+abaixo; pra manter o casal na frente do arco, `baseY` tem que ficar ≤150, faixa que
+só é alcançável colado na parede do topo, acima de todos — onde o jogador não anda.
+Mantive o overlay (inofensivo, satisfaz "incluir o arco do altar"); um efeito real
+exigiria desacoplar a profundidade do casal da âncora (fica como ajuste futuro).
+A classe "arcos" está bem provada pelo **arco de rosas da Vila**.

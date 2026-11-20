@@ -90,6 +90,9 @@ export function MapaClient(props: MapaClientProps) {
   const [tableMsg, setTableMsg] = useState<{ name: string; mine: boolean } | null>(null);
   const [goingToRsvp, setGoingToRsvp] = useState(false);
   const [debugPoint, setDebugPoint] = useState<{ x: number; y: number } | null>(null);
+  // Spawn de teste (dev): ?px=&py= posiciona o avatar num ponto exato da fase —
+  // usado para provar a profundidade (boneco atrás de cada objeto) por screenshot.
+  const [spawnOverride, setSpawnOverride] = useState<{ x: number; y: number } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   // Recado do visitante para os noivos (missão alternativa da vila — item 30/31)
   const [recadoText, setRecadoText] = useState("");
@@ -117,6 +120,11 @@ export function MapaClient(props: MapaClientProps) {
     const start = q.get("start") as LevelId | null;
     if (start && (start === "vila" || start === "bosque" || start === "grande-dia")) {
       setView(start);
+    }
+    const px = Number(q.get("px"));
+    const py = Number(q.get("py"));
+    if (Number.isFinite(px) && Number.isFinite(py) && q.has("px") && q.has("py")) {
+      setSpawnOverride({ x: px, y: py });
     }
   }, []);
 
@@ -241,7 +249,7 @@ export function MapaClient(props: MapaClientProps) {
       w: phase.w,
       h: phase.h,
       atlasUrl,
-      spawn: phase.spawn,
+      spawn: spawnOverride ? { ...phase.spawn, ...spawnOverride } : phase.spawn,
       collisionUrl: phase.collision,
       interactables,
       npcs,
@@ -249,7 +257,7 @@ export function MapaClient(props: MapaClientProps) {
       debug,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, atlasUrl, debug, progress, unlocked, props.memories, props.tables, props.myTableId]);
+  }, [view, atlasUrl, debug, spawnOverride, progress, unlocked, props.memories, props.tables, props.myTableId]);
 
   // ─── Interação (A / Enter / botão) ───
   const handleInteract = useCallback(

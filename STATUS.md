@@ -75,35 +75,27 @@ Windows, logado) — provas em `docs/screens-jogo/`. `tsc` 0 erros, `eslint` 0.
   - Dados de teste **dev-only no demo/voem-dev**: convidada-câmera `amanda`
     (Fases 1–2 liberadas), 5 memórias, 4 mesas, alocação da amanda. Não afeta prod.
 
-### ⚠️ Trabalho em andamento NÃO commitado (working tree de `feat/s3-personagem`)
-Já há um **começo da pendência nº 1** (extensão da profundidade) no working tree,
-**ainda não commitado e NÃO validado por screenshot**:
-- `src/lib/game/world.ts` — novos `overlays` para telhados e árvores da Vila, mais
-  árvores do Bosque, e **arco do altar** no Grande Dia.
-- `public/game/mapas/vila.colisao.json` e `grande-dia.colisao.json` — colisões
-  reduzidas à base de casas/árvores/arco.
-- `src/app/(public)/[slug]/jogo/mapa/mapa-client.tsx` — tool de teste `?px=&py=`
-  para posicionar o avatar num ponto exato e provar a profundidade por screenshot.
-
-> Próxima conversa: **validar essas mudanças com `?debug=1` + `?px&py` por
-> screenshot**, ajustar os retângulos, e só então commitar. Não commitei porque
-> ainda não passou pela prova visual (norma do projeto).
+### ✅ Pendência nº 1 — profundidade estendida (FEITA, 2026-11-20, commitada)
+Estendida a profundidade (overlay + colisão na base) a **todas** as árvores,
+telhados, arcos, postes e o arco do altar, validada por screenshot (`z3-*`,
+`_d3-*`, `r3-*`). `tsc` 0 erros · `eslint` limpo. Detalhes e a ressalva do arco do
+altar em `docs/DECISOES-JOGO.md` (seção "Profundidade estendida").
+- `src/lib/game/world.ts` — overlays de telhados/arco/árvores da Vila, 7 árvores do
+  Bosque, arco do altar do Grande Dia.
+- `public/game/mapas/{vila,grande-dia,bosque}.colisao.json` — colisões reduzidas à
+  base (o Bosque era o que faltava: blocos grandes de canto → caixas de tronco).
+- `src/app/(public)/[slug]/jogo/mapa/mapa-client.tsx` — tool de dev `?px=&py=`.
 
 ---
 
 ## Pendências (em ordem)
 
-1. **Estender a profundidade (overlay + colisão na base) a TODOS os objetos altos:**
-   todas as árvores, telhados, arcos, postes e **o arco do altar**. Começado no
-   working tree (ver acima) — falta terminar, validar por `?debug=1`/`?px&py` e
-   conferir por screenshot. Campo `overlays` por fase em `src/lib/game/world.ts`;
-   colisões de base em `public/game/mapas/<fase>.colisao.json`.
-2. **Ajuste fino das colisões** das 3 fases (bancos, postes, canteiros menores
+1. **Ajuste fino das colisões** das 3 fases (bancos, postes, canteiros menores
    ainda atravessáveis) e centralização das âncoras (NPC, pedestais, portão, altar)
    usando `?debug=1`.
-3. **Decisão de escala** — o JOs vai jogar: validar tamanho do boneco, zoom e
+2. **Decisão de escala** — o JOs vai jogar: validar tamanho do boneco, zoom e
    velocidade (`SPEED`/`zoom` em `game-canvas.tsx`) com ele jogando de verdade.
-4. **Merge para produção só com aprovação do JOs.** Antes do merge: mostrar o SQL
+3. **Merge para produção só com aprovação do JOs.** Antes do merge: mostrar o SQL
    da migration aditiva, conferir backup de produção verificado (produção recebe a
    migration no `migrate deploy` do build).
 

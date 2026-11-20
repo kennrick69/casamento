@@ -3,6 +3,11 @@
 Missão autônoma em `feat/s3-personagem` (2026-11-19). **Nada na main, nada em
 produção.** Dev-server no ar no Windows (`http://localhost:3000`).
 
+> **Atualização 2026-11-20:** profundidade (overlay + colisão na base) estendida a
+> todas as árvores, telhados, arcos e postes, validada por screenshot. Ver
+> `docs/DECISOES-JOGO.md` (seção "Profundidade estendida") e `STATUS.md`. O item 1
+> de "ajustes pra você fazer" abaixo já foi bastante reduzido por isso.
+
 ## Resumo
 
 O jogo ponta-a-ponta está **jogável**: mapa-múndi estilo Super Mario World +

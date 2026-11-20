@@ -88,10 +88,21 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
       gate: { x: 1380, y: 380 }, // portão de flores à direita (saída)
     },
     overlays: [
+      // ── Postes (lampião): topo passa à frente quando o boneco está atrás ──
       { cx: 554, cy: 182, cw: 46, ch: 140, baseY: 320 }, // poste cima-esq
       { cx: 856, cy: 182, cw: 46, ch: 140, baseY: 320 }, // poste cima
       { cx: 406, cy: 440, cw: 48, ch: 205, baseY: 644 }, // poste centro-esq
       { cx: 1006, cy: 478, cw: 48, ch: 168, baseY: 644 }, // poste centro-dir
+      // ── Telhados: a copa do telhado cobre o boneco ao chegar na parede ──
+      { cx: 150, cy: 0, cw: 420, ch: 210, baseY: 208 }, // casa esquerda
+      { cx: 952, cy: 0, cw: 398, ch: 240, baseY: 236 }, // casa direita
+      // ── Arco de rosas (direita): roseiral + pilares ──
+      { cx: 1294, cy: 326, cw: 224, ch: 232, baseY: 556 },
+      // ── Árvores: copa + tronco cobrem o boneco atrás do tronco ──
+      { cx: 0, cy: 6, cw: 182, ch: 282, baseY: 286 }, // cerejeira topo-esq
+      { cx: 1352, cy: 16, cw: 184, ch: 252, baseY: 266 }, // árvore amarela topo-dir
+      { cx: 24, cy: 520, cw: 300, ch: 252, baseY: 770 }, // cerejeira campo-esq
+      { cx: 1120, cy: 532, cw: 296, ch: 248, baseY: 778 }, // árvore amarela campo-dir
     ],
   },
   bosque: {
@@ -116,8 +127,16 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
       { x: 1090, y: 330 },
       { x: 1375, y: 520 },
     ],
+    // Cada árvore: copa + tronco recortados do topo até a base do tronco (baseY).
+    // O boneco atrás do tronco fica coberto pela árvore (profundidade por Y).
     overlays: [
-      { cx: 338, cy: 428, cw: 448, ch: 250, baseY: 716 }, // copa das cerejeiras centrais
+      { cx: 0, cy: 0, cw: 150, ch: 300, baseY: 300 }, // árvore verde topo-esq (canto)
+      { cx: 104, cy: 8, cw: 350, ch: 366, baseY: 374 }, // cerejeiras topo-esq (bosquete)
+      { cx: 584, cy: 28, cw: 152, ch: 244, baseY: 272 }, // árvore verde topo-centro
+      { cx: 948, cy: 28, cw: 164, ch: 224, baseY: 252 }, // árvore branca topo-centro
+      { cx: 1178, cy: 28, cw: 296, ch: 296, baseY: 324 }, // cerejeira topo-dir
+      { cx: 24, cy: 616, cw: 228, ch: 272, baseY: 888 }, // árvore verde baixo-esq
+      { cx: 1126, cy: 502, cw: 316, ch: 404, baseY: 906 }, // cerejeira baixo-dir
     ],
   },
   "grande-dia": {
@@ -133,6 +152,9 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
       brideStand: { x: 735, y: 150 },
       groomStand: { x: 805, y: 150 },
     },
+    // Arco do altar + colunas + cortinas: cobrem o boneco quando ele sobe ao
+    // estrado e fica atrás do arco (baseY na base das colunas, onde o casal pisa).
+    overlays: [{ cx: 620, cy: 0, cw: 284, ch: 150, baseY: 150 }],
   },
 };
 
