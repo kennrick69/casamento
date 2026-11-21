@@ -195,6 +195,7 @@ model Event {
   liveEvents          LiveEvent[]
   guests              Guest[]
   identificationLogs  GuestIdentificationLog[]
+  roles               EventRole[]
   locations           EventLocation[]
   journeyItems        JourneyItem[]
   gifts               Gift[]
@@ -345,6 +346,8 @@ model Guest {
   companions          GuestCompanion[]
   credentials         GuestCredential[]
   identificationLogs  GuestIdentificationLog[]
+  gameCharacter       GameCharacter?
+  roleClaims          GuestRoleClaim[]
 
   @@unique([eventId, email])
   @@index([eventId, sessionToken])
@@ -393,6 +396,68 @@ model GuestIdentificationLog {
   @@index([guestId, createdAt])
 }
 
+// Modo Gamificado (S3) — personagem paper-doll (camadas LPC). Dono é um Guest
+// OU um GuestCompanion (o grupo anda junto). `outfit` é um preset; branco é
+// bloqueado para não-noiva no servidor. `lockedByRoleId` trava o uniforme
+// quando reivindicado por um papel (EventRole). Tudo aditivo.
+model GameCharacter {
+  id             String   @id @default(cuid())
+  guestId        String?  @unique
+  companionId    String?  @unique
+  skinColor      String
+  hairStyle      String
+  hairColor      String
+  outfit         String
+  appearance     Json?
+  gameProgress   Json?
+  isChild        Boolean  @default(false)
+  lockedByRoleId String?
+  randomSeed     Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  guest        Guest?          @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  companion    GuestCompanion? @relation(fields: [companionId], references: [id], onDelete: Cascade)
+  // SetNull: se o papel for apagado, o personagem não fica preso num uniforme órfão
+  lockedByRole EventRole?      @relation("RoleLockedCharacters", fields: [lockedByRoleId], references: [id], onDelete: SetNull)
+
+  @@index([lockedByRoleId])
+}
+
+// Modo Gamificado (S3) — papéis com código (genérico: madrinha, padrinho,
+// pajem...). Os noivos definem key/label/código/uniforme/mensagem no painel.
+model EventRole {
+  id          String   @id @default(cuid())
+  eventId     String
+  key         String
+  label       String
+  code        String
+  uniformSpec Json
+  message     String   @db.Text
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  event            Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  claims           GuestRoleClaim[]
+  lockedCharacters GameCharacter[]  @relation("RoleLockedCharacters")
+
+  @@unique([eventId, key])
+}
+
+model GuestRoleClaim {
+  id        String   @id @default(cuid())
+  guestId   String
+  roleId    String
+  claimedAt DateTime @default(now())
+
+  guest Guest     @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  role  EventRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([guestId, roleId])
+  @@index([roleId])
+}
+
 enum RsvpStatus {
   PENDING
   CONFIRMED
@@ -413,6 +478,7 @@ model GuestCompanion {
   updatedAt DateTime      @updatedAt
 
   guest Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  gameCharacter GameCharacter?
 
   @@index([guestId])
 }

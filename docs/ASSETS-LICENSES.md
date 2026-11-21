@@ -1,90 +1,106 @@
-# Licenças de assets — Voem. Modo Gamificado
+# Créditos e licenças dos assets do personagem (Modo Gamificado · S3)
 
-Registro de **autores + licença + link** de todo asset de terceiros usado no jogo.
-Regra: só entram aqui os arquivos **efetivamente copiados/processados para `public/`** (ou para onde o jogo carregar). A pasta-fonte `assets-src/` fica fora do git e não é distribuída.
+Assets do criador de personagem, derivados do **LPC (Liberated Pixel Cup) Universal
+Spritesheet Generator**. Usamos **somente** peças sob licença **CC-BY**, **CC-BY-SA**
+ou **OGA-BY** (nenhuma peça somente-GPL). Arquivos em `public/game/personagem/`.
 
-> O jogo **deve ter uma tela/link de Créditos** exibindo os autores abaixo (obrigação das licenças).
+> As peças da noiva (véu, corpete e saia brancos) são **derivadas** de bases LPC e
+> ficam sob a **mesma licença das peças de origem** (bases de corpo/roupa LPC:
+> OGA-BY 3.0 / CC-BY-SA 3.0).
 
----
+## Peças
 
-## 1. Personagens — pacote LPC (decisão tomada)
+### Corpo (feminino/masculino)
+- **Licenças:** CC-BY-SA 3.0, GPL 3.0, OGA-BY 3.0
+- **Autores:** Benjamin K. Smith (BenCreating), Durrani, Eliza Wyatt (ElizaWy), ElizaWy, Evert, JaidynReiman, Johannes Sjölund (wulax), Matthew Krohn (makrohn), MuffinElZangano, Pierre Vigier (pvigier), Stephen Challener (Redshrike), TheraHedwig, bluecarrot16
+- **Fontes:** https://gitlab.com/vagabondgame/lpc-characters, https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles, https://opengameart.org/content/lpc-7-womens-shirts
 
-**Fonte:** Universal LPC Spritesheet Character Generator
-- Repo: https://github.com/LiberatedPixelCup/Universal-LPC-Spritesheet-Character-Generator
-- Commit fixado: `04140673ec02906f8233523639733c83690df750` (baixado em 17/11/2026)
-- Pasta-fonte local (fora do git): `assets-src/personagens/lpc/`
-- Créditos por arquivo: `assets-src/personagens/lpc/CREDITS.csv` (13.916 linhas) — **fonte da verdade dos autores/licenças**
-- Texto das licenças: `assets-src/personagens/lpc/LICENSE`
+### Cabelo Longo
+- **Licenças:** CC-BY-SA 3.0, GPL 3.0
+- **Autores:** JaidynReiman, Manuel Riecke (MrBeast)
+- **Fontes:** https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles, https://opengameart.org/content/lpc-expanded-hair
 
-### Licenças presentes no pacote
-Todas permitem **uso comercial**, mas **exigem crédito** aos autores. Cada arquivo lista uma ou mais:
+### Cabelo Curto (buzzcut)
+- **Licenças:** OGA-BY 3.0
+- **Autores:** ElizaWy
+- **Fontes:** https://opengameart.org/content/lpc-hair
 
-| Licença | Uso comercial | Crédito obrigatório | Observação |
-|---|---|---|---|
-| CC0 1.0 | ✅ | não (mas registramos) | domínio público |
-| OGA-BY 3.0 | ✅ | ✅ | atribuição (OpenGameArt) |
-| CC-BY 3.0/4.0 | ✅ | ✅ | atribuição |
-| CC-BY-SA 3.0 | ✅ | ✅ | **share-alike**: a arte derivada herda a licença |
-| GPL 3.0 | ✅ | ✅ | **copyleft** sobre o asset (não contamina o código do app) |
+### Cabelos adicionais do criador (item 2 do feedback)
+Novos estilos extraídos do LPC (`hair/<estilo>/adult/walk.png`, paleta base
+"orange", recolor por cor). Todos sob licença compatível (CC-BY-SA / OGA-BY / CC0).
+- **Chanel** (`bob`) — CC0 — ElizaWy, bluecarrot16
+- **Cacheado** (`curly_long`) — OGA-BY 3.0 — ElizaWy
+- **Cacheado curto** (`curly_short`) — OGA-BY 3.0 — ElizaWy
+- **Coque com franja** (`bangs_bun`) — CC0 — ElizaWy, bluecarrot16
+- **Rabo de cavalo** (`half_up`) — OGA-BY 3.0 — ElizaWy
+- **Topete** (`cowlick`) — CC0 — ElizaWy, bluecarrot16
+- **Social** (`parted`) — CC-BY-SA 3.0 — JaidynReiman, Joe White, Manuel Riecke (MrBeast)
+- **Raspado** (`high_and_tight`) — CC-BY-SA 3.0 — Skorpio, bluecarrot16
+- **Fontes:** https://opengameart.org/content/lpc-hair, https://github.com/ElizaWy/LPC/tree/main/Characters/Hair
 
-> ⚠️ **Share-alike/copyleft (CC-BY-SA 3.0 + GPL 3.0):** aplicam-se à **arte** (os spritesheets que distribuímos), não ao código do jogo. Na prática: os PNGs finais que forem para `public/` carregam essas licenças e precisam manter os créditos deste arquivo + a tela de Créditos. Não impactam a licença do Next.js/código.
+### Camisa formal (terno)
+- **Licenças:** CC-BY-SA 3.0, GPL 3.0
+- **Autores:** Johannes Sjölund (wulax), Stephen Challener (Redshrike), Thane Brimhall (pennomi), bluecarrot16, laetissima
+- **Fontes:** https://opengameart.org/content/lpc-2-characters, https://opengameart.org/content/lpc-gentleman, https://opengameart.org/content/lpc-medieval-fantasy-character-sprites
 
-### Autores da base LPC (crédito mínimo garantido — a base de corpo é sempre usada)
-bluecarrot16 · JaidynReiman · Benjamin K. Smith (BenCreating) · Evert · Eliza Wyatt (ElizaWy) · TheraHedwig · MuffinElZangano · Durrani · Johannes Sjölund (wulax) · Stephen Challener (Redshrike) · Pierre Vigier (pvigier) · Matthew Krohn (makrohn) · Nila122 · kheftel · Sander Frenken (castelonia) · dalonedrau
+### Calça formal (terno)
+- **Licenças:** CC-BY-SA 3.0, GPL 3.0, OGA-BY 3.0
+- **Autores:** ElizaWy, JaidynReiman, Johannes Sjölund (wulax), Stephen Challener (Redshrike), bluecarrot16
+- **Fontes:** https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles, https://opengameart.org/content/lpc-2-characters, https://opengameart.org/content/lpc-expanded-pants
 
-> A lista **definitiva e por arquivo** é gerada a partir do `CREDITS.csv` para exatamente os PNGs enviados ao `public/`, no S3.
+### Sapatos
+- **Licenças:** GPL 3.0, OGA-BY 3.0
+- **Autores:** Bluecarrot16, ElizaWy, JaidynReiman, Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+- **Fontes:** https://github.com/ElizaWy/LPC/tree/main/Characters/Clothing, https://opengameart.org/content/lpc-expanded-socks-shoes
 
-### Arquivos efetivamente usados (`public/`)
-**Status: nenhum arquivo copiado para `public/` ainda** — o criador de personagem (S3) ainda não começou. Conforme cada camada for processada, entra aqui uma linha:
+### Terno e Noivo (item 11 do feedback)
+Trajes masculinos distintos — convidado (terno) e organizador (noivo). Peças LPC
+pré-coloridas ou recoloridas por luminância para tons escuros sólidos.
+- **Paletó** (`torso/jacket/collared`, charcoal/black) — CC-BY-SA 3.0 — bluecarrot16
+- **Gravata** (`neck/tie/necktie`, recolor vinho) — CC-BY-SA 3.0 — JaidynReiman, bluecarrot16, Thane Brimhall (pennomi), laetissima, Makrohn
+- **Gravata-borboleta** (`neck/tie/bowtie`, recolor branco) — CC-BY-SA 3.0 — JaidynReiman, bluecarrot16, Thane Brimhall (pennomi), laetissima, Makrohn
+- **Calça social** (`legs/pants`, recolor charcoal/preto) — OGA-BY 3.0 / CC-BY-SA 3.0 — bluecarrot16, JaidynReiman, ElizaWy, Matthew Krohn (makrohn), Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+- **Fontes:** https://opengameart.org/content/lpc-gentleman, https://github.com/ElizaWy/LPC
 
-| Arquivo (público) | Origem (assets-src) | Autores | Licenças |
-|---|---|---|---|
-| _(preenchido em S3)_ | | | |
+### Vestido (slit)
+- **Licenças:** CC-BY-SA 3.0, GPL 2.0, GPL 3.0, OGA-BY 3.0
+- **Autores:** ElizaWy, Nila122, bluecarrot16
+- **Fontes:** http://opengameart.org/content/lpc-clothing-updates, https://opengameart.org/content/lpc-clothes-and-hair
 
----
+### Véu, corpete e saia (noiva) — derivados
+- **Licenças:** OGA-BY 3.0, CC-BY-SA 3.0 (herdadas das bases LPC de corpo/roupa)
+- **Autores:** equipe LPC (ver bases acima) + derivação para o projeto Voem
+- **Fontes:** https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles
 
-## 1.1 Obras derivadas customizadas (`assets-src/personagens/custom/`)
+### Cabeça / rosto (feminino/masculino) — inclui os olhos
+- **Licenças:** OGA-BY 3.0, CC-BY 3.0, GPL 3.0
+- **Autores:** Stephen Challener (Redshrike), Benjamin K. Smith (BenCreating), Eliza Wyatt (ElizaWy), JaidynReiman, bluecarrot16, kheftel
+- **Fontes:** https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles, https://opengameart.org/content/lpc-character-bases, https://github.com/ElizaWy/LPC/tree/main/Characters/Head, https://opengameart.org/content/ulpc-expanded-expressions
+- **Nota:** os olhos vêm desenhados na própria base da cabeça; a cor dos olhos no criador é feita por **recolor da íris embutida** (não é peça separada).
 
-Peças que o JOs pediu para eu criar a partir do LPC. Ficam em `assets-src/custom/` (fora do git) e **herdam a licença + créditos do asset original** (share-alike). Entram no `public/` e na tela de Créditos como qualquer outro asset.
+### Sobrancelhas (finas/grossas)
+- **Licenças:** OGA-BY 3.0
+- **Autores:** ElizaWy
+- **Fontes:** https://github.com/ElizaWy/LPC/tree/main/Characters/Hair, https://opengameart.org/content/lpc-expanded-sit-run-jump-more
 
-### Véu de noiva — `custom/veil/` (criado em 2026-11-17)
-- **O que é:** camada nova `veil`, branco translúcido (~65% de opacidade), silhueta derivada do cabelo **LPC `hair/xlong`**. Mesmas animações e frames 64×64 (walk, idle, sit, emote, run, jump), nas camadas `bg` (atrás do corpo) e `fg` (na frente), para combinar com a tiara (`hat_formal_tiara`).
-- **Processo:** RGB → branco; alpha → 65% do original. **Correção de queda (v2):** o véu sai do alto da cabeça e cai para TRÁS — o `fg` tem a região da cabeça/rosto apagada por direção (vista de costas intacta; frente vai toda pro `bg`; laterais mantêm só as pontas sobre os ombros), o resto fica no `bg`. Script re-executável: `scratchpad/bride.py`.
-- **Asset original:** `hair/xlong/adult/{bg,fg}/*` do pacote LPC.
-- **Autores (herdados):** Nila122 (original), JaidynReiman (limpeza/resplit/jump-run-sit).
-- **Licenças (herdadas, share-alike):** OGA-BY 3.0, CC-BY-SA 3.0, GPL 2.0, GPL 3.0.
-- **Links:** https://opengameart.org/content/lpc-expanded-xlong-hair · https://opengameart.org/content/lpc-clothes-and-hair
-- **Crédito na tela de Créditos:** "Véu de noiva — obra derivada do cabelo LPC *xlong* de Nila122 e JaidynReiman (OGA-BY 3.0 / CC-BY-SA 3.0 / GPL)."
+### Barba e bigode
+- **Licenças:** OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+- **Autores:** ElizaWy, JaidynReiman, Carlo Enrico Victoria (Nemisys), Thane Brimhall (pennomi), laetissima
+- **Fontes:** https://github.com/ElizaWy/LPC/tree/main/Characters/Hair, https://opengameart.org/content/lpc-white-beard, https://opengameart.org/content/lpc-brunet-mustache, https://opengameart.org/content/lpc-base-character-expressions
 
-### Saia de noiva branca — `custom/skirt_belle_white/` (criado em 2026-11-17)
-- **O que é:** versão **branca** da saia **LPC `legs/skirts/belle/thin`** (original bege/cinza), para a noiva. Preserva as dobras (recolor por luminância → rampa branca `[205..255]`, alpha intacto). Animações: idle, walk, emote (as que o pacote belle tem).
-- **Processo:** luminância normalizada por frame → cinza branco; script `scratchpad/bride.py` (determinístico).
-- **Asset original:** `legs/skirts/belle/thin/*` do pacote LPC.
-- **Autores (herdados):** bluecarrot16, Matthew Krohn (makrohn), Lanea Zimmerman (Sharm).
-- **Licenças (herdadas, share-alike):** OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0.
-- **Links:** https://opengameart.org/content/lpc-dress-in-combat-poses · http://opengameart.org/content/lpc-clothing-updates · https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles
-- **Crédito na tela de Créditos:** "Saia de noiva — obra derivada da saia LPC *belle* de bluecarrot16, Matthew Krohn e Lanea Zimmerman (OGA-BY 3.0 / CC-BY-SA 3.0 / GPL)."
+### Óculos
+- **Licenças:** OGA-BY 3.0
+- **Autores:** ElizaWy
+- **Fontes:** https://github.com/ElizaWy/LPC/tree/main/Characters/Head%20Accessories, https://opengameart.org/content/lpc-expanded-sit-run-jump-more
 
-### Corpete de noiva branco — `custom/bodice_white/` (criado em 2026-11-17)
-- **O que é:** versão **branca** do corpete **LPC `dress/bodice/female`** (o `white.png` do pacote é creme/marfim). Recolor pela MESMA rampa de luminância da saia (`[205..255]`, alpha intacto), para o corpete e a saia ficarem no mesmo branco. Animações: idle, walk (as que o pacote bodice tem no subset do casamento).
-- **Processo:** luminância normalizada por frame → branco; script `scratchpad/bride.py` (determinístico, mesma função `to_white_lum` da saia).
-- **Asset original:** `dress/bodice/female/{idle,walk}/white.png` do pacote LPC.
-- **Autores (herdados):** bluecarrot16, Matthew Krohn (makrohn), Lanea Zimmerman (Sharm).
-- **Licenças (herdadas, share-alike):** OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0.
-- **Links:** https://opengameart.org/content/lpc-dress-in-combat-poses · http://opengameart.org/content/lpc-clothing-updates · https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles
-- **Crédito na tela de Créditos:** "Corpete de noiva — obra derivada do corpete LPC *bodice* de bluecarrot16, Matthew Krohn e Lanea Zimmerman (OGA-BY 3.0 / CC-BY-SA 3.0 / GPL)."
+## Mapas das fases (Modo Gamificado · jogo)
+- **Arquivos:** `public/game/mapas/{mundi,vila,bosque,grande-dia}.png` (1536×1024, pixel art top-down 3/4).
+- **Licença:** arte própria do **projeto Voem** (encomendada/gerada para o projeto). Não deriva de LPC.
+- **Uso no jogo:** renderizados em resolução nativa com filtro *nearest* (sem borrar); câmera segue o avatar; limites do mundo = tamanho da imagem. Colisões em `public/game/mapas/<fase>.colisao.json`.
+- As mesas da Fase 3 e os marcadores/pedestais são desenhados pelo próprio jogo (Phaser Graphics) — arte própria, sem dependência de licença.
 
-> **Preview da noiva completa:** `custom/veil/preview-noiva-gerado.png` (corpo + cabeça + olhos + vestido/bodice branco + saia belle branca + cabelo long + tiara + véu), 4 direções em fundo claro e escuro. O corpete e a saia são os derivados brancos (§1.1); os demais assets LPC do preview (body, head, eyes, hair `long`, tiara) entram na tabela de "arquivos usados" quando forem para `public/` no S3.
-
----
-
-## 2. Áudio (pendente)
-Músicas e efeitos 8-bit (S7): usar material **livre de direitos** ou **gerado por IA com licença comercial**; registrar aqui (autor, link, licença) antes de subir qualquer arquivo para `public/`.
-
----
-
-## 3. Peças que FALTAM no pacote (JOs providencia)
-Ver detalhe em [`future-features/modo-gamificado.md`](./future-features/modo-gamificado.md) §12. Resumo:
-- **Véu de noiva** — ~~não existe no LPC~~ **criado** como obra derivada do cabelo `xlong` (ver §1.1). Aguardando aprovação do preview.
-- **Gown de noiva dedicado** — composição `dress_bodice` + `legs_skirt_belle` (saia de baile) em branco + `hat_formal_tiara` cobre bem; um vestido de noiva específico seria "nice to have", não bloqueante.
-- (Smoking com gravata-borboleta do padrinho **já é possível** com `torso_jacket_frock` + `vest` + `longsleeve_formal` + `legs_formal` + `neck_bowtie` + `hat_formal_tophat`.)
+## Observações
+- Motor do jogo: **Phaser 3.88.2** (MIT), vendorizado em `public/game/vendor/` — ver `public/game/vendor/README.md`.
+- Paletas de pele/cabelo: `palette_definitions` do gerador LPC (recolor por rampa).
+- Olhos: fornecidos pela base da cabeça LPC (ver seção *Cabeça / rosto*); o criador só troca a cor da íris via recolor, sem peça de olhos adicional.
+- Gerador: https://github.com/liberatedpixelcup/Universal-LPC-Spritesheet-Character-Generator

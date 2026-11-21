@@ -201,6 +201,29 @@ export async function claimMyCharacter(
   return { ok: true };
 }
 
+// ── Recado para os noivos (missão alternativa do visitante na vila) ──────────
+// O visitante não confirma presença (RSVP é só para quem está na lista), mas
+// pode deixar um carinho para os noivos — e isso conclui a fase da Vila. Salvo
+// em Guest.message (item 30/31 do feedback).
+
+const RecadoSchema = z.object({
+  slug: z.string().min(1),
+  text: z.string().trim().min(1, "Escreva um recado").max(500),
+});
+
+export async function leaveMessageForCouple(slug: string, text: string): Promise<SimpleResult> {
+  const parsed = RecadoSchema.safeParse({ slug, text });
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+
+  const event = await getGameEvent(parsed.data.slug);
+  if (!event) return { ok: false, message: "Jogo indisponível." };
+  const guest = await getCurrentGuest(parsed.data.slug);
+  if (!guest) return { ok: false, message: "Entre no jogo antes de deixar um recado." };
+
+  await prisma.guest.update({ where: { id: guest.id }, data: { message: parsed.data.text } });
+  return { ok: true };
+}
+
 // ── helper ────────────────────────────────────────────────────────────────
 
 async function getCurrentGuestById(guestId: string, eventId: string) {

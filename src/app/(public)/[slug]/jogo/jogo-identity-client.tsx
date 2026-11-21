@@ -9,7 +9,7 @@ import {
   browserSupportsWebAuthn,
 } from "@simplewebauthn/browser";
 import { buttonVariants } from "@/components/ui/button";
-import { Gamepad2, Construction } from "lucide-react";
+import { Gamepad2, Play } from "lucide-react";
 import {
   enterAsVisitor,
   identifyByNamePhone,
@@ -57,6 +57,7 @@ export function JogoIdentityClient({
   const [idName, setIdName] = useState("");
   const [idPhone, setIdPhone] = useState("");
   const [claimName, setClaimName] = useState(state.playerName ?? "");
+  const [editingName, setEditingName] = useState(false);
 
   // Suporte a passkey só pode ser lido no browser. useSyncExternalStore lê o
   // valor do cliente após a hidratação sem setState-em-effect nem mismatch
@@ -129,7 +130,8 @@ export function JogoIdentityClient({
     setMsg(null);
     const res = await claimMyCharacter(slug, claimName);
     if (res.ok) {
-      setMsg({ kind: "ok", text: "Boneco reivindicado!" });
+      setMsg({ kind: "ok", text: "Nome salvo!" });
+      setEditingName(false);
       refresh();
     } else {
       setMsg({ kind: "err", text: res.message });
@@ -251,32 +253,75 @@ export function JogoIdentityClient({
         </>
       ) : (
         <>
+          {/* Saudação + trocar de nome (item 24: tela simples e direta) */}
           <div className={card}>
-            <span className={label}>Você está dentro</span>
-            <p className="text-sm text-[var(--theme-foreground)]">
-              {state.playerName ? `Olá, ${state.playerName}!` : "Identificado."}
+            <p className="text-base font-semibold text-[var(--theme-foreground)]">
+              {state.playerName ? `Olá, ${state.playerName}!` : "Você está no jogo"}
               {state.isVisitor ? " (visitante)" : ""}
             </p>
-
-            <div className="flex flex-col gap-2 pt-1">
-              <input
-                type="text"
-                value={claimName}
-                onChange={(e) => setClaimName(e.target.value)}
-                placeholder="Seu primeiro nome no jogo"
-                maxLength={40}
-                className="h-11 rounded-[var(--theme-radius)] border border-[var(--theme-border)] bg-[var(--theme-background)] px-3 text-sm text-[var(--theme-foreground)]"
-              />
+            {editingName ? (
+              <div className="flex flex-col gap-2 pt-1">
+                <input
+                  type="text"
+                  value={claimName}
+                  onChange={(e) => setClaimName(e.target.value)}
+                  placeholder="Seu primeiro nome no jogo"
+                  maxLength={40}
+                  className="h-11 rounded-[var(--theme-radius)] border border-[var(--theme-border)] bg-[var(--theme-background)] px-3 text-sm text-[var(--theme-foreground)]"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={pending || claimName.trim().length === 0}
+                    onClick={onClaim}
+                    className={buttonVariants({ className: "h-11 flex-1 justify-center" })}
+                  >
+                    Salvar nome
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingName(false)}
+                    className={buttonVariants({ variant: "outline", className: "h-11 justify-center" })}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
               <button
                 type="button"
-                disabled={pending || claimName.trim().length === 0}
-                onClick={onClaim}
-                className={buttonVariants({ className: "h-11 justify-center" })}
+                onClick={() => setEditingName(true)}
+                className="self-center text-sm text-[var(--theme-secondary)] underline hover:text-[var(--theme-foreground)]"
               >
-                {state.characterClaimed ? "Atualizar meu boneco" : "Reivindicar meu boneco"}
+                Trocar de nome
               </button>
-            </div>
+            )}
           </div>
+
+          {/* Ação principal grande */}
+          {state.characterClaimed ? (
+            <>
+              <Link
+                href={`/${slug}/jogo/mapa`}
+                className={buttonVariants({ className: "h-14 w-full max-w-sm justify-center gap-2 text-lg font-bold" })}
+              >
+                <Play className="size-5" aria-hidden /> Continuar jogando
+              </Link>
+              <Link
+                href={`/${slug}/jogo/personagem`}
+                className="text-sm text-[var(--theme-secondary)] underline hover:text-[var(--theme-foreground)]"
+              >
+                Editar meu personagem
+              </Link>
+            </>
+          ) : (
+            <Link
+              href={`/${slug}/jogo/personagem`}
+              className={buttonVariants({ className: "h-14 w-full max-w-sm justify-center text-lg font-bold" })}
+            >
+              Criar meu personagem
+            </Link>
+          )}
 
           {supportsPasskey && !state.isVisitor && (
             <div className={card}>
@@ -296,11 +341,6 @@ export function JogoIdentityClient({
               </button>
             </div>
           )}
-
-          <p className="text-xs text-[var(--theme-secondary)] max-w-sm">
-            <Construction className="inline size-4 -mt-0.5 mr-1" aria-hidden /> O mundo do jogo (tela de título, fases, salão) chega nos próximos
-            sprints. Sua identidade e seu boneco já ficam guardados.
-          </p>
         </>
       )}
     </div>

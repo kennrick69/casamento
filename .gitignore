@@ -43,3 +43,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# arquivos soltos de sessões (não versionar)
+package-lock.json
+RESULTADO.md
+dev-server.log
+# screenshots descartáveis de rodadas (mantidos localmente, não versionados)
+docs/screens-jogo/r2-*
+docs/screens-jogo/c2-*
+docs/screens-jogo/w3-*
+docs/screens-jogo/v2-*
+docs/screens-jogo/_base-*
+docs/screens-jogo/_diag-*
+build.log
+prod-server.log
