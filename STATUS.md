@@ -19,6 +19,29 @@ Site CLASSIC conferido íntegro. Rollback: `git revert -m 1 5fdd163`.
 Estado do código: `tsc` 0 erros · `eslint` 0 errors (16 warnings pré-existentes) ·
 `vitest` 141/141. Jogo jogável ponta-a-ponta, provado por screenshot.
 
+## 🌿 Rodada 4 (2026-11-21) — no branch `feat/rodada4`, AGUARDANDO OK (NÃO na main)
+Itens 58–60 do `docs/FEEDBACK-JOS-2026-11-21-rodada4.md`, 1 commit + screenshot por
+item, **nada na `main`/produção**. `tsc` 0 · `eslint` 0. Sem migration nesta rodada.
+- **58 — abertura de jogo de verdade:** novo `src/components/guest/game-opening.tsx`
+  (`GameOpening`) substitui o `GamifiedPlaceholder` "em construção/beta" (deletado).
+  Tela-título estilo GBA sobre a arte do mapa-múndi; nomes + data + contagem; botão
+  pixel "▶ COMEÇAR"; "Confirmar presença" secundário discreto. Texto da abertura
+  aprovado pelo JOs (constante `OPENING`). O `?k=` passa ao link do jogo (a
+  identidade real é o cookie `guest_token`, não o `?k=`). **Botões futuros do convite
+  impresso (S4, `docs/IDEIA-QRCODES-CONVITE.md`) ficam só no código, atrás de
+  `INVITE_CODES_ENABLED=false` — bloco ESCONDIDO enquanto a flag está off.**
+- **59 — tirar o "EN":** `LocaleToggle` removido do layout do convite; barra "A ◑"
+  (acessibilidade) permanece. Componente fica no repo.
+- **60 — service worker:** `public/sw.js` nunca devolve `undefined` ao `respondWith`;
+  só cacheia respostas `ok`/não-redirect; sem rede entrega página offline 503
+  (`offlinePage`). `CACHE_VERSION` v2→v3. Provado com SW ativo/controlando em aba
+  anônima: online = console limpo; offline sem cache = 503, 0 erro de SW.
+- **Provas:** `docs/screens-jogo/m58-abertura-{mobile-427,desktop-1280}.png`,
+  `m59-sem-en-{mobile-427,desktop-1280}.png`, `m60-offline-fallback.png`,
+  `m60-console-prova.txt`.
+- **Pendente do JOs:** jogar/aprovar o branch e dar o OK pro merge (sem migration →
+  merge direto quando liberar). **Não mergear sem o OK dele.**
+
 ---
 
 ## Onde estamos
