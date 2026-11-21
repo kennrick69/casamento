@@ -37,11 +37,15 @@ const ROW: Record<Dir, number> = { up: 0, left: 1, down: 2, right: 3 };
 function computeZoom(vw: number, vh: number, mapW: number, mapH: number, mode: "world" | "phase"): number {
   const cover = Math.max(vw / mapW, vh / mapH);
   if (mode === "world") {
-    // Mapa-múndi (item 50): zoom MAIOR pra noiva não ficar minúscula e a câmera
-    // seguir (não mostra o mapa inteiro). Celular (~2x o de antes): boneco grande;
-    // desktop: um pouco menos, mas ainda seguindo. Nunca menor que o "cover".
-    const target = vw < 820 ? 1.9 : 1.2;
-    return Math.max(cover, Math.min(2.6, target));
+    // Item 53: no celular a noiva do mapa-múndi deve ter ~o MESMO tamanho que
+    // dentro da fase Vila (referência "perfeita" do JOs, 427x952). As fases são
+    // 1536x1024, então o "cover" de uma fase nesse viewport é ~vh/1024 — usamos
+    // esse mesmo fator aqui pro boneco casar (o zoom 1.9 de antes ficou ~2x grande
+    // demais e colava a Vila na tela toda). A arte do mundo é mais alta (1344), mas
+    // é o tamanho do boneco que tem que bater. Desktop: um pouco mais que o cover.
+    const phaseLike = Math.max(vw / 1536, vh / 1024);
+    const target = vw < 820 ? phaseLike : Math.max(phaseLike, 1.0);
+    return Math.max(cover, Math.min(1.8, target));
   }
   return Math.max(0.5, Math.min(1.6, cover));
 }
