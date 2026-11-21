@@ -81,3 +81,33 @@ Branch próprio quando aprovado (`feat/s4-qrcodes`); nada na main sem OK.
   "Tenho um código" / "Escanear QR code" funcionando.
 - Ordem sugerida: S4a = códigos + painel + PDF + resgate + cadastro da família +
   botões da abertura; S4b = família andando junto no jogo (seguidores).
+
+## 7. DESENHO FINAL (JOs 21/11 15:40) — substitui o que conflitar acima
+### Convidados da lista (convite ONLINE) — aba Convidados (já existe: nome, email,
+telefone, acompanhantes, importar CSV, link WhatsApp simples)
+- Cada convidado ganha um **CÓDIGO PESSOAL** (8 chars, mesmo esquema), e o link
+  pessoal é `…/<slug>/c/<CODIGO>`.
+- Botão **"Disparar convite"** ao lado de cada um: **WhatsApp** (wa.me com a
+  mensagem completa pronta — o JOs aperta enviar) e **Email** (envio pelo sistema
+  de email do site). SEMPRE MANUAL, 1 A 1 (sem disparo em massa).
+- **Marcador de enviado**: data + canal (WhatsApp/Email). Clicar de novo em quem
+  já recebeu → "Já enviado em <data> por <canal>. Enviar de novo?".
+- **Mensagem**: nomes do casal, data e hora, local, **link do Google Maps pra
+  traçar rota** (do local cadastrado), link do site, "Entre no jogo para escolher
+  o seu lugar" + link pessoal + o CÓDIGO escrito ("se o link não abrir, entre em
+  <site> e digite seu código: XXXX"). Mostrar o texto ao JOs antes de fechar.
+### Convite IMPRESSO — códigos EM BRANCO (pra quem o JOs não tem contato)
+- Lote de N códigos em branco → PDF A4 com QR + código escrito + linha de corte.
+- Resgate de código em branco: cria o convidado na lista com o nome + cadastra
+  quem vem junto (até 4 por padrão) + avatares.
+### Entrada (abertura do item 58)
+- "Tenho um código" (aceita código pessoal OU em branco) e "Escanear QR code".
+### ESCOLHA DE LUGAR (nova) — o CONVIDADO escolhe
+- No Grande Dia o convidado vê o salão e escolhe cadeiras LIVRES pra ele e a
+  família; a reserva fica salva e aparece pros noivos na aba Mesas (que define as
+  mesas/capacidade e pode mover/travar). Cadeira ocupada some pros outros.
+### Fases
+- S4a: códigos pessoais + disparar convite (WhatsApp/email + marcador) + lote
+  impresso em branco (PDF/QR) + resgate + família + botões da abertura.
+- S4b: escolha de lugar no salão.
+- S4c: família andando junto no jogo.
