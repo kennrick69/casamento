@@ -15,7 +15,7 @@ def rect(x0,y0,x1,y1): mask[y0:y1,x0:x1]=True
 rect(788,398,940,452)    # ponte superior
 rect(845,788,1055,845)   # ponte inferior
 rect(300,560,420,700)    # escada esq (temo) — conector
-nodes=[(290,885),(595,760),(1210,575)]
+nodes=[(285,896),(596,785),(1212,584)]  # item 49: CENTRO de cada pedra (a sola para aqui)
 yy,xx=np.ogrid[:H,:W]
 for (x,y) in nodes: mask|=((xx-x)**2+(yy-y)**2)<=30**2
 # morfologia agressiva p/ unir a trilha

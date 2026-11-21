@@ -289,9 +289,10 @@ export function GameCanvas({
         //   só aparece na dica ao chegar perto).
         function drawMarker(scene: any, it: Interactable) {
           if (it.kind === "marker") {
-            if (it.locked) return floatGlyph(scene, it.x, it.y - 46, "lock", 0xc2c6ca);
-            if (it.done) return floatGlyph(scene, it.x, it.y - 46, "star", 0xffd24a);
-            return sparkleHint(scene, it.x, it.y - 46);
+            // acima da cabeça do avatar parado na pedra (item 48/49: nunca sobreposto)
+            if (it.locked) return floatGlyph(scene, it.x, it.y - 74, "lock", 0xc2c6ca);
+            if (it.done) return floatGlyph(scene, it.x, it.y - 74, "star", 0xffd24a);
+            return sparkleHint(scene, it.x, it.y - 74);
           }
           if (it.done || it.locked) return scene.add.container(0, 0); // sem indicador
           return sparkleHint(scene, it.x, it.y - 44);
