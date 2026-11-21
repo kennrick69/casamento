@@ -781,6 +781,11 @@ export function GameCanvas({
           height: hostRef.current.clientHeight || 400,
           pixelArt: true,
           backgroundColor: "#2b3a1e",
+          // Item 55: o jogo não tem som → noAudio evita o WebAudio criado antes do
+          // toque ("The AudioContext was not allowed to start"). banner:false tira
+          // o banner do Phaser do console (aparecia a cada montagem, 3x em dev).
+          audio: { noAudio: true },
+          banner: false,
           scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
           physics: { default: "arcade", arcade: { gravity: { x: 0, y: 0 }, debug: false } },
           scene: { preload, create, update },

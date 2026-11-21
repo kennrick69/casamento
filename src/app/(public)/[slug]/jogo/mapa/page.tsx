@@ -97,11 +97,11 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
 
   return (
     <>
-      {/* Preload dos assets do jogo (mata o waterfall: Phaser + mapa inicial +
-          atlas baixam em paralelo com o JS, não depois dele). Next hasteia no head. */}
-      <link rel="preload" as="script" href="/game/vendor/phaser-3.88.2.min.js" />
-      <link rel="preload" as="image" href="/game/mapas/mundi.webp" />
-      <link rel="preload" as="image" href={atlasUrl} />
+      {/* Item 55: removidos os <link rel="preload"> do Phaser/mapa/atlas. O Phaser
+          carrega por caminho próprio (script injetado + loader XHR/Image com outra
+          URL/crossOrigin), então o navegador descartava esses preloads e avisava
+          "preloaded but not used". O GameCanvas (dynamic import) já baixa tudo assim
+          que hidrata — o gargalo real é o chunk, não o preload. Console limpo. */}
       <MapaClient
         slug={slug}
       coupleNames={event.coupleNames}

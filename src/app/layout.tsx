@@ -15,32 +15,40 @@ import { Toaster } from "@/components/ui/sonner";
 import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
-// Todas as fontes usadas pelos 5 temas — carregadas estaticamente para otimização
+// Todas as fontes usadas pelos 5 temas. Só a Inter (corpo padrão, acima da dobra
+// em toda página) fica com preload; as demais são específicas de tema/jogo e não
+// aparecem acima da dobra em todas as páginas — preload: false evita os avisos
+// "preloaded but not used within a few seconds" (item 55). Com display:swap elas
+// continuam carregando sob demanda quando o tema/página as usa, sem quebrar nada.
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "swap" });
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
   display: "swap",
+  preload: false,
 });
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
   display: "swap",
+  preload: false,
 });
-const lora = Lora({ variable: "--font-lora", subsets: ["latin"], display: "swap" });
-const caveat = Caveat({ variable: "--font-caveat", subsets: ["latin"], display: "swap" });
+const lora = Lora({ variable: "--font-lora", subsets: ["latin"], display: "swap", preload: false });
+const caveat = Caveat({ variable: "--font-caveat", subsets: ["latin"], display: "swap", preload: false });
 const dmSerif = DM_Serif_Display({
   variable: "--font-dm-serif",
   subsets: ["latin"],
   weight: "400",
   display: "swap",
+  preload: false,
 });
 const pressStart = Press_Start_2P({
   variable: "--font-press-start",
   subsets: ["latin"],
   weight: "400",
   display: "swap",
+  preload: false,
 });
 
 const APP_URL = getAppUrl();

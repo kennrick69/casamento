@@ -1,0 +1,8 @@
+=== TOTAL mensagens: 4 | relevantes (sem ruído dev): 0 ===
+--- alvos do item 55 (preload/AudioContext/banner Phaser): 0 ---
+--- demais mensagens relevantes ---
+--- TODAS as mensagens (incl. ruído dev) ---
+  [info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+  [log] [HMR] connected
+  [info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+  [log] [HMR] connected
