@@ -65,3 +65,19 @@ Branch próprio quando aprovado (`feat/s4-qrcodes`); nada na main sem OK.
    família é guiada junto até a mesa.
 4. Número de acompanhantes por código: definido no painel ao gerar o lote (ex.:
    até 4 por convite) — PERGUNTAR o padrão ao JOs na hora de implementar.
+
+## 6. JOs 21/11 15:33 — QUER JÁ FUNCIONANDO (vira S4, prioridade)
+- No painel do organizador, área nova **"Códigos de convite"** que gera os dois tipos:
+  - **Convite impresso:** lote de N códigos em branco → PDF A4 com QR + código
+    escrito (cartões com linha de corte) pra ir no envelope.
+  - **Convite online:** lote de N códigos em branco pra mandar no convite digital
+    (WhatsApp/e-mail): cada um com link pronto `…/<slug>/c/<CODIGO>` + o código,
+    com botão "copiar mensagem" por código e exportar a lista (CSV).
+  - Lista de todos os códigos: tipo (impresso/online), livre/usado, por quem,
+    quando, quantos acompanhantes; invalidar; gerar mais.
+- Quem resgata vira **convidado da lista** (RSVP real na caixa de correio, pode
+  ganhar mesa). Acompanhantes no mesmo código: padrão até 4 (campo no lote).
+- Abertura (item 58): ligar a flag INVITE_CODES_ENABLED e os botões
+  "Tenho um código" / "Escanear QR code" funcionando.
+- Ordem sugerida: S4a = códigos + painel + PDF + resgate + cadastro da família +
+  botões da abertura; S4b = família andando junto no jogo (seguidores).
