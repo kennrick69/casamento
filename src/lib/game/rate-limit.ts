@@ -69,4 +69,8 @@ export const GAME_RATE_LIMITS = {
   // de "adivinhar o celular de alguém". Por aparelho estrito (10 em 10 min) p/
   // conter tentativa e erro; por IP alto (300 em 5 min) p/ aguentar o salão.
   identify: { deviceMax: 10, deviceWindowMin: 10, ipMax: 300, ipWindowMin: 5 },
+  // Resgatar código de convite (S4): tenta adivinhar um código de 8 chars sem
+  // 0/O/1/I (~1e12). Por aparelho estrito (15 em 10 min) contém tentativa-e-erro;
+  // por IP alto (300 em 5 min) aguenta o salão chegando junto.
+  redeem: { deviceMax: 15, deviceWindowMin: 10, ipMax: 300, ipWindowMin: 5 },
 } as const satisfies Record<string, GameRateLimits>;
