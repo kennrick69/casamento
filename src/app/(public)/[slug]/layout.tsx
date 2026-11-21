@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { getThemeCssVars, cssVarsToStyle } from "@/lib/themes/css";
 import { BottomNav } from "@/components/guest/bottom-nav";
 import { AccessibilityBar } from "@/components/guest/accessibility-bar";
-import { LocaleToggle } from "@/components/guest/locale-toggle";
 import { HideOnGame } from "@/components/guest/hide-on-game";
 import type { ThemeTokens } from "@/lib/themes";
 
@@ -52,10 +51,11 @@ export default async function EventLayout({
       >
         Ir para o conteúdo
       </a>
+      {/* Seletor de idioma (EN/PT) removido do convite: o casamento é só em
+          português (item 59). O componente LocaleToggle segue no repo caso um
+          evento multilíngue precise no futuro. A barra "A ◑" (fonte/contraste)
+          permanece. */}
       <HideOnGame>
-        <div className="flex justify-end px-4 pt-3">
-          <LocaleToggle />
-        </div>
         <AccessibilityBar />
       </HideOnGame>
       <main id="main-content" className="flex-1 pb-20" style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>{children}</main>
