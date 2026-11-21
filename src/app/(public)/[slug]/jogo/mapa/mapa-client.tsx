@@ -633,7 +633,7 @@ export function MapaClient(props: MapaClientProps) {
               {props.coupleMessage ?? `${coupleNames} agradecem de coração por você estar aqui neste dia.`}
             </p>
           ) : props.myTableId ? (
-            <p className="text-sm">Essa não é a sua mesa — siga o brilho dourado até a sua.</p>
+            <p className="text-sm">Essa não é a sua mesa — siga o brilho sobre a sua.</p>
           ) : (
             <p className="text-sm">Sua mesa será definida em breve. Fique à vontade para explorar o salão!</p>
           )}

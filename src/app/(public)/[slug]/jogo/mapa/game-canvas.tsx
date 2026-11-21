@@ -42,8 +42,9 @@ function computeZoom(vw: number, vh: number, mapW: number, mapH: number): number
 // ─── Ícones em pixel-art (sem emoji — feedback do JOs, item 6) ───────────────
 // Pequenos bitmaps desenhados com retângulos (cada caractere ≠ '.' vira um
 // bloco). Substituem os emoji flutuantes dos marcadores (cadeado, estrela…).
-type GlyphName = "lock" | "star" | "pin" | "mail" | "flower" | "book" | "check" | "door" | "bang";
+type GlyphName = "lock" | "star" | "pin" | "mail" | "flower" | "book" | "check" | "door" | "bang" | "sparkle";
 const GLYPHS: Record<GlyphName, string[]> = {
+  sparkle: ["..#..", "..#..", "#####", "..#..", "..#.."], // brilho discreto (item 48)
   bang: [".##.", ".##.", ".##.", ".##.", ".##.", "....", ".##."], // "!" da missão
   lock: ["..###..", ".#...#.", ".#...#.", ".#...#.", "#######", "##.#.##", "#######", "#######"],
   star: ["...#...", "...#...", "#######", ".#####.", "..###..", ".##.##.", "##...##"],
@@ -228,7 +229,7 @@ export function GameCanvas({
         // (vistas 3/4 de cima), e o nome numa plaquinha com a fonte do jogo (Caveat).
         // Escala: cadeira ~ largura do boneco; mesa bem maior que ele.
         const CLOTH = 52, CHAIR_R = 72; // raios: toalha e anel de cadeiras
-        function drawTable(scene: any, x: number, y: number, label: string, highlight: boolean) {
+        function drawTable(scene: any, x: number, y: number, label: string) {
           const c = scene.add.container(x, y);
           const g = scene.add.graphics();
           // sombra no chão
@@ -275,45 +276,52 @@ export function GameCanvas({
             c.add(t);
           }
           c.setDepth(y);
-          if (highlight) {
-            const ring = scene.add.circle(x, y, CHAIR_R + 8, 0xffd24a, 0.16).setStrokeStyle(4, 0xffd24a, 0.9);
-            ring.setDepth(y - 1);
-            scene.tweens.add({ targets: ring, scale: { from: 0.92, to: 1.12 }, alpha: { from: 0.9, to: 0.3 }, duration: 800, yoyo: true, repeat: -1 });
-          }
+          // Item 48: sem anel dourado pulsando — a "minha mesa" ganha só um sparkle
+          // discreto acima (criado em buildInteractables quando a missão está pendente).
           return c;
         }
 
-        // marcador flutuante (anel + ícone pixel-art) para NPC / pedestal / portão
+        // Marcador de interação (item 48): SEM anel pulsando e SEM "!" grande.
+        // • mapa-múndi (kind "marker"): pino de navegação discreto acima da pedra —
+        //   cadeado (travado), estrela (concluído) ou sparkle (disponível).
+        // • fases (NPC/pedestal/portão): indicador só quando há interação PENDENTE —
+        //   um sparkle pequeno acima da cabeça; concluído/travado = nada (o cadeado
+        //   só aparece na dica ao chegar perto).
         function drawMarker(scene: any, it: Interactable) {
-          const dimmed = it.locked;
-          const color = it.done ? 0x9aa0a6 : it.locked ? 0x9aa0a6 : 0xffe58a;
-          const ring = scene.add.circle(it.x, it.y, 26, color, 0.0).setStrokeStyle(3, color, dimmed ? 0.5 : 0.95);
-          ring.setDepth(100000);
-          if (!dimmed && !it.done) {
-            scene.tweens.add({ targets: ring, scale: { from: 0.85, to: 1.1 }, duration: 900, yoyo: true, repeat: -1 });
+          if (it.kind === "marker") {
+            if (it.locked) return floatGlyph(scene, it.x, it.y - 46, "lock", 0xc2c6ca);
+            if (it.done) return floatGlyph(scene, it.x, it.y - 46, "star", 0xffd24a);
+            return sparkleHint(scene, it.x, it.y - 46);
           }
-          // ícone pixel-art flutuante (cadeado, estrela, etc. — nunca emoji)
-          const glyph: GlyphName =
-            it.glyph ?? (it.locked ? "lock" : it.done ? (it.kind === "pedestal" ? "check" : "star") : "pin");
-          // missão ("!") em dourado forte p/ destacar no fundo; demais em creme
-          const glyphColor = it.locked ? 0xb9bdc2 : it.done ? 0xffd24a : glyph === "bang" ? 0xffcf1a : 0xffe58a;
-          const iconLayer = floatGlyph(scene, it.x, it.y - (glyph === "bang" ? 54 : 46), glyph, glyphColor);
-          const c = scene.add.container(0, 0, [ring, iconLayer]);
-          c.setDepth(100000);
-          return c;
+          if (it.done || it.locked) return scene.add.container(0, 0); // sem indicador
+          return sparkleHint(scene, it.x, it.y - 44);
         }
 
-        // glyph pixel-art flutuante + piscando (sombra + cor), p/ marcadores e
-        // para o indicador de missão "!" sobre a mesa do convidado (item 29).
+        // Sparkle pixel-art discreto acima da cabeça do NPC/objeto (item 48):
+        // brilho creme que PISCA (escala/alpha, estilo 2–3 frames) — nunca sobre o
+        // avatar do jogador. Substitui o "!" dourado e o anel.
+        function sparkleHint(scene: any, x: number, y: number) {
+          const layer = scene.add.container(x, y);
+          for (const [dx, dy] of [[-2, 0], [2, 0], [0, -2], [0, 2]])
+            paintGlyph(scene, layer, dx, dy, "sparkle", 0x201208, 0.85, 0, 3); // contorno
+          paintGlyph(scene, layer, 0, 0, "sparkle", 0xfff1b8, 1, 0, 3);
+          layer.setDepth(100001);
+          scene.tweens.add({ targets: layer, alpha: { from: 1, to: 0.45 }, duration: 640, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+          scene.tweens.add({ targets: layer, scaleX: { from: 1, to: 0.68 }, scaleY: { from: 1, to: 0.68 }, duration: 640, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+          return layer;
+        }
+
+        // glyph pixel-art flutuante (sombra + cor), p/ os pinos do mapa-múndi
+        // (cadeado/estrela). Discreto, só flutua de leve (sem anel — item 48).
         function floatGlyph(scene: any, x: number, baseY: number, glyph: GlyphName, color: number) {
-          const u = glyph === "bang" ? 6 : 3; // "!" da missão maior e mais claro
+          const u = 3;
           const layer = scene.add.container(0, 0);
           // contorno escuro em 4 direções → o ícone destaca em qualquer fundo
-          for (const [dx, dy] of [[-2, 0], [2, 0], [0, -2], [0, 2], [2, 2]])
+          for (const [dx, dy] of [[-2, 0], [2, 0], [0, -2], [0, 2]])
             paintGlyph(scene, layer, x + dx, baseY + dy, glyph, 0x201208, 0.9, 0, u);
           paintGlyph(scene, layer, x, baseY, glyph, color, 1, 0, u);
           layer.setDepth(100001);
-          scene.tweens.add({ targets: layer, y: -9, duration: 780, yoyo: true, repeat: -1 });
+          scene.tweens.add({ targets: layer, y: -7, duration: 820, yoyo: true, repeat: -1 });
           return layer;
         }
 
@@ -324,10 +332,11 @@ export function GameCanvas({
           for (const k of Object.keys(markerSprites)) delete markerSprites[k];
           cfgRef.current.interactables.forEach((it) => {
             if (it.kind === "table") {
-              const tbl = drawTable(scene, it.x, it.y, it.tableLabel ?? "", !!it.highlight);
-              // indicador de missão "!" (ou "✓" quando já encontrou) sobre a mesa
-              if (it.glyph) {
-                const g = floatGlyph(scene, it.x, it.y - 64, it.glyph, it.done ? 0xffd24a : 0xffe58a);
+              const tbl = drawTable(scene, it.x, it.y, it.tableLabel ?? "");
+              // Item 48: indicador só na MINHA mesa enquanto pendente — sparkle
+              // discreto acima; encontrada ("check") ou demais mesas = sem indicador.
+              if (it.glyph === "bang" && !it.done) {
+                const g = sparkleHint(scene, it.x, it.y - 100);
                 markerSprites[it.id] = [tbl, g];
               } else {
                 markerSprites[it.id] = tbl;
