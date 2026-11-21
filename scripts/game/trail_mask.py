@@ -12,10 +12,12 @@ mx=np.maximum(np.maximum(R,G),B); mn=np.minimum(np.minimum(R,G),B)
 stone=(mn>=165)&((mx-mn)<=60)&(R>=185)   # escadas/plataformas claras
 mask=sand|stone
 def rect(x0,y0,x1,y1): mask[y0:y1,x0:x1]=True
-rect(788,398,940,452)    # ponte superior
-rect(845,788,1055,845)   # ponte inferior
-rect(300,560,420,700)    # escada esq (temo) — conector
-nodes=[(285,896),(596,785),(1212,584)]  # item 49: CENTRO de cada pedra (a sola para aqui)
+# Item 56: arte NOVA estendida (1536x1344), reescalada x1.148/y1.156 e topo-alinhada
+# com a antiga. Os conectores de ponte/escada foram reescalados na mesma proporção.
+rect(905,460,1079,523)   # ponte superior
+rect(970,911,1211,977)   # ponte inferior
+rect(344,647,482,809)    # escada esq — conector
+nodes=[(286,898),(597,787),(1215,585)]  # item 56: CENTRO de cada pedra na arte nova
 yy,xx=np.ogrid[:H,:W]
 for (x,y) in nodes: mask|=((xx-x)**2+(yy-y)**2)<=30**2
 # morfologia agressiva p/ unir a trilha

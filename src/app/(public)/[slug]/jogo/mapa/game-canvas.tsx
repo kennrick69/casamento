@@ -391,11 +391,11 @@ export function GameCanvas({
             typeof window !== "undefined" &&
             (window.matchMedia?.("(pointer: coarse)")?.matches || "ontouchstart" in window);
           scene.physics.world.setBounds(0, 0, W, H);
-          // Item 50: SÓ no celular, estende um pouco embaixo os limites da câmera
-          // pra ela conseguir SUBIR a noiva acima dos controles mesmo nos nós perto
-          // da borda (ex.: A Vila). A faixa extra fica atrás do D-pad/A-B (cor do mar).
-          const camPadB = cfg.mode === "world" && coarsePointer ? 240 : 0;
-          scene.cameras.main.setBounds(0, 0, W, H + camPadB);
+          // Item 56: a arte do mapa-múndi agora é ESTENDIDA pra baixo (mar/ilhotas
+          // de verdade abaixo das pedras), então a câmera usa os limites REAIS da
+          // arte — acabou a antiga folga "cor do mar" lisa (camPadB) atrás dos
+          // controles. A noiva ainda sobe acima do D-pad pelo followOffset (abaixo).
+          scene.cameras.main.setBounds(0, 0, W, H);
           const applyZoom = () => {
             const vw = scene.scale.width || 640;
             const vh = scene.scale.height || 400;
