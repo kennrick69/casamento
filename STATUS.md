@@ -1,11 +1,15 @@
 # STATUS — Voem. / Modo Gamificado
 
-Branch de trabalho: **`feat/s3-personagem`** (33 commits à frente da `main`).
+Branch de trabalho: **`feat/s3-personagem`** (67 commits à frente da `main`).
 Regra de ouro: nada que funciona hoje pode quebrar; tudo do jogo fica atrás de
 `Event.experienceType`; só o que está estável vai para a `main`, e **o SQL de toda
 migration é mostrado antes de qualquer merge**. **Nada em produção. Nada na main.**
 
-Última atualização: 2026-11-20.
+Última atualização: 2026-11-21 (rodada 3 — itens 52–57 — FEITA).
+
+Estado atual: `tsc` 0 erros e `eslint` limpo em todos os arquivos tocados. Jogo
+jogável ponta-a-ponta, tudo provado por screenshot. **Aguardando o JOs jogar e
+aprovar o merge** (ver `docs/PLANO-MERGE.md`). Nada mergeado desde o S2.
 
 ---
 
@@ -86,8 +90,18 @@ Windows, logado) — provas em `docs/screens-jogo/`. `tsc` 0 erros, `eslint` 0.
     **`docs/PLANO-MERGE.md`**: `add_game_character_roles` (cria GameCharacter,
     EventRole, GuestRoleClaim), `add_locked_role_fk`, `add_character_appearance`,
     `add_game_progress`.
-  - Dados de teste **dev-only no demo/voem-dev**: `amanda` (Fases 1–2), 5 memórias,
-    4 mesas; 3 visitantes com recado (`seed-recados-dev.ts`). Não afeta prod.
+  - Dados de teste **dev-only no demo/voem-dev** (não afeta prod):
+    - `amanda` (token `demo-session-amanda-12`) — é o "convidado-câmera" dos
+      screenshots. Na rodada 3 ela avançou para **5/5 memórias + Fase 2** (joguei
+      pelo screenshot). Pra resetar: `GameCharacter.gameProgress = {}` da amanda.
+    - Convidado pendente `demo-session-rsvp-teste` (`[teste-rsvp] Convidada
+      Pendente`, PENDING, com personagem) — criado pra provar a missão do RSVP na
+      Vila (item 54). Script descartável já removido; o convidado ficou no dev.
+    - 5 memórias, 4 mesas; 3 visitantes com recado (`seed-recados-dev.ts`).
+  - **Arte nova trocada no branch** (rodada 3): `mundi.png/.webp` (estendido
+    1536×1344) e `bosque.walk.png` (máscara do JOs). As antigas foram guardadas em
+    `assets-src/` (`mundi-antigo.*`, `bosque-walk-antiga.png`) — fora do git, por
+    convenção; se precisar reverter a arte, é de lá.
 
 ### ✅ Pendência nº 1 — profundidade estendida (FEITA, 2026-11-20, commitada)
 Estendida a profundidade (overlay + colisão na base) a **todas** as árvores,
@@ -115,15 +129,29 @@ Detalhes em **`docs/RELATORIO-RODADA3.md`**. Resumo:
 
 ## Pendências (em ordem)
 
-1. **Merge para produção**: seguir `docs/PLANO-MERGE.md`, **só com aprovação do JOs**.
-2. **Decisão de escala** — o JOs vai jogar: validar tamanho do boneco, zoom e
-   velocidade (`SPEED`/`zoom` em `game-canvas.tsx`) com ele jogando de verdade.
+1. **O JOs jogar e dar o OK** — mapa-múndi + 3 fases no celular e no PC. O zoom/
+   tamanho do boneco no mapa-múndi foi acertado na rodada 3 (item 53, casa com a
+   fase Vila), mas a palavra final é dele jogando. `SPEED`/`zoom` em `game-canvas.tsx`.
+2. **Merge para produção**: seguir `docs/PLANO-MERGE.md`, **só com aprovação do JOs**.
+   ⚠️ **Atenção:** o `PLANO-MERGE.md` ainda NÃO cobre a arte nova do mapa-múndi
+   (item 56) nem a máscara nova do bosque (item 57); são só assets em `public/`
+   (sem migration), mas revisar o plano antes do merge.
 3. **Ajuste fino residual** de colisões menores (canteiros/bancos) e âncoras, se o
-   JOs quiser, com `?debug=1` (o grosso já foi feito na rodada 3).
+   JOs quiser, com `?debug=1` (o grosso já foi feito nas rodadas 3 anteriores).
 
 > Antes de qualquer merge: `tsc`+`eslint`+`vitest` verdes, mostrar o SQL das
 > migrations, conferir backup de produção verificado (produção aplica as migrations
 > no `migrate deploy` do build). Tudo detalhado em `docs/PLANO-MERGE.md`.
+
+### ⚠️ Avisos / pontas soltas
+
+- **`src/lib/utils/escape-html.ts`** está na árvore de trabalho **não rastreado** e
+  **sem uso** no código — sobrou de outra sessão, não é da rodada 3. Deixado
+  intocado; decidir depois se remove ou aproveita (ex.: escapar nome em e-mail/JSON-LD).
+- Backups de arte antiga vivem em `assets-src/` (fora do git). Se o checkout for
+  recriado do zero, esses backups se perdem — não dependa deles para reverter.
+- `demo-session-rsvp-teste` e o progresso 5/5 da amanda são **dev-only**; se algum
+  screenshot futuro precisar da amanda "zerada", resetar o `gameProgress` dela.
 
 ---
 
@@ -143,8 +171,11 @@ Detalhes em **`docs/RELATORIO-RODADA3.md`**. Resumo:
 - Entrar no jogo: `http://localhost:3000/demo/jogo` (ou "visitante").
 - Mapa-múndi: `http://localhost:3000/demo/jogo/mapa`.
 - Deep-link de fase: `?start=vila|bosque|grande-dia`.
+- Parar o avatar num nó do mapa-múndi: `?node=0|1|2` (Vila/Bosque/Grande Dia).
 - Ferramenta de colisão: `?debug=1` (retângulos + coord. do mouse).
-- Spawn de teste (profundidade): `?px=<x>&py=<y>`.
+- Spawn de teste (profundidade / abrir diálogo): `?px=<x>&py=<y>`. Para abrir um
+  diálogo por script, o Enter precisa ficar PRESSIONADO alguns frames (um "tap"
+  rápido às vezes não registra) — ver `scripts/game/screenshot.mjs` (`hold`).
 
 ---
 
