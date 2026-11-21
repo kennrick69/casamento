@@ -1,17 +1,8 @@
 {
   "w": 1536,
   "h": 1024,
+  "_nota": "Item 51: paredes/borda/DJ/bolo agora vêm da máscara caminhável (grande-dia.walk.png, desenhada pelo JOs). Resta só o ESTRADO do altar (piso quadriculado onde o casal pisa) como bloco sólido, pra o jogador parar NA FRENTE sem subir no estrado (item 38). O JOs pode pintar esse trecho de preto na máscara e aí este arquivo some.",
   "blocks": [
-    { "x": 0, "y": 0, "w": 1536, "h": 140 },
-    { "x": 0, "y": 0, "w": 95, "h": 1024 },
-    { "x": 1441, "y": 0, "w": 95, "h": 1024 },
-
-    { "x": 95, "y": 880, "w": 625, "h": 144 },
-    { "x": 816, "y": 880, "w": 625, "h": 144 },
-
-    { "x": 600, "y": 140, "w": 340, "h": 95 },
-
-    { "x": 120, "y": 118, "w": 205, "h": 78 },
-    { "x": 1232, "y": 116, "w": 188, "h": 82 }
+    { "x": 622, "y": 138, "w": 268, "h": 90 }
   ]
 }

@@ -141,6 +141,15 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
     map: "/game/mapas/grande-dia.webp",
     w: 1536,
     h: 1024,
+    // Item 51: máscara caminhável desenhada pelo JOs (piso do salão), usada TAL
+    // COMO ESTÁ. Deixa de fora paredes, estrado do altar (notch acima de ~y171,
+    // item 38 continua valendo), palco/DJ (canto sup. esq.) e mesa do bolo (canto
+    // sup. dir.). Teste pela SOLA do pé (item 44). As MESAS (item 37, desenhadas
+    // por código) seguem sólidas pelo corpo circular — a máscara é só o piso.
+    walkMask: "/game/mapas/grande-dia.walk.png",
+    // A máscara do JOs deixa o estrado caminhável (o jogador subia entre o casal);
+    // item 38 continua valendo, então sobra 1 bloco sólido só no estrado do altar
+    // (o jogador para NA FRENTE). Paredes/DJ/bolo são da máscara.
     collision: "/game/mapas/grande-dia.colisao.json",
     spawn: { x: 778, y: 870, facing: "up" },
     anchors: {
