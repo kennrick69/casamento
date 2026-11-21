@@ -49,7 +49,21 @@ Windows, logado) — provas em `docs/screens-jogo/`. `tsc` 0 erros, `eslint` 0.
 ### Rodadas de feedback do JOs
 - **Rodada 1** (19/11, `docs/FEEDBACK-JOS-2026-11-19.md`): todos os itens FEITOS.
 - **Rodada 2** (19/11 noite, `docs/FEEDBACK-JOS-2026-11-19-rodada2.md`): **12/12
-  itens (21–32) FEITOS** e conferidos por screenshot.
+  itens (21–32) FEITOS** e conferidos por screenshot. Itens 44–51 também FEITOS.
+- **Rodada 3** (21/11, `docs/FEEDBACK-JOS-2026-11-21-rodada3.md`): **6/6 itens
+  (52–57) FEITOS**, um commit + screenshot de prova por item (`docs/screens-jogo/`
+  prefixos `m52-`…`m57-` e `m53-`). Resumo:
+  - **52** — caixa de diálogo estilo GBA/Pokémon no topo (mesma pra todos os
+    diálogos; máquina de escrever; escolhas com cursor ▶; boneco não anda).
+  - **53** — zoom do mapa-múndi no tamanho da fase Vila (a noiva casa com a fase).
+  - **54** — âncora da recepcionista movida pra frente da caixa de correio nova
+    (684,350): a missão do RSVP volta a abrir.
+  - **55** — console limpo (fontes `preload:false`, sem preloads órfãos, Phaser
+    `noAudio`/`banner:false`).
+  - **56** — mapa-múndi NOVO estendido pra baixo (WORLD.h=1344, 3 nós remedidos,
+    trilha/via regeradas, câmera com limites reais, fim da folga "cor do mar").
+  - **57** — Bosque com a máscara caminhável do JOs (branco→opaco); 5 pedestais
+    interagíveis.
 
 ### S0–S2 (já na main) — referência rápida
 - **S1:** enum `ExperienceType { CLASSIC, GAMIFIED }` + `Event.experienceType`
