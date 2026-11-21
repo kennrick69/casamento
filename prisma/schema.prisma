@@ -213,6 +213,7 @@ model Event {
   weddingParty        WeddingPartyMember[]
   storyItems          CoupleStoryItem[]
   venue3d             Venue3D?
+  inviteCodes         InviteCode[]
 }
 
 enum EventStatus {
@@ -348,9 +349,45 @@ model Guest {
   identificationLogs  GuestIdentificationLog[]
   gameCharacter       GameCharacter?
   roleClaims          GuestRoleClaim[]
+  inviteCodes         InviteCode[]         @relation("GuestInviteCodes")
 
   @@unique([eventId, email])
   @@index([eventId, sessionToken])
+}
+
+// Modo Gamificado (S4) — códigos de convite. Dois tipos:
+//  • PERSONAL: um por convidado da lista (vínculo guestId desde a criação). O
+//    link pessoal é /<slug>/c/<code>; "Disparar convite" registra sentAt/sentChannel.
+//  • BLANK: lote em branco para imprimir (QR no envelope). guestId só é
+//    preenchido no RESGATE, quando cria o convidado na lista.
+// `code` = 8 chars base32 sem 0/O/1/I (impossível de adivinhar). invalidatedAt
+// desativa um código perdido. Tudo aditivo; não afeta a experiência clássica.
+enum InviteCodeKind {
+  PERSONAL
+  BLANK
+}
+
+model InviteCode {
+  id            String         @id @default(cuid())
+  eventId       String
+  code          String // 8 chars base32 (sem 0/O/1/I), maiúsculo
+  kind          InviteCodeKind @default(PERSONAL)
+  guestId       String? // PERSONAL: dono desde a criação; BLANK: preenchido no resgate
+  maxCompanions Int            @default(4) // teto de acompanhantes no resgate (BLANK)
+  batchLabel    String? // rótulo do lote impresso
+  sentAt        DateTime? // "Disparar convite" (online): quando foi enviado
+  sentChannel   String? // "whatsapp" | "email"
+  claimedAt     DateTime? // 1º resgate (BLANK) / vínculo efetivado
+  invalidatedAt DateTime? // código revogado (perdido/cancelado)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  event Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest Guest? @relation("GuestInviteCodes", fields: [guestId], references: [id], onDelete: SetNull)
+
+  @@unique([eventId, code])
+  @@index([eventId, kind])
+  @@index([guestId])
 }
 
 // Modo Gamificado (S2) — passkey WebAuthn do convidado (SimpleWebAuthn).

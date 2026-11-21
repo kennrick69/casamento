@@ -7,6 +7,9 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { GuestActions } from "./guest-actions";
 import { bulkBanGuests, bulkRemoveGuests, importGuestsFromCsv } from "./actions";
+import { InviteButton, type InviteRow } from "./invite-button";
+
+export type { InviteRow };
 
 type RsvpStatus = "CONFIRMED" | "DECLINED" | "PENDING";
 
@@ -35,6 +38,8 @@ interface Props {
   guests: Guest[];
   eventId: string;
   whatsappContext?: WhatsappContext;
+  gamified?: boolean;
+  inviteRows?: Record<string, InviteRow>;
 }
 
 type FilterTab = "all" | "confirmed" | "declined" | "pending" | "banned";
@@ -60,7 +65,7 @@ function buildWhatsappLink(guest: Guest, ctx: WhatsappContext): string {
   return `https://wa.me/${phone.startsWith("55") ? phone : `55${phone}`}?text=${encodeURIComponent(msg)}`;
 }
 
-export function GuestList({ guests, eventId, whatsappContext }: Props) {
+export function GuestList({ guests, eventId, whatsappContext, gamified, inviteRows }: Props) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterTab>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -319,7 +324,7 @@ export function GuestList({ guests, eventId, whatsappContext }: Props) {
                 {guest.phone && (
                   <div className="flex items-center gap-2">
                     <p className="text-xs text-muted-foreground">{guest.phone}</p>
-                    {whatsappContext && (
+                    {!gamified && whatsappContext && (
                       <a
                         href={buildWhatsappLink(guest, whatsappContext)}
                         target="_blank"
@@ -347,6 +352,16 @@ export function GuestList({ guests, eventId, whatsappContext }: Props) {
                     {format(guest.createdAt, "d MMM yyyy", { locale: ptBR })}
                   </span>
                 </div>
+
+                {/* S4a — Disparar convite (código pessoal, WhatsApp/Email + marcador) */}
+                {gamified && !guest.banned && inviteRows?.[guest.id] && (
+                  <InviteButton
+                    eventId={eventId}
+                    guestId={guest.id}
+                    row={inviteRows[guest.id]}
+                    hasEmail={!!guest.email && !guest.email.endsWith(".invalid")}
+                  />
+                )}
               </div>
               <div className="shrink-0">
                 <GuestActions guestId={guest.id} eventId={eventId} banned={guest.banned} />
