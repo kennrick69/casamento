@@ -162,46 +162,42 @@ export function GameOpening({
               </Link>
 
               {/* ── Lugar previsto para os botões do convite impresso (S4) ──
-                  Desabilitados até docs/IDEIA-QRCODES-CONVITE.md virar código.
-                  INVITE_CODES_ENABLED controla o estado (handlers no S4). */}
-              <div
-                className="mt-2 w-full border-t pt-3"
-                style={{ borderColor: "rgba(107,74,42,0.3)" }}
-              >
-                <p
-                  className="mb-2 text-xs"
-                  style={{ color: GBA.brown, fontFamily: "var(--font-lora), Georgia, serif" }}
+                  Bloco INTEIRO escondido enquanto a flag está desligada (não
+                  mostra botões nem "EM BREVE"): fica só no código, pronto para
+                  quando ligarmos INVITE_CODES_ENABLED no S4 e plugarmos os
+                  handlers. Ver docs/IDEIA-QRCODES-CONVITE.md. */}
+              {INVITE_CODES_ENABLED && (
+                <div
+                  className="mt-2 w-full border-t pt-3"
+                  style={{ borderColor: "rgba(107,74,42,0.3)" }}
                 >
-                  Recebeu um convite impresso?
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {(["Tenho um código", "Escanear QR code"] as const).map((label) => (
-                    <button
-                      key={label}
-                      type="button"
-                      disabled={!INVITE_CODES_ENABLED}
-                      aria-disabled={!INVITE_CODES_ENABLED}
-                      title={INVITE_CODES_ENABLED ? undefined : "Em breve"}
-                      className="flex items-center justify-center px-2 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-55"
-                      style={{
-                        fontFamily: PIXEL,
-                        fontSize: "8px",
-                        lineHeight: 1.4,
-                        color: GBA.text,
-                        background: "#efe0bf",
-                        border: `2px solid ${GBA.brown}`,
-                      }}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                {!INVITE_CODES_ENABLED && (
-                  <p className="mt-1.5 text-center" style={{ fontFamily: PIXEL, fontSize: "7px", color: "#a08a63" }}>
-                    EM BREVE
+                  <p
+                    className="mb-2 text-xs"
+                    style={{ color: GBA.brown, fontFamily: "var(--font-lora), Georgia, serif" }}
+                  >
+                    Recebeu um convite impresso?
                   </p>
-                )}
-              </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(["Tenho um código", "Escanear QR code"] as const).map((label) => (
+                      <button
+                        key={label}
+                        type="button"
+                        className="flex items-center justify-center px-2 py-2 text-xs"
+                        style={{
+                          fontFamily: PIXEL,
+                          fontSize: "8px",
+                          lineHeight: 1.4,
+                          color: GBA.text,
+                          background: "#efe0bf",
+                          border: `2px solid ${GBA.brown}`,
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
