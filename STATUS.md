@@ -28,11 +28,12 @@ Estado do código: `tsc` 0 erros · `eslint` 0 errors (16 warnings pré-existent
 | S0 | Visão, docs, fix do PRESS START | ✅ feito · **na main** |
 | S1 | Gate de experiência (CLASSIC × GAMIFIED) + placeholder | ✅ feito · **na main** |
 | S2 | Identidade: cadastro, passkey (WebAuthn), visitante, claim de boneco, acompanhantes | ✅ feito · **na main** |
-| S3 | Criador de personagem (LPC) + rosto + **jogo completo ponta-a-ponta** | ✅ feito · **só no branch `feat/s3-personagem`** |
+| S3 | Criador de personagem (LPC) + rosto + **jogo completo ponta-a-ponta** | ✅ feito · **na main · EM PRODUÇÃO** |
 
-> **S0–S2 estão MERGEADOS na `main`.** S3 (criador + jogo inteiro) está **só no
-> branch `feat/s3-personagem`**, validado por screenshot, **aguardando aprovação do
-> JOs para merge**.
+> **S0–S3 estão MERGEADOS na `main` e EM PRODUÇÃO** (merge `5fdd163`, deploy do
+> Railway em 2026-11-21, 4 migrations aplicadas pelo `migrate deploy`). Validado
+> ponta-a-ponta em produção no evento real `joseeleticia` (mobile e desktop) e site
+> CLASSIC conferido íntegro. Relatório: `docs/RELATORIO-DEPLOY-PROD-2026-11-21.md`.
 
 ### S3 — o que foi entregue no branch (resumo)
 Jogo **jogável ponta-a-ponta**, conferido por screenshot (Chrome/Playwright do
@@ -88,17 +89,18 @@ Windows, logado) — provas em `docs/screens-jogo/`. `tsc` 0 erros, `eslint` 0.
 
 ---
 
-## O que está só no dev × o que está em produção
+## O que está em produção × o que é dev-only
 
-- **Produção (`joseeleticia.com`, Railway, deploy da `main`):** apenas S0–S2. O
-  modo clássico e o gate de experiência. **Nenhuma migration do jogo foi aplicada.**
-- **Só no branch `feat/s3-personagem` (não aplicado em produção):**
-  - Todo o criador + jogo (S3) + painel de Recados do jogo.
-  - **4 migrations aditivas** (só rodadas no voem-dev) — SQL exato em
-    **`docs/PLANO-MERGE.md`**: `add_game_character_roles` (cria GameCharacter,
-    EventRole, GuestRoleClaim), `add_locked_role_fk`, `add_character_appearance`,
-    `add_game_progress`.
-  - Dados de teste **dev-only no demo/voem-dev** (não afeta prod):
+- **Produção (`joseeleticia.com`, Railway, deploy da `main`):** S0–S3 completo. Modo
+  clássico, gate de experiência, criador + jogo inteiro + painel de Recados do jogo.
+  As **4 migrations aditivas** já foram aplicadas pelo `migrate deploy`
+  (`add_game_character_roles` → GameCharacter/EventRole/GuestRoleClaim,
+  `add_locked_role_fk`, `add_character_appearance`, `add_game_progress`) — SQL exato
+  em `docs/PLANO-MERGE.md`. Rollback: `git revert -m 1 5fdd163`.
+  - **No evento real `joseeleticia`:** ainda **0 memórias e 0 mesas** cadastradas, e
+    há **2 visitantes de teste** (`Convidada`, `Teste`) para limpar — pendência do
+    JOs (ver relatório de deploy).
+- **Dados de teste dev-only no demo/voem-dev (NÃO afetam prod):**
     - `amanda` (token `demo-session-amanda-12`) — é o "convidado-câmera" dos
       screenshots. Na rodada 3 ela avançou para **5/5 memórias + Fase 2** (joguei
       pelo screenshot). Pra resetar: `GameCharacter.gameProgress = {}` da amanda.
@@ -106,10 +108,10 @@ Windows, logado) — provas em `docs/screens-jogo/`. `tsc` 0 erros, `eslint` 0.
       Pendente`, PENDING, com personagem) — criado pra provar a missão do RSVP na
       Vila (item 54). Script descartável já removido; o convidado ficou no dev.
     - 5 memórias, 4 mesas; 3 visitantes com recado (`seed-recados-dev.ts`).
-  - **Arte nova trocada no branch** (rodada 3): `mundi.png/.webp` (estendido
-    1536×1344) e `bosque.walk.png` (máscara do JOs). As antigas foram guardadas em
-    `assets-src/` (`mundi-antigo.*`, `bosque-walk-antiga.png`) — fora do git, por
-    convenção; se precisar reverter a arte, é de lá.
+- **Arte nova (rodada 3), já em produção:** `mundi.png/.webp` (estendido 1536×1344) e
+  `bosque.walk.png` (máscara do JOs) foram ao ar no merge. As antigas foram guardadas
+  em `assets-src/` (`mundi-antigo.*`, `bosque-walk-antiga.png`) — **fora do git**; se
+  precisar reverter a arte, é de lá.
 
 ### ✅ Pendência nº 1 — profundidade estendida (FEITA, 2026-11-20, commitada)
 Estendida a profundidade (overlay + colisão na base) a **todas** as árvores,
@@ -135,21 +137,24 @@ Detalhes em **`docs/RELATORIO-RODADA3.md`**. Resumo:
 
 ---
 
-## Pendências (em ordem)
+## Pendências (em ordem) — agora do JOs
 
-1. **O JOs jogar e dar o OK** — mapa-múndi + 3 fases no celular e no PC. O zoom/
-   tamanho do boneco no mapa-múndi foi acertado na rodada 3 (item 53, casa com a
-   fase Vila), mas a palavra final é dele jogando. `SPEED`/`zoom` em `game-canvas.tsx`.
-2. **Merge para produção**: seguir `docs/PLANO-MERGE.md`, **só com aprovação do JOs**.
-   ⚠️ **Atenção:** o `PLANO-MERGE.md` ainda NÃO cobre a arte nova do mapa-múndi
-   (item 56) nem a máscara nova do bosque (item 57); são só assets em `public/`
-   (sem migration), mas revisar o plano antes do merge.
-3. **Ajuste fino residual** de colisões menores (canteiros/bancos) e âncoras, se o
-   JOs quiser, com `?debug=1` (o grosso já foi feito nas rodadas 3 anteriores).
+Merge + deploy FEITOS. O que falta é tudo do lado do JOs, no evento real em produção:
 
-> Antes de qualquer merge: `tsc`+`eslint`+`vitest` verdes, mostrar o SQL das
-> migrations, conferir backup de produção verificado (produção aplica as migrations
-> no `migrate deploy` do build). Tudo detalhado em `docs/PLANO-MERGE.md`.
+1. **Jogar e dar o OK final** — mapa-múndi + 3 fases no celular e no PC em produção.
+   O zoom/tamanho do boneco no mapa-múndi foi acertado na rodada 3 (item 53, casa com
+   a fase Vila), mas a palavra final é dele jogando. `SPEED`/`zoom` em `game-canvas.tsx`.
+2. **Conferir o painel *Recados do jogo*** (login de organizador) — única prova visual
+   que faltou no deploy; o caminho do dado foi provado por banco + código.
+3. **Cadastrar o conteúdo real** no evento `joseeleticia`: **memórias** (aba História,
+   viram os pedestais do Bosque) e **mesas** (aba Mesas, viram o Grande Dia). Hoje 0/0.
+4. **Limpar os 2 visitantes de teste** (`Convidada`, `Teste`) do evento real.
+5. **Ajuste fino residual** de colisões menores (canteiros/bancos) e âncoras, se quiser,
+   com `?debug=1` (o grosso já foi feito nas rodadas anteriores).
+
+> Já NÃO há merge pendente. Se precisar de uma nova migration no futuro, a regra segue:
+> só aditiva, `tsc`+`eslint`+`vitest` verdes, SQL mostrado antes, backup de produção
+> verificado antes (produção aplica no `migrate deploy` do build). Ver `docs/PLANO-MERGE.md`.
 
 ### ⚠️ Avisos / pontas soltas
 
