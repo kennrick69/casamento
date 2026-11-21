@@ -156,17 +156,22 @@ function loadPhaser(): Promise<any> {
 export function GameCanvas({
   config,
   controls,
+  paused,
   onNearChange,
   onInteract,
   onDebugPoint,
 }: {
   config: SceneConfig;
   controls: React.RefObject<Controls>;
+  // Item 52: enquanto uma caixa de diálogo está aberta, o boneco não anda.
+  paused?: boolean;
   onNearChange: (it: Interactable | null) => void;
   onInteract: (id: string) => void;
   onDebugPoint?: (p: Point) => void;
 }) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
   const onNearRef = useRef(onNearChange);
   const onInteractRef = useRef(onInteract);
   const onDebugRef = useRef(onDebugPoint);
@@ -756,6 +761,15 @@ export function GameCanvas({
 
         function update(this: any) {
           if (!this._ready || !player) return;
+          // Item 52: caixa de diálogo aberta → congela o avatar (para a velocidade
+          // e a animação; A/B/setas passam a controlar o diálogo, não o jogo).
+          if (pausedRef.current) {
+            if (cfgRef.current.mode !== "world" && player.body) player.body.setVelocity(0, 0);
+            player.anims.stop();
+            player.setFrame(ROW[facing] * FRAMES_PER_DIR);
+            if (controls.current) controls.current.interact = false;
+            return;
+          }
           if (cfgRef.current.mode === "world") updateWorld(this);
           else updatePhase();
         }

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Loader2, Info, MapPin, X, Lock } from "lucide-react";
+import { ArrowLeft, Loader2, Info, MapPin, Lock } from "lucide-react";
 import { WORLD, PHASES, tableGrid, type LevelId } from "@/lib/game/world";
 import type { Controls, Interactable, SceneConfig, NpcAvatar } from "./game-canvas";
 import { leaveMessageForCouple } from "../actions";
@@ -64,6 +64,9 @@ export function MapaClient(props: MapaClientProps) {
   const freeRoam = isVisitor || props.isOrganizer;
   const router = useRouter();
   const controls = useRef<Controls>({ up: false, down: false, left: false, right: false, interact: false });
+  // Item 52: controle imperativo da caixa de diálogo (A avança/escolhe, B volta,
+  // D-pad cima/baixo move o cursor) — ligado aos botões A/B e ao D-pad touch.
+  const dialogRef = useRef<GameDialogHandle | null>(null);
 
   const [debug, setDebug] = useState(false);
   // Controles touch (D-pad/A) só aparecem em telas de toque (item 13). No PC
@@ -374,6 +377,13 @@ export function MapaClient(props: MapaClientProps) {
   );
 
   const press = (key: keyof Controls, value: boolean) => {
+    // Item 52: com a caixa aberta, o D-pad move o cursor das escolhas e o boneco
+    // não anda; sem caixa, dirige o avatar normalmente.
+    if (dialog) {
+      if (value && key === "up") dialogRef.current?.moveUp();
+      if (value && key === "down") dialogRef.current?.moveDown();
+      return;
+    }
     controls.current[key] = value;
   };
 
@@ -410,6 +420,151 @@ export function MapaClient(props: MapaClientProps) {
         : view === "bosque"
           ? `Memórias: ${progress.memoriesSeen.length}/${props.memories.length}`
           : null;
+
+  // Item 52: constrói a MESMA caixa de diálogo (estilo GBA) para todos os casos —
+  // recepcionista, memória, mesa e créditos. Texto, escolhas e campos variam.
+  function renderDialog() {
+    if (!dialog) return null;
+    const close = () => setDialog(null);
+
+    if (dialog === "npc") {
+      if (isVisitor && recadoSent) {
+        return (
+          <GameDialog
+            apiRef={dialogRef}
+            isTouch={isTouch}
+            onBack={close}
+            title="Recepcionista"
+            body={`Que carinho, ${playerName}! Seu recado foi guardado para ${coupleNames}. A festa toda está liberada — aproveite cada fase!`}
+            choices={[{ key: "ok", label: "Oba!", onSelect: close }]}
+          />
+        );
+      }
+      if (isVisitor) {
+        return (
+          <GameDialog
+            apiRef={dialogRef}
+            isTouch={isTouch}
+            onBack={close}
+            title="Recepcionista"
+            body={`Olá, ${playerName}! Visitantes não confirmam presença, mas que tal deixar um carinho para ${coupleNames}? Você já pode explorar todas as fases.`}
+            extra={
+              <textarea
+                value={recadoText}
+                onChange={(e) => setRecadoText(e.target.value)}
+                maxLength={500}
+                rows={3}
+                placeholder="Escreva seu recado para os noivos…"
+                className="mt-2 w-full resize-none rounded border-2 border-[#8a6d3b] bg-[#fffdf5] px-3 py-2 text-sm text-[#3a2a1a] placeholder:text-[#a08a63] focus:border-[#c9a24b] focus:outline-none"
+              />
+            }
+            extraWhenDone
+            choices={[
+              { key: "no", label: "Agora não", onSelect: close },
+              {
+                key: "send",
+                label: recadoSending ? "Enviando" : "Enviar recado",
+                disabled: recadoSending || !recadoText.trim(),
+                loading: recadoSending,
+                onSelect: sendRecado,
+              },
+            ]}
+          />
+        );
+      }
+      if (progress.phase1) {
+        return (
+          <GameDialog
+            apiRef={dialogRef}
+            isTouch={isTouch}
+            onBack={close}
+            title="Recepcionista"
+            body={`Sua presença já está confirmada, ${playerName}! Atravesse o portão de flores à direita para seguir viagem.`}
+            choices={[{ key: "ok", label: "Oba!", onSelect: close }]}
+          />
+        );
+      }
+      return (
+        <GameDialog
+          apiRef={dialogRef}
+          isTouch={isTouch}
+          onBack={close}
+          title="Recepcionista"
+          body={`Bem-vindo(a) à Vila, ${playerName}! Para liberar o resto da festa, primeiro confirme sua presença. Vamos lá?`}
+          choices={[
+            { key: "no", label: "Agora não", onSelect: close },
+            {
+              key: "go",
+              label: goingToRsvp ? "Abrindo" : "Confirmar presença",
+              loading: goingToRsvp,
+              onSelect: () => {
+                setGoingToRsvp(true);
+                router.push(`/${slug}/rsvp`);
+              },
+            },
+          ]}
+        />
+      );
+    }
+
+    if (dialog === "memory" && activeMemory) {
+      return (
+        <GameDialog
+          apiRef={dialogRef}
+          isTouch={isTouch}
+          onBack={close}
+          title={activeMemory.dateLabel ?? "Memória"}
+          body={[activeMemory.title, activeMemory.description].filter(Boolean).join("\n\n")}
+          extra={
+            activeMemory.photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={activeMemory.photoUrl}
+                alt={activeMemory.title}
+                className="mt-2 max-h-40 w-full rounded border-2 border-[#8a6d3b] object-cover"
+              />
+            ) : undefined
+          }
+          choices={[{ key: "ok", label: "Continuar", onSelect: close }]}
+        />
+      );
+    }
+
+    if (dialog === "table" && tableMsg) {
+      const body = tableMsg.mine
+        ? `Encontrou seu lugar, ${playerName}! ${
+            props.coupleMessage ?? `${coupleNames} agradecem de coração por você estar aqui neste dia.`
+          }`
+        : props.myTableId
+          ? "Essa não é a sua mesa — siga o brilho sobre a sua."
+          : "Sua mesa será definida em breve. Fique à vontade para explorar o salão!";
+      return (
+        <GameDialog
+          apiRef={dialogRef}
+          isTouch={isTouch}
+          onBack={close}
+          title={tableMsg.name}
+          body={body}
+          choices={[{ key: "ok", label: "Fechar", onSelect: close }]}
+        />
+      );
+    }
+
+    if (dialog === "credits") {
+      return (
+        <GameDialog
+          apiRef={dialogRef}
+          isTouch={isTouch}
+          onBack={close}
+          title="Créditos"
+          body={CREDITS_TEXT}
+          choices={[{ key: "ok", label: "Fechar", onSelect: close }]}
+        />
+      );
+    }
+
+    return null;
+  }
 
   return (
     // fixed inset-0: o jogo ocupa a tela inteira, cobrindo o chrome do layout
@@ -448,6 +603,7 @@ export function MapaClient(props: MapaClientProps) {
         <GameCanvas
           config={config}
           controls={controls}
+          paused={dialog !== null}
           onNearChange={setNear}
           onInteract={handleInteract}
           onDebugPoint={debug ? setDebugPoint : undefined}
@@ -515,7 +671,10 @@ export function MapaClient(props: MapaClientProps) {
                 type="button"
                 aria-label="A — ação"
                 onPointerDown={() => {
-                  controls.current.interact = true;
+                  // Item 52: com a caixa aberta, A completa/avança o texto e
+                  // confirma a escolha; sem caixa, interage com o cenário.
+                  if (dialog) dialogRef.current?.advance();
+                  else controls.current.interact = true;
                 }}
                 className="flex size-16 items-center justify-center rounded-full border-2 border-rose-200/60 bg-rose-700/45 text-xl font-black text-white shadow-md backdrop-blur-sm transition active:scale-95 active:bg-rose-700/90"
               >
@@ -524,196 +683,257 @@ export function MapaClient(props: MapaClientProps) {
             </div>
           </>
         )}
-      </div>
 
-      {/* ── Diálogos ── */}
-      {dialog === "npc" && (
-        <DialogBox title="Recepcionista" onClose={() => setDialog(null)}>
-          {isVisitor ? (
-            recadoSent ? (
-              <>
-                <p className="text-sm">
-                  Que carinho, {playerName}! Seu recado foi guardado para {coupleNames}. A festa toda está liberada —
-                  aproveite cada fase!
-                </p>
-                <DialogActions>
-                  <PrimaryBtn onClick={() => setDialog(null)}>
-                    <Check className="mr-1 inline size-4" aria-hidden /> Oba!
-                  </PrimaryBtn>
-                </DialogActions>
-              </>
-            ) : (
-              <>
-                <p className="text-sm">
-                  Olá, {playerName}! Visitantes não confirmam presença, mas que tal deixar um carinho para {coupleNames}?
-                  Você já pode explorar todas as fases.
-                </p>
-                <textarea
-                  value={recadoText}
-                  onChange={(e) => setRecadoText(e.target.value)}
-                  maxLength={500}
-                  rows={3}
-                  placeholder="Escreva seu recado para os noivos…"
-                  className="mt-2 w-full resize-none rounded-lg border border-neutral-600 bg-neutral-900 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-emerald-400 focus:outline-none"
-                />
-                <DialogActions>
-                  <GhostBtn onClick={() => setDialog(null)}>Agora não</GhostBtn>
-                  <PrimaryBtn disabled={recadoSending || !recadoText.trim()} onClick={sendRecado}>
-                    {recadoSending ? (
-                      <Loader2 className="size-4 animate-spin" aria-hidden />
-                    ) : (
-                      <Check className="size-4" aria-hidden />
-                    )}
-                    Enviar recado
-                  </PrimaryBtn>
-                </DialogActions>
-              </>
-            )
-          ) : progress.phase1 ? (
-            <>
-              <p className="text-sm">
-                Sua presença já está confirmada, {playerName}! Atravesse o portão de flores à direita para seguir
-                viagem.
-              </p>
-              <DialogActions>
-                <PrimaryBtn onClick={() => setDialog(null)}>
-                  <Check className="mr-1 inline size-4" aria-hidden /> Oba!
-                </PrimaryBtn>
-              </DialogActions>
-            </>
-          ) : (
-            <>
-              <p className="text-sm">
-                Bem-vindo(a) à Vila, {playerName}! Para liberar o resto da festa, primeiro confirme sua presença. Vamos
-                lá?
-              </p>
-              <DialogActions>
-                <GhostBtn onClick={() => setDialog(null)}>Agora não</GhostBtn>
-                <PrimaryBtn
-                  disabled={goingToRsvp}
-                  onClick={() => {
-                    setGoingToRsvp(true);
-                    router.push(`/${slug}/rsvp`);
-                  }}
-                >
-                  {goingToRsvp ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Check className="size-4" aria-hidden />}
-                  Confirmar presença
-                </PrimaryBtn>
-              </DialogActions>
-            </>
-          )}
-        </DialogBox>
-      )}
-
-      {dialog === "memory" && activeMemory && (
-        <DialogBox title={activeMemory.dateLabel ?? "Memória"} onClose={() => setDialog(null)}>
-          <div className="flex flex-col gap-2">
-            {activeMemory.photoUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={activeMemory.photoUrl}
-                alt={activeMemory.title}
-                className="max-h-48 w-full rounded-lg object-cover"
-              />
-            )}
-            <p className="text-base font-semibold text-emerald-200">{activeMemory.title}</p>
-            {activeMemory.description && <p className="text-sm text-neutral-200">{activeMemory.description}</p>}
-          </div>
-          <DialogActions>
-            <PrimaryBtn onClick={() => setDialog(null)}>Continuar</PrimaryBtn>
-          </DialogActions>
-        </DialogBox>
-      )}
-
-      {dialog === "table" && tableMsg && (
-        <DialogBox title={tableMsg.name} onClose={() => setDialog(null)}>
-          {tableMsg.mine ? (
-            <p className="text-sm">
-              Encontrou seu lugar, {playerName}!{" "}
-              {props.coupleMessage ?? `${coupleNames} agradecem de coração por você estar aqui neste dia.`}
-            </p>
-          ) : props.myTableId ? (
-            <p className="text-sm">Essa não é a sua mesa — siga o brilho sobre a sua.</p>
-          ) : (
-            <p className="text-sm">Sua mesa será definida em breve. Fique à vontade para explorar o salão!</p>
-          )}
-          <DialogActions>
-            <PrimaryBtn onClick={() => setDialog(null)}>Fechar</PrimaryBtn>
-          </DialogActions>
-        </DialogBox>
-      )}
-
-      {dialog === "credits" && <CreditsOverlay onClose={() => setDialog(null)} />}
-    </div>
-  );
-}
-
-// ─── Componentes de UI ───
-function DialogBox({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
-  return (
-    <div className="fixed inset-x-0 bottom-0 z-20 flex justify-center p-3">
-      <div className="w-full max-w-xl rounded-xl border-2 border-neutral-600 bg-neutral-800/97 p-4 shadow-2xl">
-        <div className="mb-1 flex items-center justify-between">
-          <p className="text-xs uppercase tracking-wider text-emerald-300">{title}</p>
-          <button onClick={onClose} aria-label="Fechar" className="text-neutral-400 hover:text-white">
-            <X className="size-4" aria-hidden />
-          </button>
-        </div>
-        {children}
+        {/* Item 52: caixa de diálogo estilo GBA/Pokémon, no TOPO da área do jogo
+            (nunca atrás do D-pad/A/B). Mesma caixa para TODOS os diálogos. */}
+        {renderDialog()}
       </div>
     </div>
   );
 }
-function DialogActions({ children }: { children: React.ReactNode }) {
-  return <div className="mt-3 flex justify-end gap-2">{children}</div>;
+
+// ─── Item 52: caixa de diálogo estilo GBA/Pokémon ───────────────────────────
+interface DialogChoice {
+  key: string;
+  label: string;
+  disabled?: boolean;
+  loading?: boolean;
+  onSelect: () => void;
 }
-function PrimaryBtn({ children, onClick, disabled }: { children: React.ReactNode; onClick: () => void; disabled?: boolean }) {
+interface GameDialogHandle {
+  advance: () => void; // A: completa o texto / vira a página / confirma a escolha
+  moveUp: () => void; // cursor ▲ na lista de escolhas
+  moveDown: () => void; // cursor ▼ na lista de escolhas
+  back: () => void; // B/Esc: voltar/fechar
+}
+
+const CREDITS_TEXT =
+  "Arte dos personagens derivada do LPC (Liberated Pixel Cup) — peças sob CC-BY, CC-BY-SA ou OGA-BY. Motor Phaser 3 (MIT)." +
+  "\n\nStephen Challener (Redshrike), Johannes Sjölund (wulax), Eliza Wyatt (ElizaWy), JaidynReiman, Benjamin K. Smith (BenCreating), bluecarrot16, Matthew Krohn (makrohn), Manuel Riecke (MrBeast), Nila122, Thane Brimhall (pennomi), laetissima, kheftel, Carlo Enrico Victoria (Nemisys)." +
+  "\n\nLista completa de peças e licenças em docs/ASSETS-LICENSES.md. Mapas: arte do projeto Voem.";
+
+// Quebra o texto em páginas (sem rolagem) respeitando limites de palavra.
+function paginate(text: string, max: number): string[] {
+  if (!text) return [""];
+  const pages: string[] = [];
+  for (const block of text.split("\n\n")) {
+    let cur = "";
+    for (const word of block.split(/\s+/)) {
+      if (cur && (cur + " " + word).length > max) {
+        pages.push(cur);
+        cur = word;
+      } else {
+        cur = cur ? cur + " " + word : word;
+      }
+    }
+    if (cur) pages.push(cur);
+  }
+  return pages.length ? pages : [""];
+}
+
+// Caixa única de diálogo: moldura pixel dupla (clara + contorno escuro, cantos
+// dentados), fundo creme, plaquinha de nome, texto com efeito máquina de escrever
+// e escolhas em lista com cursor "▶". A/avança, setas/cursor, B/volta. Mesma
+// caixa para memória, recepcionista, mesa e créditos.
+function GameDialog({
+  title,
+  body,
+  choices,
+  onBack,
+  isTouch,
+  apiRef,
+  extra,
+  extraWhenDone,
+}: {
+  title: string;
+  body: string;
+  choices: DialogChoice[];
+  onBack: () => void;
+  isTouch: boolean;
+  apiRef: React.RefObject<GameDialogHandle | null>;
+  extra?: React.ReactNode;
+  extraWhenDone?: boolean;
+}) {
+  const pages = useMemo(() => paginate(body, 170), [body]);
+  const [pageIdx, setPageIdx] = useState(0);
+  const [typed, setTyped] = useState(0);
+  const [sel, setSel] = useState(0);
+
+  const page = pages[pageIdx] ?? "";
+  const typing = typed < page.length;
+  const lastPage = pageIdx >= pages.length - 1;
+  const showChoices = lastPage && !typing;
+  const moreAfter = !typing && !lastPage;
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTyped(0);
+  }, [pageIdx, body]);
+
+  useEffect(() => {
+    if (typed >= page.length) return;
+    const id = window.setTimeout(() => setTyped((t) => Math.min(page.length, t + 1)), 18);
+    return () => window.clearTimeout(id);
+  }, [typed, page]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSel((s) => Math.min(Math.max(0, s), Math.max(0, choices.length - 1)));
+  }, [choices.length]);
+
+  // snapshot do estado atual para os controles imperativos e o teclado
+  const stateRef = useRef({ typing, page, lastPage, sel, choices, showChoices, onBack });
+  stateRef.current = { typing, page, lastPage, sel, choices, showChoices, onBack };
+
+  useEffect(() => {
+    const api: GameDialogHandle = {
+      advance() {
+        const s = stateRef.current;
+        if (s.typing) {
+          setTyped(s.page.length);
+          return;
+        }
+        if (!s.lastPage) {
+          setPageIdx((i) => i + 1);
+          return;
+        }
+        const c = s.choices[s.sel];
+        if (c && !c.disabled && !c.loading) c.onSelect();
+      },
+      moveUp() {
+        if (stateRef.current.showChoices) setSel((v) => Math.max(0, v - 1));
+      },
+      moveDown() {
+        const s = stateRef.current;
+        if (s.showChoices) setSel((v) => Math.min(s.choices.length - 1, v + 1));
+      },
+      back() {
+        stateRef.current.onBack();
+      },
+    };
+    apiRef.current = api;
+    return () => {
+      if (apiRef.current === api) apiRef.current = null;
+    };
+  }, [apiRef]);
+
+  // Teclado: Enter/Espaço/Z/E = A; setas/W/S = cursor; Esc = B. Não sequestra as
+  // teclas quando o foco está num campo de texto (recado do visitante).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (document.activeElement?.tagName ?? "").toUpperCase();
+      if (e.key === "Escape") {
+        e.preventDefault();
+        apiRef.current?.back();
+        return;
+      }
+      if (tag === "TEXTAREA" || tag === "INPUT") return;
+      if (["Enter", " ", "z", "Z", "e", "E"].includes(e.key)) {
+        e.preventDefault();
+        apiRef.current?.advance();
+      } else if (["ArrowUp", "w", "W"].includes(e.key)) {
+        e.preventDefault();
+        apiRef.current?.moveUp();
+      } else if (["ArrowDown", "s", "S"].includes(e.key)) {
+        e.preventDefault();
+        apiRef.current?.moveDown();
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [apiRef]);
+
+  const shown = page.slice(0, typed);
+  const pixelFont = "var(--font-press-start), monospace";
+
   return (
-    <button
-      disabled={disabled}
-      onClick={onClick}
-      className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-60"
+    <div
+      className="pointer-events-auto absolute inset-x-0 top-0 z-20 flex justify-center px-2"
+      style={{ paddingTop: "calc(0.5rem + env(safe-area-inset-top, 0px))" }}
     >
-      {children}
-    </button>
-  );
-}
-function GhostBtn({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
-  return (
-    <button onClick={onClick} className="rounded-lg bg-neutral-700 px-4 py-2 text-sm hover:bg-neutral-600">
-      {children}
-    </button>
-  );
-}
-
-function CreditsOverlay({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70 p-4">
-      <div className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-xl border border-neutral-600 bg-neutral-800 p-5 text-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Créditos</h2>
-          <button onClick={onClose} aria-label="Fechar" className="text-neutral-400 hover:text-white">
-            <X className="size-5" aria-hidden />
-          </button>
+      <style>{"@keyframes dlgblink{0%,100%{opacity:1}50%{opacity:0}}"}</style>
+      <div className="relative w-full max-w-2xl">
+        {/* plaquinha/aba com o nome (fonte pixel do projeto) */}
+        <div
+          className="absolute -top-2 left-3 z-10 px-2 py-1"
+          style={{
+            background: "#2a1d12",
+            color: "#ffeec2",
+            border: "2px solid #c9a24b",
+            borderRadius: "3px",
+            fontFamily: pixelFont,
+            fontSize: "10px",
+            letterSpacing: "0.5px",
+            boxShadow: "2px 2px 0 rgba(0,0,0,0.35)",
+          }}
+        >
+          {title}
         </div>
-        <p className="mb-3 text-neutral-300">
-          Arte dos personagens derivada do <strong>LPC (Liberated Pixel Cup)</strong> — peças sob CC-BY, CC-BY-SA ou
-          OGA-BY. Motor <strong>Phaser 3</strong> (MIT).
-        </p>
-        <ul className="space-y-1.5 text-neutral-300">
-          <li>Stephen Challener (Redshrike)</li>
-          <li>Johannes Sjölund (wulax)</li>
-          <li>Eliza Wyatt (ElizaWy)</li>
-          <li>JaidynReiman</li>
-          <li>Benjamin K. Smith (BenCreating)</li>
-          <li>bluecarrot16, Matthew Krohn (makrohn)</li>
-          <li>Manuel Riecke (MrBeast), Nila122</li>
-          <li>Thane Brimhall (pennomi), laetissima, kheftel</li>
-          <li>Carlo Enrico Victoria (Nemisys)</li>
-        </ul>
-        <p className="mt-3 text-xs text-neutral-400">
-          Lista completa de peças e licenças em <code>docs/ASSETS-LICENSES.md</code>. Mapas: arte do projeto Voem.
-        </p>
+        {/* caixa: moldura dupla pixel, cantos dentados, fundo creme */}
+        <div
+          onClick={() => apiRef.current?.advance()}
+          className="cursor-pointer select-none pt-5"
+          style={{
+            background: "#f7eccf",
+            border: "4px solid #2a1d12",
+            boxShadow:
+              "inset 0 0 0 3px #fff8e8, inset 0 0 0 6px #c9a24b, inset 0 0 0 8px #6b4a2a, 3px 3px 0 rgba(0,0,0,0.3)",
+            clipPath:
+              "polygon(5px 0,calc(100% - 5px) 0,100% 5px,100% calc(100% - 5px),calc(100% - 5px) 100%,5px 100%,0 calc(100% - 5px),0 5px)",
+            imageRendering: "pixelated",
+          }}
+        >
+          <div className="px-5 pb-4">
+            <p
+              style={{
+                fontFamily: "var(--font-lora), Georgia, serif",
+                fontSize: "15px",
+                lineHeight: 1.5,
+                color: "#3a2a1a",
+                minHeight: "3em",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {shown}
+            </p>
+
+            {extra && (!extraWhenDone || showChoices) && <div onClick={(e) => e.stopPropagation()}>{extra}</div>}
+
+            {showChoices ? (
+              <ul className="mt-3 space-y-1.5">
+                {choices.map((c, i) => (
+                  <li
+                    key={c.key}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!c.disabled && !c.loading) c.onSelect();
+                    }}
+                    className="flex cursor-pointer items-center gap-2"
+                    style={{ fontFamily: pixelFont, fontSize: "11px", color: c.disabled ? "#a08a63" : "#3a2a1a" }}
+                  >
+                    <span style={{ width: "14px", color: "#b5853a" }}>{i === sel ? "▶" : ""}</span>
+                    <span>{c.loading ? "…" : c.label}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              moreAfter && (
+                <div
+                  className="mt-1 text-right"
+                  style={{ fontFamily: pixelFont, fontSize: "12px", color: "#6b4a2a", animation: "dlgblink 1s steps(1) infinite" }}
+                >
+                  ▼
+                </div>
+              )
+            )}
+
+            {showChoices && (
+              <p className="mt-2 text-right" style={{ fontFamily: pixelFont, fontSize: "8px", color: "#a08a63" }}>
+                {isTouch ? "A escolher · B voltar" : "Enter escolher · Esc voltar"}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
