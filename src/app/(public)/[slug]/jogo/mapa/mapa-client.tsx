@@ -93,6 +93,9 @@ export function MapaClient(props: MapaClientProps) {
   // Spawn de teste (dev): ?px=&py= posiciona o avatar num ponto exato da fase —
   // usado para provar a profundidade (boneco atrás de cada objeto) por screenshot.
   const [spawnOverride, setSpawnOverride] = useState<{ x: number; y: number } | null>(null);
+  // Dev: ?node=N posiciona o avatar parado na plataforma N do mapa-múndi (prova
+  // de "parar de frente em cima da pedra" — itens 47/49/50), sem precisar viajar.
+  const [worldStartNode, setWorldStartNode] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   // Recado do visitante para os noivos (missão alternativa da vila — item 30/31)
   const [recadoText, setRecadoText] = useState("");
@@ -125,6 +128,10 @@ export function MapaClient(props: MapaClientProps) {
     const py = Number(q.get("py"));
     if (Number.isFinite(px) && Number.isFinite(py) && q.has("px") && q.has("py")) {
       setSpawnOverride({ x: px, y: py });
+    }
+    const node = Number(q.get("node"));
+    if (q.has("node") && Number.isInteger(node) && node >= 0 && node < WORLD.nodes.length) {
+      setWorldStartNode(node);
     }
   }, []);
 
@@ -203,10 +210,10 @@ export function MapaClient(props: MapaClientProps) {
         w: WORLD.w,
         h: WORLD.h,
         atlasUrl,
-        spawn: { x: WORLD.nodes[0].x, y: WORLD.nodes[0].y, facing: "down" },
+        spawn: { x: WORLD.nodes[worldStartNode].x, y: WORLD.nodes[worldStartNode].y, facing: "down" },
         nodes: WORLD.nodes,
         edges: WORLD.edges,
-        startNode: 0,
+        startNode: worldStartNode,
         interactables,
         debug,
       };
@@ -292,7 +299,7 @@ export function MapaClient(props: MapaClientProps) {
       debug,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, atlasUrl, debug, spawnOverride, progress, unlocked, props.memories, props.tables, props.myTableId]);
+  }, [view, atlasUrl, debug, spawnOverride, worldStartNode, progress, unlocked, props.memories, props.tables, props.myTableId]);
 
   // ─── Interação (A / Enter / botão) ───
   const handleInteract = useCallback(

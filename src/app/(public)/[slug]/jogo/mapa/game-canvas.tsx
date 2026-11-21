@@ -459,6 +459,11 @@ export function GameCanvas({
             player.setDepth(n.y);
             player.body.setAllowGravity(false);
             player.body.moves = false; // movimento por tween, não física
+            // Item 47: parado no mapa-múndi, o avatar fica SEMPRE de frente pro
+            // jogador (direção down) — não de costas com a direção do trecho.
+            facing = "down";
+            player.anims.stop();
+            player.setFrame(ROW.down * FRAMES_PER_DIR);
           }
 
           // ── HUD de proximidade (debug: coords do mouse) ──
@@ -689,8 +694,11 @@ export function GameCanvas({
                 moveAlong(scene, bestPath, () => {
                   currentNode = bestNode;
                   moving = false;
+                  // Item 47: ao chegar na plataforma, para de frente pro jogador
+                  // (down), nunca de costas com a direção do último trecho.
+                  facing = "down";
                   player.anims.stop();
-                  player.setFrame(ROW[facing] * FRAMES_PER_DIR);
+                  player.setFrame(ROW.down * FRAMES_PER_DIR);
                 });
               }
             }
