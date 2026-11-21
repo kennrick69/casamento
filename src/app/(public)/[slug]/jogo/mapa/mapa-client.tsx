@@ -781,9 +781,13 @@ function GameDialog({
     setSel((s) => Math.min(Math.max(0, s), Math.max(0, choices.length - 1)));
   }, [choices.length]);
 
-  // snapshot do estado atual para os controles imperativos e o teclado
+  // snapshot do estado atual para os controles imperativos e o teclado.
+  // Atualizado num effect (não no render) — o ref só é LIDO em handlers/effects,
+  // que rodam sempre após o commit, então o snapshot está sempre atualizado.
   const stateRef = useRef({ typing, page, lastPage, sel, choices, showChoices, onBack });
-  stateRef.current = { typing, page, lastPage, sel, choices, showChoices, onBack };
+  useEffect(() => {
+    stateRef.current = { typing, page, lastPage, sel, choices, showChoices, onBack };
+  });
 
   useEffect(() => {
     const api: GameDialogHandle = {
