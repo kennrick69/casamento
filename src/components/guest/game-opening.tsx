@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Countdown } from "@/components/guest/countdown";
+import { InviteCodeEntry } from "@/components/guest/invite-code-entry";
 import { formatEventDate } from "@/lib/timezone";
 
 // ─── TEXTO DA ABERTURA (aprovado pelo JOs — trocar aqui se mudar o tom) ──────
@@ -13,11 +14,9 @@ const OPENING = {
   rsvp: "Confirmar presença",
 } as const;
 
-// Botões de convite impresso (S4 — QR codes). A IDEIA está aprovada em conceito
-// (docs/IDEIA-QRCODES-CONVITE.md) mas o fluxo ainda NÃO existe: por isso o lugar
-// já fica previsto na abertura, porém desabilitado. Virar `true` quando o S4
-// entrar e os dois botões ganharem handler. NÃO implementar os QR codes aqui.
-const INVITE_CODES_ENABLED = false;
+// Botões de convite impresso / por código (S4a). Ligados: "Tenho um código" e
+// "Escanear QR code" levam ao resgate /<slug>/c/<code>. Ver InviteCodeEntry.
+const INVITE_CODES_ENABLED = true;
 
 // Paleta da caixa de diálogo GBA do jogo (item 52) — reaproveitada para a
 // abertura ficar coerente com o jogo.
@@ -37,12 +36,14 @@ const PIXEL = "var(--font-press-start), ui-monospace, monospace";
 // data, contagem regressiva e o botão "COMEÇAR". O jogo JÁ existe e está no ar —
 // nada de "em construção"/"beta" aqui (feedback do JOs, item 58).
 export function GameOpening({
+  slug,
   coupleNames,
   ceremonyDate,
   timezone,
   rsvpHref,
   jogoHref,
 }: {
+  slug: string;
   coupleNames: string;
   ceremonyDate: Date;
   timezone: string;
@@ -161,43 +162,10 @@ export function GameOpening({
                 {OPENING.rsvp}
               </Link>
 
-              {/* ── Lugar previsto para os botões do convite impresso (S4) ──
-                  Bloco INTEIRO escondido enquanto a flag está desligada (não
-                  mostra botões nem "EM BREVE"): fica só no código, pronto para
-                  quando ligarmos INVITE_CODES_ENABLED no S4 e plugarmos os
-                  handlers. Ver docs/IDEIA-QRCODES-CONVITE.md. */}
-              {INVITE_CODES_ENABLED && (
-                <div
-                  className="mt-2 w-full border-t pt-3"
-                  style={{ borderColor: "rgba(107,74,42,0.3)" }}
-                >
-                  <p
-                    className="mb-2 text-xs"
-                    style={{ color: GBA.brown, fontFamily: "var(--font-lora), Georgia, serif" }}
-                  >
-                    Recebeu um convite impresso?
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(["Tenho um código", "Escanear QR code"] as const).map((label) => (
-                      <button
-                        key={label}
-                        type="button"
-                        className="flex items-center justify-center px-2 py-2 text-xs"
-                        style={{
-                          fontFamily: PIXEL,
-                          fontSize: "8px",
-                          lineHeight: 1.4,
-                          color: GBA.text,
-                          background: "#efe0bf",
-                          border: `2px solid ${GBA.brown}`,
-                        }}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* ── Convite por código / QR impresso (S4a) ──────────────────
+                  Ligado por INVITE_CODES_ENABLED. "Tenho um código" e "Escanear
+                  QR code" levam ao resgate /<slug>/c/<code>. */}
+              {INVITE_CODES_ENABLED && <InviteCodeEntry slug={slug} />}
             </div>
           </div>
         </div>

@@ -83,6 +83,7 @@ export default async function EventPage({
   if (event.experienceType === "GAMIFIED") {
     return (
       <GameOpening
+        slug={slug}
         coupleNames={event.coupleNames}
         ceremonyDate={event.ceremonyDate}
         timezone={event.timezone}
