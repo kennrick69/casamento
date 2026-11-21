@@ -95,7 +95,11 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
     walkMask: "/game/mapas/vila.walk.png",
     spawn: { x: 95, y: 505, facing: "right" }, // entrada pelo braço ESQUERDO
     anchors: {
-      npc: { x: 430, y: 460 }, // calçamento em frente ao mural/caixa de correio (topo-centro)
+      // Item 54: a praça nova tem a caixa de correio com a base em ~(684,307) e o
+      // mural de avisos à direita (~x 790–860). O ponto de interação fica NO
+      // calçamento logo abaixo da caixa (y≈334), pra noiva receber a missão do
+      // RSVP parada em frente. Raio padrão (72) pega quem para na caixa ou no mural.
+      npc: { x: 684, y: 350 }, // calçamento em frente à caixa de correio (praça nova)
       gate: { x: 1480, y: 519 }, // saída pelo braço DIREITO → volta ao mapa
     },
   },
