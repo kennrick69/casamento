@@ -1,15 +1,23 @@
 # STATUS — Voem. / Modo Gamificado
 
-Branch de trabalho: **`feat/s3-personagem`** (67 commits à frente da `main`).
 Regra de ouro: nada que funciona hoje pode quebrar; tudo do jogo fica atrás de
-`Event.experienceType`; só o que está estável vai para a `main`, e **o SQL de toda
-migration é mostrado antes de qualquer merge**. **Nada em produção. Nada na main.**
+`Event.experienceType`; o SQL de toda migration é mostrado antes de qualquer merge.
 
-Última atualização: 2026-11-21 (rodada 3 — itens 52–57 — FEITA).
+Última atualização: 2026-11-21 (**S3 MERGEADO e EM PRODUÇÃO**).
 
-Estado atual: `tsc` 0 erros e `eslint` limpo em todos os arquivos tocados. Jogo
-jogável ponta-a-ponta, tudo provado por screenshot. **Aguardando o JOs jogar e
-aprovar o merge** (ver `docs/PLANO-MERGE.md`). Nada mergeado desde o S2.
+## 🚀 S3 EM PRODUÇÃO (2026-11-21)
+`feat/s3-personagem` foi **mergeado na `main`** (merge commit `5fdd163`, `--no-ff`)
+e **deployado no Railway**. As 4 migrations foram aplicadas pelo `migrate deploy`
+(`Database schema is up to date!`). Validado ponta-a-ponta em produção no evento real
+`joseeleticia` (GAMIFIED, PUBLISHED), mobile 427×952 e desktop 1280 — relatório e
+prints em **`docs/RELATORIO-DEPLOY-PROD-2026-11-21.md`** / `docs/screens-prod/`.
+Site CLASSIC conferido íntegro. Rollback: `git revert -m 1 5fdd163`.
+- **Pendente do JOs:** jogar/aprovar; conferir o painel *Recados do jogo* (único print
+  que faltou — precisa do login dele); cadastrar memórias + mesas do evento real
+  (hoje 0/0); limpar os 2 visitantes de teste (`Convidada`, `Teste`) — ver relatório.
+
+Estado do código: `tsc` 0 erros · `eslint` 0 errors (16 warnings pré-existentes) ·
+`vitest` 141/141. Jogo jogável ponta-a-ponta, provado por screenshot.
 
 ---
 
