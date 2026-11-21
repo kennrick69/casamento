@@ -34,8 +34,15 @@ const ROW: Record<Dir, number> = { up: 0, left: 1, down: 2, right: 3 };
 // Zoom responsivo "cover": o mapa sempre enche a tela (sem faixas vazias) e a
 // câmera segue o avatar. No celular mostra ~2 casas; no desktop, quase a fase
 // toda. (Feedback do JOs, itens 14 e 19.)
-function computeZoom(vw: number, vh: number, mapW: number, mapH: number): number {
+function computeZoom(vw: number, vh: number, mapW: number, mapH: number, mode: "world" | "phase"): number {
   const cover = Math.max(vw / mapW, vh / mapH);
+  if (mode === "world") {
+    // Mapa-múndi (item 50): zoom MAIOR pra noiva não ficar minúscula e a câmera
+    // seguir (não mostra o mapa inteiro). Celular (~2x o de antes): boneco grande;
+    // desktop: um pouco menos, mas ainda seguindo. Nunca menor que o "cover".
+    const target = vw < 820 ? 1.9 : 1.2;
+    return Math.max(cover, Math.min(2.6, target));
+  }
   return Math.max(0.5, Math.min(1.6, cover));
 }
 
@@ -374,15 +381,32 @@ export function GameCanvas({
             }
           });
 
+          // celular/toque: sobe a noiva acima da faixa de controles (D-pad/A-B)
+          const coarsePointer =
+            typeof window !== "undefined" &&
+            (window.matchMedia?.("(pointer: coarse)")?.matches || "ontouchstart" in window);
           scene.physics.world.setBounds(0, 0, W, H);
-          scene.cameras.main.setBounds(0, 0, W, H);
+          // Item 50: SÓ no celular, estende um pouco embaixo os limites da câmera
+          // pra ela conseguir SUBIR a noiva acima dos controles mesmo nos nós perto
+          // da borda (ex.: A Vila). A faixa extra fica atrás do D-pad/A-B (cor do mar).
+          const camPadB = cfg.mode === "world" && coarsePointer ? 240 : 0;
+          scene.cameras.main.setBounds(0, 0, W, H + camPadB);
           const applyZoom = () => {
             const vw = scene.scale.width || 640;
             const vh = scene.scale.height || 400;
-            scene.cameras.main.setZoom(cfg.zoom ?? computeZoom(vw, vh, W, H));
+            const z = cfg.zoom ?? computeZoom(vw, vh, W, H, cfg.mode);
+            scene.cameras.main.setZoom(z);
+            // followOffset.y negativo = alvo mais pra CIMA na tela. No celular sobe
+            // ~metade da faixa dos controles pra noiva nunca ficar atrás deles (item 50).
+            if (cfg.mode === "world") {
+              const band = coarsePointer ? 180 : 0;
+              scene.cameras.main.setFollowOffset(0, -(band / 2) / z);
+            }
           };
           applyZoom();
-          scene.cameras.main.setBackgroundColor("#2b3a1e");
+          // Fundo: cor do mar no mapa-múndi (a faixa extra embaixo vira "mar");
+          // verde-escuro nas fases (bordas da arte).
+          scene.cameras.main.setBackgroundColor(cfg.mode === "world" ? "#2f7fb8" : "#2b3a1e");
           // recalcula zoom e recentra ao girar/redimensionar a tela
           scene.scale.on("resize", () => {
             applyZoom();
