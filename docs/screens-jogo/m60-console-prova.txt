@@ -1,0 +1,27 @@
+SW registrado -> {"active":true,"state":"activated"}
+SW controlando -> true
+offline, rota sem cache -> status/erro: 503
+
+===== RESUMO (item 60) =====
+Total errors/warnings/pageerrors: 3
+Erros ligados ao Service Worker: 0 (esperado 0)
+[OK] nenhum erro de Service Worker em nenhuma fase (online nem offline)
+
+--- demais errors/warnings (contexto; offline gera erros de REDE normais, não do SW) ---
+[
+  {
+    "phase": "offline",
+    "kind": "error",
+    "text": "WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=n_vBiJ315ccNsVzSzVLe9' failed: Error in connection establishment: net::ERR_INTERNET_DISCONNECTED"
+  },
+  {
+    "phase": "offline",
+    "kind": "error",
+    "text": "WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=n_vBiJ315ccNsVzSzVLe9' failed: Error in connection establishment: net::ERR_INTERNET_DISCONNECTED"
+  },
+  {
+    "phase": "offline",
+    "kind": "error",
+    "text": "Failed to load resource: the server responded with a status of 503 ()"
+  }
+]
