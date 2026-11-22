@@ -17,7 +17,26 @@ cada parte. As falas/textos ficam no tom do site — o JOs ajusta no teste final
     `44HU V9NT` == `44HUV9NT`. Normalizador puro compartilhado em
     `src/lib/invite/normalize.ts` (cliente + servidor usam a MESMA regra).
   - Provas: `docs/screens-jogo/m-s4p1-codigo-{427,1280}.png`.
-- **PARTE 2 — S4b (escolha de lugar):** a fazer.
+- **PARTE 2 — S4b (escolha de lugar) ✅ (commit `ff14a3b`):**
+  - Migration aditiva `add_seats` (tabela `Seat`: cadeira = `tableId+seatIndex`;
+    ocupante convidado/acompanhante OU cadeira travada pelo organizador; `claimedById`
+    liga a família). SQL 100% aditivo, aplicada só no voem-dev.
+  - No **Grande Dia**, o convidado chega perto de uma mesa e escolhe sentar ali com
+    a família (acompanhantes do S2); reserva as cadeiras livres mais baixas, a missão
+    passa a **guiar até a mesa**. Cadeira livre/minha/ocupada/travada tem cor própria
+    no desenho (Phaser). Reserva atômica e idempotente por grupo (re-escolher troca).
+  - Aba **Mesas**: mapa de cadeiras por mesa, **travar/destravar** cadeira livre,
+    **mover** a família p/ outra mesa, **liberar** reserva. `SeatingAssignment` segue
+    em sincronia (contagem e "sem mesa" continuam certos).
+  - **Decisão de design** (ajustável no teste): o convidado escolhe a MESA e o jogo
+    reserva as cadeiras livres do grupo (não precisa clicar cadeira por cadeira);
+    visualmente as cadeiras do grupo ficam douradas. Dá pra refinar p/ escolha cadeira
+    a cadeira depois, se o JOs quiser.
+  - Provas: `docs/screens-jogo/m-s4p2-escolha-427.png` (diálogo de escolha),
+    `m-s4p2-reservado-427.png` (cadeiras reservadas + guia), `m-s4p2-mesas-1280.png`
+    (painel com a reserva da família + travar/mover/liberar).
+  - **Dev-only:** a Amanda (convidada-câmera) ganhou 2 acompanhantes e uma reserva na
+    Mesa 3 no voem-dev, só p/ os screenshots. Não afeta produção.
 - **PARTE 3 — NPCs do salão + Cardápio (`docs/NPCS-SALAO.md`):** a fazer.
 - **PARTE 4 — S4c (família andando junto, estilo Pokémon):** a fazer.
 - **PARTE 5 — publicação única:** SQL de TODAS as migrations + plano de merge + backfill,
