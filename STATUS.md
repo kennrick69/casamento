@@ -64,8 +64,12 @@ cada parte. As falas/textos ficam no tom do site — o JOs ajusta no teste final
     bebê de colo fora da fila), `m-s4p4-familia-mesa-1280.png` (família até a mesa).
   - **Dev-only:** a Amanda ganhou um "Bebê Cardoso" (bebê de colo) no voem-dev só
     para provar a exclusão da fila.
-- **PARTE 5 — publicação única:** SQL de TODAS as migrations + plano de merge + backfill,
-  aguardando OK do JOs. **Nada na main até lá.**
+- **PARTE 5 — publicação única ✅ PLANO PRONTO, aguardando OK do JOs:**
+  **`docs/PLANO-MERGE-S4-COMPLETO.md`** — SQL exato das 3 migrations aditivas
+  (`add_invite_codes`, `add_seats`, `add_companion_lap_infant`), backfill dos códigos
+  pessoais, o que entra (rodada 4 + S4 inteiro), riscos/rollback e checklist (backup
+  verificado, deploy acompanhado, backfill conferido). **Nada na `main` até o OK.**
+  `tsc` 0 · `eslint` 0 erros · migrations aplicadas só no voem-dev.
 
 
 ## 🚀 S3 EM PRODUÇÃO (2026-11-21)
