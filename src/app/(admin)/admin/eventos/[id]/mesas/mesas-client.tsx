@@ -41,6 +41,7 @@ interface SeatRow {
   claimedById: string | null;
   holderName: string | null;
   locked: boolean;
+  isChild: boolean;
 }
 
 interface Props {
@@ -49,9 +50,10 @@ interface Props {
   guests: Guest[];
   guestMap: Record<string, Guest>;
   seats: SeatRow[];
+  infantsByGuest: Record<string, number>;
 }
 
-export function MesasClient({ eventId, tables: initialTables, guests, guestMap, seats }: Props) {
+export function MesasClient({ eventId, tables: initialTables, guests, guestMap, seats, infantsByGuest }: Props) {
   const [tables, setTables] = useState(initialTables);
   const [newTableName, setNewTableName] = useState("");
   const [newTableCap, setNewTableCap] = useState(8);
@@ -279,9 +281,14 @@ export function MesasClient({ eventId, tables: initialTables, guests, guestMap, 
                           : `Cadeira ${i + 1} livre — clique para travar`;
                       const base = "flex h-6 min-w-6 items-center justify-center rounded px-1 text-[10px] font-medium border";
                       if (occupied) {
+                        const child = s!.isChild;
                         return (
-                          <span key={i} title={title} className={`${base} border-amber-300 bg-amber-100 text-amber-800`}>
-                            {(s!.holderName ?? "·").slice(0, 6)}
+                          <span
+                            key={i}
+                            title={child ? `${s!.holderName ?? "Convidado"} (criança) — cadeira ${i + 1}` : title}
+                            className={`${base} ${child ? "border-sky-300 bg-sky-100 text-sky-800" : "border-amber-300 bg-amber-100 text-amber-800"}`}
+                          >
+                            {(s!.holderName ?? "·").slice(0, 6)}{child ? "•" : ""}
                           </span>
                         );
                       }
@@ -304,10 +311,13 @@ export function MesasClient({ eventId, tables: initialTables, guests, guestMap, 
                   </div>
                   {groups.size > 0 && (
                     <div className="flex flex-col gap-1">
-                      {Array.from(groups.entries()).map(([headId, g]) => (
+                      {Array.from(groups.entries()).map(([headId, g]) => {
+                        const infants = infantsByGuest[headId] ?? 0;
+                        return (
                         <div key={headId} className="flex items-center gap-1 text-[11px]">
                           <span className="truncate flex-1">
                             {g.headName || "Convidado"}{g.count > 1 ? ` (família: ${g.count})` : ""}
+                            {infants > 0 ? ` +${infants} bebê${infants > 1 ? "s" : ""} de colo` : ""}
                           </span>
                           <select
                             defaultValue=""
@@ -327,7 +337,8 @@ export function MesasClient({ eventId, tables: initialTables, guests, guestMap, 
                             title="Liberar os lugares desta família"
                           >×</button>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

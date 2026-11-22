@@ -102,6 +102,7 @@ export interface Interactable {
   highlight?: boolean; // alvo da missão (brilho dourado)
   capacity?: number; // nº de cadeiras a desenhar (mesa)
   seats?: SeatCell[]; // S4b: estado de cada cadeira (livre/minha/ocupada/travada)
+  solid?: boolean; // colisão pela base (NPCs do salão não são atravessados)
 }
 
 export interface NpcAvatar {
@@ -488,8 +489,8 @@ export function GameCanvas({
           // para o avatar não os atravessar. Raio < 72 (alcance de interação),
           // então ainda dá pra chegar perto e interagir.
           (cfg.interactables ?? []).forEach((it) => {
-            if (it.kind !== "table" && it.kind !== "pedestal") return;
-            const rad = it.kind === "table" ? 62 : 22;
+            if (it.kind !== "table" && it.kind !== "pedestal" && !it.solid) return;
+            const rad = it.kind === "table" ? 62 : it.kind === "pedestal" ? 22 : 15;
             const body = scene.add.circle(it.x, it.y, rad, 0xff2bff, cfg.debug ? 0.25 : 0);
             scene.physics.add.existing(body, true);
             body.body.setCircle(rad);

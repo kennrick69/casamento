@@ -513,6 +513,9 @@ model GuestCompanion {
   guestId   String
   name      String
   type      CompanionType @default(ADULT)
+  // S4 (crianças): bebê de colo = criança que NÃO ocupa cadeira e é carregada
+  // (não anda em fila própria). Implica type CHILD (avatar em tamanho de criança).
+  lapInfant Boolean       @default(false)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 

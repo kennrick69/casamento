@@ -104,14 +104,24 @@ export function RedeemClient({
   // ── Resgate de código em branco (nome + família) ─────────────────────────
   const maxCompanions = state.kind === "blank_free" ? state.maxCompanions : 0;
   const [name, setName] = useState("");
-  const [companions, setCompanions] = useState<{ name: string; child: boolean }[]>([]);
+  type Comp = { name: string; child: boolean; lapInfant: boolean };
+  const [companions, setCompanions] = useState<Comp[]>([]);
 
   function addCompanion() {
     if (companions.length >= maxCompanions) return;
-    setCompanions((c) => [...c, { name: "", child: false }]);
+    setCompanions((c) => [...c, { name: "", child: false, lapInfant: false }]);
   }
-  function updateCompanion(i: number, patch: Partial<{ name: string; child: boolean }>) {
-    setCompanions((c) => c.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
+  function updateCompanion(i: number, patch: Partial<Comp>) {
+    setCompanions((c) =>
+      c.map((x, idx) => {
+        if (idx !== i) return x;
+        const next = { ...x, ...patch };
+        // bebê de colo é sempre criança; marcar "bebê de colo" liga "criança".
+        if (patch.lapInfant) next.child = true;
+        if (patch.child === false) next.lapInfant = false;
+        return next;
+      }),
+    );
   }
   function removeCompanion(i: number) {
     setCompanions((c) => c.filter((_, idx) => idx !== i));
@@ -122,7 +132,11 @@ export function RedeemClient({
     const cleanName = name.trim();
     if (!cleanName) return setError("Diga o seu nome.");
     const comps = companions
-      .map((c) => ({ name: c.name.trim(), type: c.child ? ("CHILD" as const) : ("ADULT" as const) }))
+      .map((c) => ({
+        name: c.name.trim(),
+        type: c.child ? ("CHILD" as const) : ("ADULT" as const),
+        lapInfant: c.lapInfant,
+      }))
       .filter((c) => c.name.length > 0);
     startTransition(async () => {
       const r = await redeemBlankCode(slug, code, cleanName, JSON.stringify(comps));
@@ -195,22 +209,30 @@ export function RedeemClient({
           <div className="flex flex-col gap-2">
             <p className="text-sm font-medium">Quem vem com você? (opcional)</p>
             {companions.map((comp, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <input
-                  value={comp.name}
-                  onChange={(e) => updateCompanion(i, { name: e.target.value })}
-                  placeholder={`Acompanhante ${i + 1}`}
-                  maxLength={80}
-                  className="flex-1 h-10 px-3 rounded-md border-2 text-sm"
-                  style={{ borderColor: BROWN, background: "#fff8e8", color: TEXT }}
-                />
-                <label className="flex items-center gap-1 text-xs" title="É criança">
-                  <input type="checkbox" checked={comp.child} onChange={(e) => updateCompanion(i, { child: e.target.checked })} />
-                  criança
-                </label>
-                <button type="button" onClick={() => removeCompanion(i)} className="text-xs underline" style={{ color: BROWN }}>
-                  remover
-                </button>
+              <div key={i} className="flex flex-col gap-1 rounded-md border-2 p-2" style={{ borderColor: "rgba(107,74,42,0.35)" }}>
+                <div className="flex items-center gap-2">
+                  <input
+                    value={comp.name}
+                    onChange={(e) => updateCompanion(i, { name: e.target.value })}
+                    placeholder={`Acompanhante ${i + 1}`}
+                    maxLength={80}
+                    className="flex-1 h-10 px-3 rounded-md border-2 text-sm"
+                    style={{ borderColor: BROWN, background: "#fff8e8", color: TEXT }}
+                  />
+                  <button type="button" onClick={() => removeCompanion(i)} className="text-xs underline" style={{ color: BROWN }}>
+                    remover
+                  </button>
+                </div>
+                <div className="flex items-center gap-4 pl-1 text-xs">
+                  <label className="flex items-center gap-1" title="Avatar em tamanho de criança">
+                    <input type="checkbox" checked={comp.child} onChange={(e) => updateCompanion(i, { child: e.target.checked })} />
+                    criança
+                  </label>
+                  <label className="flex items-center gap-1" title="Bebê de colo não ocupa cadeira">
+                    <input type="checkbox" checked={comp.lapInfant} onChange={(e) => updateCompanion(i, { lapInfant: e.target.checked })} />
+                    bebê de colo (não ocupa cadeira)
+                  </label>
+                </div>
               </div>
             ))}
             {companions.length < maxCompanions && (

@@ -13,12 +13,19 @@ export type { InviteRow };
 
 type RsvpStatus = "CONFIRMED" | "DECLINED" | "PENDING";
 
+interface Companion {
+  id: string;
+  name: string;
+  type: "ADULT" | "CHILD";
+  lapInfant: boolean;
+}
 interface Guest {
   id: string;
   name: string;
   email: string;
   phone: string | null;
   plusOnes: number;
+  companions?: Companion[];
   dietaryRestrictions: string | null;
   rsvpStatus: RsvpStatus;
   banned: boolean;
@@ -343,6 +350,16 @@ export function GuestList({ guests, eventId, whatsappContext, gamified, inviteRo
                       +{guest.plusOnes} acomp.
                     </span>
                   )}
+                  {guest.companions?.map((c) => (
+                    <span key={c.id} className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                      {c.name}
+                      {c.lapInfant ? (
+                        <span className="rounded-full bg-sky-100 text-sky-700 px-1.5 py-0.5">bebê de colo</span>
+                      ) : c.type === "CHILD" ? (
+                        <span className="rounded-full bg-amber-100 text-amber-700 px-1.5 py-0.5">criança</span>
+                      ) : null}
+                    </span>
+                  ))}
                   {guest.dietaryRestrictions && (
                     <span className="text-xs text-muted-foreground">
 <Utensils className="inline size-3 mr-1 -mt-0.5" aria-hidden />{guest.dietaryRestrictions}

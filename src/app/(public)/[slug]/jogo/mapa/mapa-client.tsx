@@ -8,6 +8,7 @@ import { ArrowLeft, Loader2, Info, MapPin, Lock } from "lucide-react";
 import { WORLD, PHASES, tableGrid, type LevelId } from "@/lib/game/world";
 import type { Controls, Interactable, SceneConfig, NpcAvatar } from "./game-canvas";
 import type { TableSeatMap } from "@/lib/game/seats";
+import { CARDAPIO } from "@/lib/game/cardapio";
 import { leaveMessageForCouple } from "../actions";
 import { chooseSeat } from "./seat-actions";
 
@@ -58,8 +59,17 @@ export interface MapaClientProps {
   coupleMessage: string | null;
   brideAtlas: string;
   groomAtlas: string;
+  npcAtlases: { dj: string; fotografo: string; cerimonialista: string; garcom: string };
   progress: GameProgress;
 }
+
+type SalaoNpc = "dj" | "fotografo" | "cerimonialista" | "garcom";
+const NPC_LABEL: Record<SalaoNpc, string> = {
+  dj: "DJ",
+  fotografo: "Fotógrafo",
+  cerimonialista: "Cerimonialista",
+  garcom: "Garçom",
+};
 
 type View = "world" | LevelId;
 
@@ -93,7 +103,10 @@ export function MapaClient(props: MapaClientProps) {
 
   const [view, setView] = useState<View>("world");
   const [near, setNear] = useState<Interactable | null>(null);
-  const [dialog, setDialog] = useState<null | "npc" | "memory" | "table" | "credits" | "gate" | "seat">(null);
+  const [dialog, setDialog] = useState<null | "npc" | "memory" | "table" | "credits" | "gate" | "seat" | "salao">(null);
+  const [activeNpc, setActiveNpc] = useState<SalaoNpc | null>(null);
+  // Garçom: sub-tela do diálogo (pergunta → cardápio → bebidas).
+  const [garcomView, setGarcomView] = useState<"ask" | "food" | "drinks">("ask");
   const [activeMemory, setActiveMemory] = useState<Memory | null>(null);
   const [tableMsg, setTableMsg] = useState<{ name: string; mine: boolean } | null>(null);
   // S4b: escolha de lugar. Mapa de cadeiras e "minha mesa" ficam em estado local
@@ -156,6 +169,7 @@ export function MapaClient(props: MapaClientProps) {
     /* eslint-disable react-hooks/set-state-in-effect */
     setDialog(null);
     setActiveMemory(null);
+    setActiveNpc(null);
     setTableMsg(null);
     setSeatTarget(null);
     setNear(null);
@@ -304,10 +318,31 @@ export function MapaClient(props: MapaClientProps) {
           radius: 110, // mesa grande (item 37): alcance de interação > raio do corpo
         };
       });
+      // NPCs do salão (PARTE 3): DJ, Fotógrafo, Cerimonialista, Garçom. Cada um é
+      // um sprite (npcs) + um ponto de interação sólido (interactables kind "npc"),
+      // com sparkle discreto e colisão pela base (item 48 / NPCS-SALAO.md).
+      const salao: { key: SalaoNpc; a: typeof phase.anchors.dj; atlas: string }[] = [
+        { key: "dj", a: phase.anchors.dj, atlas: props.npcAtlases.dj },
+        { key: "fotografo", a: phase.anchors.fotografo, atlas: props.npcAtlases.fotografo },
+        { key: "cerimonialista", a: phase.anchors.cerimonialista, atlas: props.npcAtlases.cerimonialista },
+        { key: "garcom", a: phase.anchors.garcom, atlas: props.npcAtlases.garcom },
+      ];
       npcs = [
         { x: phase.anchors.brideStand.x, y: phase.anchors.brideStand.y, atlasUrl: props.brideAtlas, facing: "down" },
         { x: phase.anchors.groomStand.x, y: phase.anchors.groomStand.y, atlasUrl: props.groomAtlas, facing: "down" },
+        ...salao.map((n) => ({ x: n.a.x, y: n.a.y, atlasUrl: n.atlas, facing: "down" as const })),
       ];
+      interactables.push(
+        ...salao.map((n) => ({
+          id: `npc-${n.key}`,
+          x: n.a.x,
+          y: n.a.y,
+          kind: "npc" as const,
+          label: NPC_LABEL[n.key],
+          solid: true,
+          radius: 68,
+        })),
+      );
     }
 
     return {
@@ -380,6 +415,12 @@ export function MapaClient(props: MapaClientProps) {
       }
       // Grande Dia
       if (view === "grande-dia") {
+        if (id.startsWith("npc-")) {
+          setActiveNpc(id.slice(4) as SalaoNpc);
+          setGarcomView("ask");
+          setDialog("salao");
+          return;
+        }
         if (id.startsWith("table-")) {
           const tid = id.slice(6);
           const t = props.tables.find((x) => x.id === tid);
@@ -639,6 +680,92 @@ export function MapaClient(props: MapaClientProps) {
                 ]
               : [{ key: "ok", label: "Procurar outra", onSelect: close }]
           }
+        />
+      );
+    }
+
+    // PARTE 3: NPCs do salão. Garçom mostra o cardápio; os outros abrem a função.
+    if (dialog === "salao" && activeNpc) {
+      const go = (path: string) => () => {
+        setGoingToRsvp(true);
+        router.push(`/${slug}${path}`);
+      };
+      if (activeNpc === "garcom") {
+        // Duas opções (cursor ▶): Cardápio (comidas) e Bebidas (termina com o
+        // aviso de que pode trazer a própria bebida). Conteúdo em @/lib/game/cardapio.
+        if (garcomView === "food") {
+          return (
+            <GameDialog
+              apiRef={dialogRef}
+              isTouch={isTouch}
+              onBack={() => setGarcomView("ask")}
+              title="Garçom"
+              body={`Hoje temos:\n\n${CARDAPIO.foods.map((f) => `• ${f}`).join("\n")}`}
+              choices={[
+                { key: "drinks", label: "Ver as bebidas", onSelect: () => setGarcomView("drinks") },
+                { key: "ok", label: "Fechar", onSelect: close },
+              ]}
+            />
+          );
+        }
+        if (garcomView === "drinks") {
+          return (
+            <GameDialog
+              apiRef={dialogRef}
+              isTouch={isTouch}
+              onBack={() => setGarcomView("ask")}
+              title="Garçom"
+              body={`Para beber:\n\n${CARDAPIO.drinks.map((d) => `• ${d}`).join("\n")}\n\n${CARDAPIO.byoNotice}`}
+              choices={[
+                { key: "food", label: "Ver o cardápio", onSelect: () => setGarcomView("food") },
+                { key: "ok", label: "Fechar", onSelect: close },
+              ]}
+            />
+          );
+        }
+        return (
+          <GameDialog
+            apiRef={dialogRef}
+            isTouch={isTouch}
+            onBack={close}
+            title="Garçom"
+            body="Olá! Quer ver o cardápio ou as bebidas?"
+            choices={[
+              { key: "food", label: "Cardápio", onSelect: () => setGarcomView("food") },
+              { key: "drinks", label: "Bebidas", onSelect: () => setGarcomView("drinks") },
+            ]}
+          />
+        );
+      }
+      const npcDialog: Record<Exclude<SalaoNpc, "garcom">, { body: string; action: string; path: string }> = {
+        dj: {
+          body: `E aí, ${playerName}? Qual música não pode faltar hoje? Deixa o seu pedido que eu toco!`,
+          action: "Pedir música",
+          path: "/playlist",
+        },
+        fotografo: {
+          body: `Vou registrar cada momento! E você também pode: mande as suas fotos no mural da festa.`,
+          action: "Enviar fotos",
+          path: "/mural",
+        },
+        cerimonialista: {
+          body: `Bem-vindo(a)! Quer saber como vai ser a festa? Te mostro o roteiro com os horários.`,
+          action: "Ver o roteiro",
+          path: "/roteiro",
+        },
+      };
+      const d = npcDialog[activeNpc];
+      return (
+        <GameDialog
+          apiRef={dialogRef}
+          isTouch={isTouch}
+          onBack={close}
+          title={NPC_LABEL[activeNpc]}
+          body={d.body}
+          choices={[
+            { key: "no", label: "Agora não", onSelect: close },
+            { key: "go", label: goingToRsvp ? "Abrindo" : d.action, loading: goingToRsvp, onSelect: go(d.path) },
+          ]}
         />
       );
     }

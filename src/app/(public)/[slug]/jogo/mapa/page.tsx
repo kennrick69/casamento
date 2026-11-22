@@ -38,6 +38,14 @@ const GROOM_SPEC: CharacterSpec = {
   outfit: "noivo",
 };
 
+// NPCs do salão (S4·PARTE 3) — equipe da festa, pixel-art no mesmo estilo (LPC).
+const NPC_SPECS: Record<"dj" | "fotografo" | "cerimonialista" | "garcom", CharacterSpec> = {
+  dj: { body: "masculino", skin: "black", hairStyle: "cacheado_curto", hairColor: "black", eyeColor: "castanho", eyebrows: "thick", beard: "curta", glasses: "redondo", outfit: "terno" },
+  fotografo: { body: "masculino", skin: "bronze", hairStyle: "social", hairColor: "dark_brown", eyeColor: "castanho", eyebrows: "thin", beard: "none", glasses: "none", outfit: "terno" },
+  cerimonialista: { body: "feminino", skin: "light", hairStyle: "coque", hairColor: "chestnut", eyeColor: "mel", eyebrows: "thin", beard: "none", glasses: "none", outfit: "vestido_blue" },
+  garcom: { body: "masculino", skin: "peach", hairStyle: "social", hairColor: "black", eyeColor: "castanho", eyebrows: "thick", beard: "none", glasses: "none", outfit: "terno" },
+};
+
 function parseProgress(raw: unknown): GameProgress {
   const p = (raw ?? {}) as Partial<GameProgress>;
   return {
@@ -99,6 +107,13 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
   const atlasUrl = `/${slug}/jogo/personagem/sheet?${specToQuery(spec)}`;
   const brideAtlas = `/${slug}/jogo/personagem/sheet?${specToQuery(BRIDE_SPEC)}`;
   const groomAtlas = `/${slug}/jogo/personagem/sheet?${specToQuery(GROOM_SPEC)}`;
+  const sheet = (s: CharacterSpec) => `/${slug}/jogo/personagem/sheet?${specToQuery(s)}`;
+  const npcAtlases = {
+    dj: sheet(NPC_SPECS.dj),
+    fotografo: sheet(NPC_SPECS.fotografo),
+    cerimonialista: sheet(NPC_SPECS.cerimonialista),
+    garcom: sheet(NPC_SPECS.garcom),
+  };
 
   return (
     <>
@@ -120,10 +135,11 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
       myTableId={myTableId}
       seatMaps={seatMaps}
       canChooseSeat={!guest.isVisitor}
-      companionCount={await prisma.guestCompanion.count({ where: { guestId: guest.id } })}
+      companionCount={await prisma.guestCompanion.count({ where: { guestId: guest.id, lapInfant: false } })}
       coupleMessage={null}
       brideAtlas={brideAtlas}
       groomAtlas={groomAtlas}
+      npcAtlases={npcAtlases}
       progress={parseProgress(character.gameProgress)}
       />
     </>

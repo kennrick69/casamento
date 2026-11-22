@@ -59,6 +59,10 @@ export default async function ConvidadosPage({
       rsvpStatus: true,
       banned: true,
       createdAt: true,
+      companions: {
+        select: { id: true, name: true, type: true, lapInfant: true },
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
 

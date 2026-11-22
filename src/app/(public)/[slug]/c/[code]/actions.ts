@@ -38,6 +38,7 @@ export async function enterWithPersonalCode(slug: string, code: string): Promise
 const CompanionSchema = z.object({
   name: z.string().trim().min(1).max(80),
   type: z.enum(["ADULT", "CHILD"]),
+  lapInfant: z.boolean().optional().default(false),
 });
 
 const BlankSchema = z.object({
@@ -79,7 +80,7 @@ export async function redeemBlankCode(
   }
 
   // Acompanhantes (teto do lote).
-  let companions: { name: string; type: "ADULT" | "CHILD" }[] = [];
+  let companions: { name: string; type: "ADULT" | "CHILD"; lapInfant: boolean }[] = [];
   if (parsed.data.companionsJson) {
     try {
       const raw = JSON.parse(parsed.data.companionsJson);
@@ -118,7 +119,12 @@ export async function redeemBlankCode(
       });
       if (companions.length > 0) {
         await tx.guestCompanion.createMany({
-          data: companions.map((c) => ({ guestId: g.id, name: c.name, type: c.type })),
+          data: companions.map((c) => ({
+            guestId: g.id,
+            name: c.name,
+            type: c.lapInfant ? "CHILD" : c.type,
+            lapInfant: c.lapInfant,
+          })),
         });
       }
       await tx.inviteCode.update({ where: { id: invite.id }, data: { guestId: g.id } });

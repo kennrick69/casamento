@@ -122,7 +122,11 @@ export async function chooseSeatsForGuest(
       select: { id: true, name: true, playerName: true },
     }),
     prisma.seatingTable.findFirst({ where: { id: tableId, eventId }, select: { id: true, capacity: true } }),
-    prisma.guestCompanion.findMany({ where: { guestId }, select: { id: true, name: true } }),
+    // Bebê de colo (lapInfant) não ocupa cadeira — fica de fora da reserva.
+    prisma.guestCompanion.findMany({
+      where: { guestId, lapInfant: false },
+      select: { id: true, name: true },
+    }),
   ]);
   if (!guest) return { ok: false, message: "Convidado não encontrado." };
   if (!table) return { ok: false, message: "Mesa não encontrada." };

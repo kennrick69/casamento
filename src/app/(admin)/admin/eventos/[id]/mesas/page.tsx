@@ -48,8 +48,30 @@ export default async function MesasPage({ params }: { params: Promise<{ id: stri
       claimedById: true,
       holderName: true,
       locked: true,
+      companion: { select: { type: true, lapInfant: true } },
     },
   });
+
+  // Bebês de colo (não ocupam cadeira) — contados por família (guestId do chefe)
+  // para aparecer na aba Mesas junto do grupo que escolheu.
+  const infantRows = await prisma.guestCompanion.findMany({
+    where: { guest: { eventId: id }, lapInfant: true },
+    select: { guestId: true },
+  });
+  const infantsByGuest: Record<string, number> = {};
+  for (const r of infantRows) infantsByGuest[r.guestId] = (infantsByGuest[r.guestId] ?? 0) + 1;
+
+  const seats = seatRows.map((s) => ({
+    id: s.id,
+    tableId: s.tableId,
+    seatIndex: s.seatIndex,
+    guestId: s.guestId,
+    companionId: s.companionId,
+    claimedById: s.claimedById,
+    holderName: s.holderName,
+    locked: s.locked,
+    isChild: s.companion?.type === "CHILD",
+  }));
 
   const guestMap = Object.fromEntries(event.guests.map((g) => [g.id, g]));
 
@@ -87,7 +109,8 @@ export default async function MesasPage({ params }: { params: Promise<{ id: stri
           tables={event.seatingTables}
           guests={event.guests}
           guestMap={guestMap}
-          seats={seatRows}
+          seats={seats}
+          infantsByGuest={infantsByGuest}
         />
       </main>
     </div>
