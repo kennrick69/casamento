@@ -21,8 +21,9 @@ Branch `fix/mural-file-delete` **mergeada na `main`** (merge `ef0a5e0`, `--no-ff
   botão **"Limpar arquivos órfãos"** no painel do mural. Varre `${slug}/fotos/` e apaga arquivos
   sem foto viva no banco. Prefixo exclusivo do mural (galeria=`gallery/…`, história=`story/…`),
   seguro. **Sem Railway SSH** — organizador logado clica e o toast devolve a contagem.
-- **Pendência de 1 clique:** o órfão `/data/joseeleticia/fotos/1yrJWTIXLHjE.jpg` (já 404) morre
-  no primeiro clique do botão. Não dá pra eu disparar sozinho (sem `CRON_SECRET`/sessão de org).
+- **FECHADO (resíduo zero):** JOs clicou "Limpar arquivos órfãos" → toast "1 arquivo órfão
+  apagado do volume". O órfão `/data/joseeleticia/fotos/1yrJWTIXLHjE.jpg` foi apagado. Esse
+  clique também é a **prova funcional** de que o código novo está no ar (a action rodou).
 
 ## 🔧 fix/storage — upload de fotos funciona em produção (2026-11-22)
 Branch `fix/storage` **mergeado na `main`** (merge `7cfe417`, `--no-ff`) e deployado.
