@@ -3,16 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, ScanLine, X } from "lucide-react";
+import { normalizeCode } from "@/lib/invite/normalize";
 
 // Entrada por código na abertura do jogo (S4a): "Tenho um código" (campo) e
 // "Escanear QR code" (câmera: BarcodeDetector nativo, com fallback jsQR
 // vendorizado em /vendor/jsqr.js). Sem câmera → só o campo.
 
-// Extrai o código de 8 chars de um conteúdo de QR (URL .../c/<CODE> ou o código
-// puro). A normalização final é feita no servidor (rota /<slug>/c/<code>).
+// Extrai o código de um conteúdo de QR (URL .../c/<CODE> ou o código puro) e já
+// normaliza (sem hífen/espaço, maiúsculo) — mesma regra do servidor.
 function extractCode(text: string): string {
-  const m = text.match(/\/c\/([A-Za-z0-9-]+)/i);
-  return (m ? m[1] : text).trim();
+  const m = text.match(/\/c\/([^/?#\s]+)/i);
+  return normalizeCode(m ? m[1] : text);
 }
 
 type BarcodeDetectorCtor = new (opts?: { formats?: string[] }) => {
@@ -48,7 +49,7 @@ export function InviteCodeEntry({ slug }: { slug: string }) {
   const rafRef = useRef<number | null>(null);
 
   function go(rawCode: string) {
-    const c = rawCode.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    const c = normalizeCode(rawCode); // aceita com/sem hífen, espaços e minúsculas
     if (!c) return;
     router.push(`/${slug}/c/${c}`);
   }
@@ -163,9 +164,12 @@ export function InviteCodeEntry({ slug }: { slug: string }) {
           <input
             autoFocus
             value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            onChange={(e) => setCode(e.target.value)}
             placeholder="Seu código (ex.: ABCD-2345)"
-            maxLength={12}
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck={false}
+            maxLength={16}
             className="w-full h-11 px-3 rounded-md border-2 text-sm tracking-widest text-center"
             style={{ borderColor: "#6b4a2a", background: "#fff8e8", color: "#3a2a1a", fontFamily: "ui-monospace, monospace" }}
           />

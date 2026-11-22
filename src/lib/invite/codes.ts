@@ -2,30 +2,16 @@ import "server-only";
 import { customAlphabet } from "nanoid";
 import { prisma } from "@/lib/db";
 import type { InviteCodeKind } from "@prisma/client";
+import { ALPHABET, INVITE_CODE_LENGTH, normalizeCode, formatCode } from "./normalize";
 
-// Alfabeto base32 SEM 0/O/1/I (evita confusão na leitura/digitação do código
-// impresso). 32 símbolos, 8 chars → ~1,1e12 combinações (impossível de
-// adivinhar; o resgate ainda tem rate-limit).
-const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
-export const INVITE_CODE_LENGTH = 8;
+// Normalização/formatação do código vivem em ./normalize (PURO, sem DB), pra que
+// o cliente ("Tenho um código") e o servidor normalizem exatamente igual.
+// Reexportadas aqui para não quebrar quem já importa de "@/lib/invite/codes".
+export { INVITE_CODE_LENGTH, normalizeCode, formatCode };
+
+// 32 símbolos, 8 chars → ~1,1e12 combinações (impossível de adivinhar; o resgate
+// ainda tem rate-limit).
 const gen = customAlphabet(ALPHABET, INVITE_CODE_LENGTH);
-
-// Normaliza o que o convidado digita: maiúsculas, sem espaços/hífens, só os
-// símbolos válidos. (O código é impresso em grupos p/ leitura, ex. "ABCD-2345".)
-export function normalizeCode(raw: string): string {
-  return (raw || "")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "")
-    .split("")
-    .filter((ch) => ALPHABET.includes(ch))
-    .join("");
-}
-
-// Formata para exibição/impressão: dois blocos de 4 (ABCD-2345).
-export function formatCode(code: string): string {
-  const c = normalizeCode(code);
-  return c.length === 8 ? `${c.slice(0, 4)}-${c.slice(4)}` : c;
-}
 
 // Gera um código único dentro do evento (poucas tentativas bastam: espaço
 // gigante). Não garante unicidade entre eventos — o resgate é sempre por
