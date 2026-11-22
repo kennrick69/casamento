@@ -297,7 +297,7 @@ export function RedeemClient({
       </h1>
       <p className="text-sm">Convite inválido ou desativado. Confira o código do seu convite.</p>
       <Link href={`/${slug}/jogo`} className="flex items-center justify-center px-4 py-3" style={pixelBtn}>
-        TENHO OUTRO CÓDIGO
+        TENHO OUTRO CODIGO
       </Link>
       <Link href={`/${slug}`} className="text-sm underline self-center" style={{ color: BROWN }}>
         Voltar ao convite
