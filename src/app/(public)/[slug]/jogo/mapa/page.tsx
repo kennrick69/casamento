@@ -5,6 +5,7 @@ import { storage } from "@/lib/storage";
 import { getGameEvent } from "@/lib/game/identity";
 import { getCurrentGuest } from "@/lib/auth/guest";
 import { isEventOrganizer } from "@/lib/game/character/organizer";
+import { getEventSeatMaps } from "@/lib/game/seats";
 import { type CharacterSpec, specFromCharacter, specToQuery } from "@/lib/game/character/catalog";
 import { MapaClient, type Memory, type TableInfo, type GameProgress } from "./mapa-client";
 
@@ -86,7 +87,11 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
   }));
 
   const tables: TableInfo[] = seatingTables.map((t) => ({ id: t.id, name: t.name, capacity: t.capacity }));
-  const myTableId = myAssignment?.tableId ?? null;
+
+  // S4b: mapa de cadeiras (livre/ocupada/minha/travada) de todas as mesas + a
+  // "minha mesa" derivada da cadeira escolhida (prioridade sobre a alocação grossa).
+  const { maps: seatMaps, myTableId: seatTableId } = await getEventSeatMaps(event.id, guest.id);
+  const myTableId = seatTableId ?? myAssignment?.tableId ?? null;
 
   // Organizador logado (noivo/noiva) joga com tudo liberado — modo de teste (item 31).
   const isOrganizer = await isEventOrganizer(event.id);
@@ -113,6 +118,9 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
       memories={memories}
       tables={tables}
       myTableId={myTableId}
+      seatMaps={seatMaps}
+      canChooseSeat={!guest.isVisitor}
+      companionCount={await prisma.guestCompanion.count({ where: { guestId: guest.id } })}
       coupleMessage={null}
       brideAtlas={brideAtlas}
       groomAtlas={groomAtlas}

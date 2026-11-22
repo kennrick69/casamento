@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { Dir, Point, WorldEdge } from "@/lib/game/world";
+import type { SeatCell } from "@/lib/game/seats"; // só o tipo (erased) — não puxa o módulo server-only
 
 // Phaser é dinâmico (script vendored) e sua API não é tipada aqui; `any` é
 // intencional em todo o motor desta cena.
@@ -99,6 +100,8 @@ export interface Interactable {
   glyph?: GlyphName; // ícone pixel-art flutuante (sem emoji)
   tableLabel?: string; // texto da mesa
   highlight?: boolean; // alvo da missão (brilho dourado)
+  capacity?: number; // nº de cadeiras a desenhar (mesa)
+  seats?: SeatCell[]; // S4b: estado de cada cadeira (livre/minha/ocupada/travada)
 }
 
 export interface NpcAvatar {
@@ -245,25 +248,50 @@ export function GameCanvas({
         // (vistas 3/4 de cima), e o nome numa plaquinha com a fonte do jogo (Caveat).
         // Escala: cadeira ~ largura do boneco; mesa bem maior que ele.
         const CLOTH = 52, CHAIR_R = 72; // raios: toalha e anel de cadeiras
-        function drawTable(scene: any, x: number, y: number, label: string) {
+        function drawTable(scene: any, x: number, y: number, label: string, seats?: SeatCell[], capacity?: number) {
           const c = scene.add.container(x, y);
           const g = scene.add.graphics();
           // sombra no chão
           g.fillStyle(0x000000, 0.14);
           g.fillEllipse(0, 14, CLOTH * 2.5, CLOTH * 1.5);
-          // cadeiras de madeira (8) com encosto voltado pra fora
-          for (let i = 0; i < 8; i++) {
-            const a = (i / 8) * Math.PI * 2;
+          // cadeiras: capacity (fallback 8), encosto voltado pra fora. S4b: a cor e
+          // um marcador mostram o estado — livre, ocupada (outro), minha ou travada.
+          const n = Math.max(1, Math.min(14, capacity ?? seats?.length ?? 8));
+          // começa no topo (−90°) e vai no sentido horário — leitura natural.
+          for (let i = 0; i < n; i++) {
+            const a = (i / n) * Math.PI * 2 - Math.PI / 2;
             const cx = Math.cos(a) * CHAIR_R, cy = Math.sin(a) * CHAIR_R;
             const ox = Math.cos(a), oy = Math.sin(a);
-            // encosto (mais escuro), na borda externa
-            g.fillStyle(0x6b4423, 1);
+            const st = seats?.find((s) => s.index === i)?.state ?? "free";
+            // paleta por estado (encosto / assento / detalhe)
+            const pal =
+              st === "mine"
+                ? { back: 0x9a6b1f, seat: 0xe6b84c, top: 0xf6d98a }
+                : st === "taken"
+                  ? { back: 0x5a3a1f, seat: 0x8a5a30, top: 0x9f6c3c }
+                  : st === "locked"
+                    ? { back: 0x4a4a4a, seat: 0x6f6f6f, top: 0x8a8a8a }
+                    : { back: 0x6b4423, seat: 0xa9713f, top: 0xc08a52 };
+            // encosto (externo)
+            g.fillStyle(pal.back, 1);
             g.fillRoundedRect(cx + ox * 8 - 11, cy + oy * 8 - 11, 22, 22, 5);
-            // assento (madeira clara)
-            g.fillStyle(0xa9713f, 1);
+            // assento
+            g.fillStyle(pal.seat, 1);
             g.fillRoundedRect(cx - 11, cy - 10, 22, 20, 5);
-            g.fillStyle(0xc08a52, 1);
+            g.fillStyle(pal.top, 1);
             g.fillRoundedRect(cx - 8, cy - 7, 16, 12, 4);
+            // marcador no assento: ocupada/minha = "cabecinha"; travada = X.
+            if (st === "taken" || st === "mine") {
+              g.fillStyle(st === "mine" ? 0x7a4a12 : 0x3a2a1a, 1);
+              g.fillCircle(cx, cy - 1, 6); // alguém sentado (cabeça vista de cima)
+            } else if (st === "locked") {
+              g.lineStyle(2.5, 0x2a2a2a, 1);
+              g.beginPath();
+              g.moveTo(cx - 5, cy - 5); g.lineTo(cx + 5, cy + 5);
+              g.moveTo(cx + 5, cy - 5); g.lineTo(cx - 5, cy + 5);
+              g.strokePath();
+              g.lineStyle();
+            }
           }
           // toalha: saia (drapeado) + tampo
           g.fillStyle(0xe7dcc8, 1); g.fillCircle(0, 6, CLOTH + 4);     // saia/sombra da toalha
@@ -349,7 +377,7 @@ export function GameCanvas({
           for (const k of Object.keys(markerSprites)) delete markerSprites[k];
           cfgRef.current.interactables.forEach((it) => {
             if (it.kind === "table") {
-              const tbl = drawTable(scene, it.x, it.y, it.tableLabel ?? "");
+              const tbl = drawTable(scene, it.x, it.y, it.tableLabel ?? "", it.seats, it.capacity);
               // Item 48: indicador só na MINHA mesa enquanto pendente — sparkle
               // discreto acima; encontrada ("check") ou demais mesas = sem indicador.
               if (it.glyph === "bang" && !it.done) {
@@ -808,7 +836,12 @@ export function GameCanvas({
   // Reconstrói marcadores/mesas dentro da MESMA cena quando o estado muda
   // (portão libera, memória vista, mesa encontrada), sem perder a posição.
   const interactSig = config.interactables
-    .map((i) => `${i.id}:${i.locked ? 1 : 0}${i.done ? 1 : 0}${i.highlight ? 1 : 0}`)
+    .map(
+      (i) =>
+        `${i.id}:${i.locked ? 1 : 0}${i.done ? 1 : 0}${i.highlight ? 1 : 0}:${i.glyph ?? ""}:${
+          i.seats ? i.seats.map((s) => s.state[0]).join("") : ""
+        }`,
+    )
     .join("|");
   useEffect(() => {
     sceneApiRef.current?.rebuild();

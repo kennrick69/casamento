@@ -7,7 +7,9 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Info, MapPin, Lock } from "lucide-react";
 import { WORLD, PHASES, tableGrid, type LevelId } from "@/lib/game/world";
 import type { Controls, Interactable, SceneConfig, NpcAvatar } from "./game-canvas";
+import type { TableSeatMap } from "@/lib/game/seats";
 import { leaveMessageForCouple } from "../actions";
+import { chooseSeat } from "./seat-actions";
 
 // Phaser roda só no cliente (sem SSR). ssr:false exige Client Component (Next 16).
 const GameCanvas = dynamic(() => import("./game-canvas").then((m) => m.GameCanvas), {
@@ -50,6 +52,9 @@ export interface MapaClientProps {
   memories: Memory[];
   tables: TableInfo[];
   myTableId: string | null;
+  seatMaps: Record<string, TableSeatMap>;
+  canChooseSeat: boolean;
+  companionCount: number;
   coupleMessage: string | null;
   brideAtlas: string;
   groomAtlas: string;
@@ -88,9 +93,16 @@ export function MapaClient(props: MapaClientProps) {
 
   const [view, setView] = useState<View>("world");
   const [near, setNear] = useState<Interactable | null>(null);
-  const [dialog, setDialog] = useState<null | "npc" | "memory" | "table" | "credits" | "gate">(null);
+  const [dialog, setDialog] = useState<null | "npc" | "memory" | "table" | "credits" | "gate" | "seat">(null);
   const [activeMemory, setActiveMemory] = useState<Memory | null>(null);
   const [tableMsg, setTableMsg] = useState<{ name: string; mine: boolean } | null>(null);
+  // S4b: escolha de lugar. Mapa de cadeiras e "minha mesa" ficam em estado local
+  // (mudam ao escolher, sem recarregar a página).
+  const [seatMaps, setSeatMaps] = useState<Record<string, TableSeatMap>>(props.seatMaps);
+  const [myTableId, setMyTableId] = useState<string | null>(props.myTableId);
+  const [seatTarget, setSeatTarget] = useState<{ id: string; name: string; free: number } | null>(null);
+  const [seatSaving, setSeatSaving] = useState(false);
+  const partySize = 1 + props.companionCount;
   const [goingToRsvp, setGoingToRsvp] = useState(false);
   const [debugPoint, setDebugPoint] = useState<{ x: number; y: number } | null>(null);
   // Spawn de teste (dev): ?px=&py= posiciona o avatar num ponto exato da fase —
@@ -145,6 +157,7 @@ export function MapaClient(props: MapaClientProps) {
     setDialog(null);
     setActiveMemory(null);
     setTableMsg(null);
+    setSeatTarget(null);
     setNear(null);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [view]);
@@ -268,19 +281,29 @@ export function MapaClient(props: MapaClientProps) {
       });
     } else if (view === "grande-dia") {
       const grid = tableGrid(props.tables.length);
-      interactables = props.tables.slice(0, grid.length).map((t, i) => ({
-        id: `table-${t.id}`,
-        x: grid[i].x,
-        y: grid[i].y,
-        kind: "table" as const,
-        label: t.name, // nome da mesa no hint do topo (corrige o "· aperte" cortado — item 39)
-        tableLabel: t.name,
-        highlight: t.id === props.myTableId,
-        // "!" flutuante sobre a MINHA mesa (vira "✓" ao encontrar) — item 29
-        glyph: t.id === props.myTableId ? (progress.phase3 ? "check" : "bang") : undefined,
-        done: t.id === props.myTableId && progress.phase3,
-        radius: 110, // mesa grande (item 37): alcance de interação > raio do corpo
-      }));
+      interactables = props.tables.slice(0, grid.length).map((t, i) => {
+        const map = seatMaps[t.id];
+        const mine = t.id === myTableId;
+        const free = map?.freeCount ?? t.capacity;
+        // "!" só aparece quando ainda há algo a fazer: escolher um lugar (sem mesa
+        // ainda) numa mesa com vagas, ou encontrar a minha mesa já reservada.
+        const needsChoice = props.canChooseSeat && !myTableId && free >= partySize;
+        const glyph = mine ? (progress.phase3 ? "check" : "bang") : needsChoice ? "bang" : undefined;
+        return {
+          id: `table-${t.id}`,
+          x: grid[i].x,
+          y: grid[i].y,
+          kind: "table" as const,
+          label: t.name,
+          tableLabel: t.name,
+          highlight: mine,
+          glyph,
+          done: mine && progress.phase3,
+          capacity: t.capacity,
+          seats: map?.cells,
+          radius: 110, // mesa grande (item 37): alcance de interação > raio do corpo
+        };
+      });
       npcs = [
         { x: phase.anchors.brideStand.x, y: phase.anchors.brideStand.y, atlasUrl: props.brideAtlas, facing: "down" },
         { x: phase.anchors.groomStand.x, y: phase.anchors.groomStand.y, atlasUrl: props.groomAtlas, facing: "down" },
@@ -302,7 +325,7 @@ export function MapaClient(props: MapaClientProps) {
       debug,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, atlasUrl, debug, spawnOverride, worldStartNode, progress, unlocked, props.memories, props.tables, props.myTableId]);
+  }, [view, atlasUrl, debug, spawnOverride, worldStartNode, progress, unlocked, props.memories, props.tables, myTableId, seatMaps]);
 
   // ─── Interação (A / Enter / botão) ───
   const handleInteract = useCallback(
@@ -361,20 +384,56 @@ export function MapaClient(props: MapaClientProps) {
           const tid = id.slice(6);
           const t = props.tables.find((x) => x.id === tid);
           if (!t) return;
-          const mine = tid === props.myTableId;
-          setTableMsg({ name: t.name, mine });
-          setDialog("table");
-          if (mine && !progress.phase3) {
-            const next = { ...progress, phase3: true };
-            setProgress(next);
-            persist(next);
+          const mine = tid === myTableId;
+          // Minha mesa (já reservada) OU visitante/sem permissão → mensagem.
+          if (mine || !props.canChooseSeat) {
+            setTableMsg({ name: t.name, mine });
+            setDialog("table");
+            if (mine && !progress.phase3) {
+              const next = { ...progress, phase3: true };
+              setProgress(next);
+              persist(next);
+            }
+            return;
           }
+          // Ainda não escolhi → dialog de escolha ("Sentar aqui").
+          const free = seatMaps[tid]?.freeCount ?? t.capacity;
+          setSeatTarget({ id: tid, name: t.name, free });
+          setDialog("seat");
         }
         return;
       }
     },
-    [view, unlocked, progress, freeRoam, props.memories, props.tables, props.myTableId, persist, showToast],
+    [view, unlocked, progress, freeRoam, props.memories, props.tables, props.canChooseSeat, myTableId, seatMaps, persist, showToast],
   );
+
+  // S4b: confirma a escolha de lugar (eu + família) na mesa alvo.
+  const confirmSeat = useCallback(() => {
+    if (!seatTarget || seatSaving) return;
+    setSeatSaving(true);
+    chooseSeat(slug, seatTarget.id)
+      .then((r) => {
+        setSeatSaving(false);
+        if (!r.ok) {
+          showToast(r.message ?? "Não deu para reservar agora.");
+          return;
+        }
+        if (r.maps) setSeatMaps(r.maps);
+        setMyTableId(r.myTableId ?? seatTarget.id);
+        setDialog(null);
+        setSeatTarget(null);
+        if (!progress.phase3) {
+          const next = { ...progress, phase3: true };
+          setProgress(next);
+          persist(next);
+        }
+        showToast("Lugar reservado! Siga o brilho até a sua mesa.");
+      })
+      .catch(() => {
+        setSeatSaving(false);
+        showToast("Não deu para reservar agora. Tente de novo.");
+      });
+  }, [seatTarget, seatSaving, slug, progress, persist, showToast]);
 
   const press = (key: keyof Controls, value: boolean) => {
     // Item 52: com a caixa aberta, o D-pad move o cursor das escolhas e o boneco
@@ -413,13 +472,15 @@ export function MapaClient(props: MapaClientProps) {
 
   const areaTitle = view === "world" ? "Mapa da festa" : PHASES[view].title;
   const missionHint =
-    view === "grande-dia" && props.myTableId
-      ? `Encontre sua mesa: ${props.tables.find((t) => t.id === props.myTableId)?.name ?? ""}`
-      : view === "grande-dia" && !props.myTableId
-        ? "Sua mesa será definida em breve"
-        : view === "bosque"
-          ? `Memórias: ${progress.memoriesSeen.length}/${props.memories.length}`
-          : null;
+    view === "grande-dia" && myTableId
+      ? `Vá até a sua mesa: ${props.tables.find((t) => t.id === myTableId)?.name ?? ""}`
+      : view === "grande-dia" && props.canChooseSeat
+        ? "Escolha onde sentar: chegue perto de uma mesa e aperte"
+        : view === "grande-dia"
+          ? "Explore o salão à vontade"
+          : view === "bosque"
+            ? `Memórias: ${progress.memoriesSeen.length}/${props.memories.length}`
+            : null;
 
   // Item 52: constrói a MESMA caixa de diálogo (estilo GBA) para todos os casos —
   // recepcionista, memória, mesa e créditos. Texto, escolhas e campos variam.
@@ -535,9 +596,9 @@ export function MapaClient(props: MapaClientProps) {
         ? `Encontrou seu lugar, ${playerName}! ${
             props.coupleMessage ?? `${coupleNames} agradecem de coração por você estar aqui neste dia.`
           }`
-        : props.myTableId
+        : myTableId
           ? "Essa não é a sua mesa — siga o brilho sobre a sua."
-          : "Sua mesa será definida em breve. Fique à vontade para explorar o salão!";
+          : "Fique à vontade para explorar o salão!";
       return (
         <GameDialog
           apiRef={dialogRef}
@@ -546,6 +607,38 @@ export function MapaClient(props: MapaClientProps) {
           title={tableMsg.name}
           body={body}
           choices={[{ key: "ok", label: "Fechar", onSelect: close }]}
+        />
+      );
+    }
+
+    // S4b: escolher lugar nesta mesa (eu + família).
+    if (dialog === "seat" && seatTarget) {
+      const enough = seatTarget.free >= partySize;
+      const quem = partySize === 1 ? "você" : `você e mais ${props.companionCount}`;
+      const body = enough
+        ? `${seatTarget.name} tem ${seatTarget.free} ${seatTarget.free === 1 ? "lugar livre" : "lugares livres"}. Quer sentar aqui com a sua família? Vou reservar ${partySize} ${partySize === 1 ? "lugar" : "lugares"} (${quem}).`
+        : `${seatTarget.name} tem só ${seatTarget.free} ${seatTarget.free === 1 ? "lugar livre" : "lugares livres"} — a sua família precisa de ${partySize}. Procure outra mesa com mais lugares.`;
+      return (
+        <GameDialog
+          apiRef={dialogRef}
+          isTouch={isTouch}
+          onBack={close}
+          title={seatTarget.name}
+          body={body}
+          choices={
+            enough
+              ? [
+                  { key: "no", label: "Agora não", onSelect: close },
+                  {
+                    key: "sit",
+                    label: seatSaving ? "Reservando" : "Sentar aqui",
+                    loading: seatSaving,
+                    disabled: seatSaving,
+                    onSelect: confirmSeat,
+                  },
+                ]
+              : [{ key: "ok", label: "Procurar outra", onSelect: close }]
+          }
         />
       );
     }

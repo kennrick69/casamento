@@ -35,6 +35,22 @@ export default async function MesasPage({ params }: { params: Promise<{ id: stri
   });
   if (!event) notFound();
 
+  // S4b: cadeiras escolhidas no jogo (ou travadas pelo organizador).
+  const seatRows = await prisma.seat.findMany({
+    where: { eventId: id },
+    orderBy: [{ tableId: "asc" }, { seatIndex: "asc" }],
+    select: {
+      id: true,
+      tableId: true,
+      seatIndex: true,
+      guestId: true,
+      companionId: true,
+      claimedById: true,
+      holderName: true,
+      locked: true,
+    },
+  });
+
   const guestMap = Object.fromEntries(event.guests.map((g) => [g.id, g]));
 
   const stats = {
@@ -71,6 +87,7 @@ export default async function MesasPage({ params }: { params: Promise<{ id: stri
           tables={event.seatingTables}
           guests={event.guests}
           guestMap={guestMap}
+          seats={seatRows}
         />
       </main>
     </div>
