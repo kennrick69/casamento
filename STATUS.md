@@ -37,8 +37,25 @@ cada parte. As falas/textos ficam no tom do site — o JOs ajusta no teste final
     (painel com a reserva da família + travar/mover/liberar).
   - **Dev-only:** a Amanda (convidada-câmera) ganhou 2 acompanhantes e uma reserva na
     Mesa 3 no voem-dev, só p/ os screenshots. Não afeta produção.
-- **PARTE 3 — NPCs do salão + Cardápio (`docs/NPCS-SALAO.md`):** a fazer.
-- **PARTE 4 — S4c (família andando junto, estilo Pokémon):** a fazer.
+- **PARTE 3 — NPCs do salão + Garçom/cardápio + crianças ✅ (commit `ae3531f`):**
+  - 4 NPCs no Grande Dia (pixel-art LPC, colisão pela sola, sparkle discreto, caixa
+    GBA): **Fotógrafo**→mural de fotos, **DJ**→playlist, **Cerimonialista**→roteiro,
+    **Garçom**→cardápio. Falas no tom do site (o JOs ajusta no teste).
+  - **Garçom** pergunta "cardápio ou bebidas?" (2 opções ▶); bebidas terminam com
+    "pode trazer a própria bebida". Conteúdo em **`src/lib/game/cardapio.ts`** (arquivo
+    simples, cardápio de EXEMPLO — **sem painel, sem migration**, decisão do JOs).
+  - **Crianças/bebê de colo** (migration aditiva `add_companion_lap_infant`,
+    `GuestCompanion.lapInfant`): cadastro do acompanhante ganha "bebê de colo (não
+    ocupa cadeira)"; na escolha de lugar a **criança ganha cadeira** e o **bebê de
+    colo não** (fica fora do grupo); painéis **Convidados** e **Mesas** mostram quem
+    é "criança" e quem é "bebê de colo".
+  - Provas: `m-s4p3-npcs-1280.png`, `m-s4p3-garcom-427.png` (cardápio/bebidas),
+    `m-s4p3-garcom-bebidas-427.png`, `m-s4p3-cadastro-427.png`,
+    `m-s4p3-familia-{convidados,mesas}-1280.png` (família teste pai+mãe+criança+bebê).
+  - **Dev-only:** família de teste "Paulo Família Teste" (+Marina/Nina/Téo) no
+    voem-dev, com reserva na Mesa 2. Não afeta produção.
+- **PARTE 4 — S4c (família andando junto, estilo Pokémon):** a fazer. Crianças seguem
+  em tamanho de criança; bebê de colo é carregado (sem follower próprio).
 - **PARTE 5 — publicação única:** SQL de TODAS as migrations + plano de merge + backfill,
   aguardando OK do JOs. **Nada na main até lá.**
 
