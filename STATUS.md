@@ -54,8 +54,16 @@ cada parte. As falas/textos ficam no tom do site — o JOs ajusta no teste final
     `m-s4p3-familia-{convidados,mesas}-1280.png` (família teste pai+mãe+criança+bebê).
   - **Dev-only:** família de teste "Paulo Família Teste" (+Marina/Nina/Téo) no
     voem-dev, com reserva na Mesa 2. Não afeta produção.
-- **PARTE 4 — S4c (família andando junto, estilo Pokémon):** a fazer. Crianças seguem
-  em tamanho de criança; bebê de colo é carregado (sem follower próprio).
+- **PARTE 4 — S4c (família andando junto) ✅ (commit `08bb7e4`):**
+  - Os acompanhantes (menos bebê de colo) seguem o jogador **em fila** (estilo
+    Pokémon) no mapa-múndi e nas 3 fases; no Grande Dia vão junto até a mesa.
+  - **Criança anda em tamanho de criança** (escala ~0.72); **bebê de colo é
+    carregado** (não entra na fila). Rastro do pé (history) + amostragem por
+    arc-length; mesma origem na sola (profundidade por Y).
+  - Provas: `m-s4p4-fila-vila-427.png` (Amanda + Bruno adulto + Lili criança menor;
+    bebê de colo fora da fila), `m-s4p4-familia-mesa-1280.png` (família até a mesa).
+  - **Dev-only:** a Amanda ganhou um "Bebê Cardoso" (bebê de colo) no voem-dev só
+    para provar a exclusão da fila.
 - **PARTE 5 — publicação única:** SQL de TODAS as migrations + plano de merge + backfill,
   aguardando OK do JOs. **Nada na main até lá.**
 
