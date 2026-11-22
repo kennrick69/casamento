@@ -308,7 +308,9 @@ Merge + deploy FEITOS. O que falta é tudo do lado do JOs, no evento real em pro
    que faltou no deploy; o caminho do dado foi provado por banco + código.
 3. **Cadastrar o conteúdo real** no evento `joseeleticia`: **memórias** (aba História,
    viram os pedestais do Bosque) e **mesas** (aba Mesas, viram o Grande Dia). Hoje 0/0.
-4. **Limpar os 2 visitantes de teste** (`Convidada`, `Teste`) do evento real.
+4. ✅ **FEITO (22/11)** — Limpar visitantes de teste: eram **3** (`Convidada` + 2×`Teste`,
+   PENDING), apagados via DB de prod (cascade levou 3 GameCharacters; 0 fotos/recados).
+   Evento agora **0 convidados / 0 fotos / 0 recados / 0 códigos** — base limpa pro real.
 5. **Ajuste fino residual** de colisões menores (canteiros/bancos) e âncoras, se quiser,
    com `?debug=1` (o grosso já foi feito nas rodadas anteriores).
 
