@@ -162,6 +162,13 @@ export const PHASES: Record<LevelId, PhaseConfig> = {
       // ~y195 (antes era y150 do centro do sprite).
       brideStand: { x: 735, y: 195 },
       groomStand: { x: 805, y: 195 },
+      // NPCs do salão (S4·PARTE 3) — no chão do salão (piso caminhável), entre o
+      // altar/paredes e as mesas. DJ perto da cabine (esq.), Garçom perto da mesa
+      // do bolo/bar (dir.), Fotógrafo perto da pista, Cerimonialista perto da entrada.
+      dj: { x: 300, y: 360 },
+      fotografo: { x: 600, y: 390 },
+      cerimonialista: { x: 980, y: 390 },
+      garcom: { x: 1240, y: 360 },
     },
     // Arco do altar + colunas + cortinas: cobrem o boneco quando ele sobe ao
     // estrado e fica atrás do arco (baseY na base das colunas, onde o casal pisa).

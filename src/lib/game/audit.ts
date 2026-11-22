@@ -3,12 +3,12 @@ import { cookies, headers } from "next/headers";
 import { prisma } from "@/lib/db";
 
 // Registra uma identificação no jogo para auditoria dos noivos no painel.
-// `method`: "name_phone" | "passkey" | "visitor". Nunca lança — auditoria não
-// pode quebrar o login.
+// `method`: "name_phone" | "passkey" | "visitor" | "invite_code". Nunca lança —
+// auditoria não pode quebrar o login.
 export async function logIdentification(
   eventId: string,
   guestId: string,
-  method: "name_phone" | "passkey" | "visitor"
+  method: "name_phone" | "passkey" | "visitor" | "invite_code"
 ): Promise<void> {
   try {
     const h = await headers();

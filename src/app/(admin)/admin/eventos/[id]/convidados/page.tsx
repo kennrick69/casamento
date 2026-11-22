@@ -5,7 +5,11 @@ import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { requireOrganizer } from "@/lib/authorization";
 import { EventNav } from "@/components/admin/event-nav";
 import { AdminHeader } from "@/components/admin/admin-header";
-import { GuestList } from "./guest-list";
+import { GuestList, type InviteRow } from "./guest-list";
+import { ensurePersonalCodes } from "@/lib/invite/codes";
+import { getInviteBase, assembleInviteContext } from "@/lib/invite/context";
+import { buildInviteText, buildWhatsappHref } from "@/lib/invite/message";
+import { formatCode } from "@/lib/invite/codes";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Convidados" };
@@ -28,7 +32,17 @@ export default async function ConvidadosPage({
 
   const event = await prisma.event.findUnique({
     where: { id },
-    select: { coupleNames: true, slug: true, ceremonyDate: true, timezone: true, publicTokenK: true },
+    select: {
+      coupleNames: true,
+      slug: true,
+      ceremonyDate: true,
+      timezone: true,
+      publicTokenK: true,
+      experienceType: true,
+      ceremonyLocation: true,
+      ceremonyAddress: true,
+      mapsLink: true,
+    },
   });
   if (!event) notFound();
 
@@ -45,11 +59,56 @@ export default async function ConvidadosPage({
       rsvpStatus: true,
       banned: true,
       createdAt: true,
+      companions: {
+        select: { id: true, name: true, type: true, lapInfant: true },
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
 
   const confirmed = guests.filter((g) => g.rsvpStatus === "CONFIRMED");
   const totalWithCompanions = confirmed.reduce((sum, g) => sum + 1 + g.plusOnes, 0);
+
+  // ── S4a · Códigos de convite (só no Modo Gamificado) ─────────────────────
+  // O código pessoal leva ao jogo (resgate /<slug>/c/<code>), que só existe em
+  // eventos GAMIFIED. Evento CLASSIC mantém o link simples de RSVP.
+  const gamified = event.experienceType === "GAMIFIED";
+  const inviteRows: Record<string, InviteRow> = {};
+  if (gamified) {
+    // Backfill: garante um código PESSOAL para TODO convidado existente (não só
+    // os novos). Idempotente; não toca em sessionToken/cookie nem no link ?k=.
+    const codeByGuest = await ensurePersonalCodes(id);
+    const inviteCodeRows = await prisma.inviteCode.findMany({
+      where: { eventId: id, kind: "PERSONAL" },
+      select: { guestId: true, sentAt: true, sentChannel: true },
+    });
+    const sentByGuest = new Map(inviteCodeRows.map((r) => [r.guestId, r] as const));
+
+    const inviteBase = await getInviteBase({
+      id,
+      slug: event.slug,
+      coupleNames: event.coupleNames,
+      ceremonyDate: event.ceremonyDate,
+      timezone: event.timezone,
+      ceremonyLocation: event.ceremonyLocation,
+      ceremonyAddress: event.ceremonyAddress,
+      mapsLink: event.mapsLink,
+    });
+
+    for (const g of guests) {
+      const code = codeByGuest.get(g.id);
+      if (!code) continue;
+      const ctx = assembleInviteContext(inviteBase, g.name, code);
+      const sent = sentByGuest.get(g.id);
+      inviteRows[g.id] = {
+        code: formatCode(code),
+        personalLink: ctx.personalLink,
+        whatsappHref: g.phone ? buildWhatsappHref(g.phone, buildInviteText(ctx)) : null,
+        sentAt: sent?.sentAt ? sent.sentAt.toISOString() : null,
+        sentChannel: (sent?.sentChannel as "whatsapp" | "email" | null) ?? null,
+      };
+    }
+  }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://casamento.app";
 
@@ -70,6 +129,14 @@ export default async function ConvidadosPage({
             </p>
           </div>
           <div className="flex items-center gap-3">
+            {gamified && (
+              <a
+                href={`/admin/eventos/${id}/convites`}
+                className="text-sm text-primary hover:underline"
+              >
+                Convites impressos
+              </a>
+            )}
             <a
               href={`/admin/eventos/${id}/convidados/importar`}
               className="text-sm text-muted-foreground hover:text-foreground hover:underline"
@@ -88,14 +155,20 @@ export default async function ConvidadosPage({
         <GuestList
           guests={guests}
           eventId={id}
-          whatsappContext={{
-            coupleNames: event.coupleNames,
-            slug: event.slug,
-            ceremonyDate: event.ceremonyDate.toISOString(),
-            timezone: event.timezone,
-            publicTokenK: event.publicTokenK,
-            appUrl,
-          }}
+          gamified={gamified}
+          inviteRows={inviteRows}
+          whatsappContext={
+            gamified
+              ? undefined
+              : {
+                  coupleNames: event.coupleNames,
+                  slug: event.slug,
+                  ceremonyDate: event.ceremonyDate.toISOString(),
+                  timezone: event.timezone,
+                  publicTokenK: event.publicTokenK,
+                  appUrl,
+                }
+          }
         />
       </main>
     </div>

@@ -3,7 +3,74 @@
 Regra de ouro: nada que funciona hoje pode quebrar; tudo do jogo fica atrás de
 `Event.experienceType`; o SQL de toda migration é mostrado antes de qualquer merge.
 
-Última atualização: 2026-11-21 (**S3 MERGEADO e EM PRODUÇÃO**).
+Última atualização: 2026-11-21 (**rodada "finalizar tudo" no `feat/s4-convites`**).
+
+## 🧩 Rodada "finalizar tudo antes de testar" — branch `feat/s4-convites` (NÃO na main)
+Decisão do JOs (21/11): construir S4a + S4b + NPCs + S4c TODOS no `feat/s4-convites`,
+**sem merge**, e só então testar tudo de uma vez em produção (publicação única, PARTE 5).
+Um commit + screenshot (celular 427 e PC 1280) por item; STATUS atualizado ao fim de
+cada parte. As falas/textos ficam no tom do site — o JOs ajusta no teste final.
+
+- **PARTE 1 — ajustes do S4a ✅ (commit `66f8411`):**
+  - Mensagem do convite mantém "Entre no jogo para escolher o seu lugar" (S4b vai existir).
+  - "Tenho um código" aceita com/sem hífen, com espaços e minúsculas: `44hu-v9nt` ==
+    `44HU V9NT` == `44HUV9NT`. Normalizador puro compartilhado em
+    `src/lib/invite/normalize.ts` (cliente + servidor usam a MESMA regra).
+  - Provas: `docs/screens-jogo/m-s4p1-codigo-{427,1280}.png`.
+- **PARTE 2 — S4b (escolha de lugar) ✅ (commit `ff14a3b`):**
+  - Migration aditiva `add_seats` (tabela `Seat`: cadeira = `tableId+seatIndex`;
+    ocupante convidado/acompanhante OU cadeira travada pelo organizador; `claimedById`
+    liga a família). SQL 100% aditivo, aplicada só no voem-dev.
+  - No **Grande Dia**, o convidado chega perto de uma mesa e escolhe sentar ali com
+    a família (acompanhantes do S2); reserva as cadeiras livres mais baixas, a missão
+    passa a **guiar até a mesa**. Cadeira livre/minha/ocupada/travada tem cor própria
+    no desenho (Phaser). Reserva atômica e idempotente por grupo (re-escolher troca).
+  - Aba **Mesas**: mapa de cadeiras por mesa, **travar/destravar** cadeira livre,
+    **mover** a família p/ outra mesa, **liberar** reserva. `SeatingAssignment` segue
+    em sincronia (contagem e "sem mesa" continuam certos).
+  - **Decisão de design** (ajustável no teste): o convidado escolhe a MESA e o jogo
+    reserva as cadeiras livres do grupo (não precisa clicar cadeira por cadeira);
+    visualmente as cadeiras do grupo ficam douradas. Dá pra refinar p/ escolha cadeira
+    a cadeira depois, se o JOs quiser.
+  - Provas: `docs/screens-jogo/m-s4p2-escolha-427.png` (diálogo de escolha),
+    `m-s4p2-reservado-427.png` (cadeiras reservadas + guia), `m-s4p2-mesas-1280.png`
+    (painel com a reserva da família + travar/mover/liberar).
+  - **Dev-only:** a Amanda (convidada-câmera) ganhou 2 acompanhantes e uma reserva na
+    Mesa 3 no voem-dev, só p/ os screenshots. Não afeta produção.
+- **PARTE 3 — NPCs do salão + Garçom/cardápio + crianças ✅ (commit `ae3531f`):**
+  - 4 NPCs no Grande Dia (pixel-art LPC, colisão pela sola, sparkle discreto, caixa
+    GBA): **Fotógrafo**→mural de fotos, **DJ**→playlist, **Cerimonialista**→roteiro,
+    **Garçom**→cardápio. Falas no tom do site (o JOs ajusta no teste).
+  - **Garçom** pergunta "cardápio ou bebidas?" (2 opções ▶); bebidas terminam com
+    "pode trazer a própria bebida". Conteúdo em **`src/lib/game/cardapio.ts`** (arquivo
+    simples, cardápio de EXEMPLO — **sem painel, sem migration**, decisão do JOs).
+  - **Crianças/bebê de colo** (migration aditiva `add_companion_lap_infant`,
+    `GuestCompanion.lapInfant`): cadastro do acompanhante ganha "bebê de colo (não
+    ocupa cadeira)"; na escolha de lugar a **criança ganha cadeira** e o **bebê de
+    colo não** (fica fora do grupo); painéis **Convidados** e **Mesas** mostram quem
+    é "criança" e quem é "bebê de colo".
+  - Provas: `m-s4p3-npcs-1280.png`, `m-s4p3-garcom-427.png` (cardápio/bebidas),
+    `m-s4p3-garcom-bebidas-427.png`, `m-s4p3-cadastro-427.png`,
+    `m-s4p3-familia-{convidados,mesas}-1280.png` (família teste pai+mãe+criança+bebê).
+  - **Dev-only:** família de teste "Paulo Família Teste" (+Marina/Nina/Téo) no
+    voem-dev, com reserva na Mesa 2. Não afeta produção.
+- **PARTE 4 — S4c (família andando junto) ✅ (commit `08bb7e4`):**
+  - Os acompanhantes (menos bebê de colo) seguem o jogador **em fila** (estilo
+    Pokémon) no mapa-múndi e nas 3 fases; no Grande Dia vão junto até a mesa.
+  - **Criança anda em tamanho de criança** (escala ~0.72); **bebê de colo é
+    carregado** (não entra na fila). Rastro do pé (history) + amostragem por
+    arc-length; mesma origem na sola (profundidade por Y).
+  - Provas: `m-s4p4-fila-vila-427.png` (Amanda + Bruno adulto + Lili criança menor;
+    bebê de colo fora da fila), `m-s4p4-familia-mesa-1280.png` (família até a mesa).
+  - **Dev-only:** a Amanda ganhou um "Bebê Cardoso" (bebê de colo) no voem-dev só
+    para provar a exclusão da fila.
+- **PARTE 5 — publicação única ✅ PLANO PRONTO, aguardando OK do JOs:**
+  **`docs/PLANO-MERGE-S4-COMPLETO.md`** — SQL exato das 3 migrations aditivas
+  (`add_invite_codes`, `add_seats`, `add_companion_lap_infant`), backfill dos códigos
+  pessoais, o que entra (rodada 4 + S4 inteiro), riscos/rollback e checklist (backup
+  verificado, deploy acompanhado, backfill conferido). **Nada na `main` até o OK.**
+  `tsc` 0 · `eslint` 0 erros · migrations aplicadas só no voem-dev.
+
 
 ## 🚀 S3 EM PRODUÇÃO (2026-11-21)
 `feat/s3-personagem` foi **mergeado na `main`** (merge commit `5fdd163`, `--no-ff`)
@@ -19,6 +86,29 @@ Site CLASSIC conferido íntegro. Rollback: `git revert -m 1 5fdd163`.
 Estado do código: `tsc` 0 erros · `eslint` 0 errors (16 warnings pré-existentes) ·
 `vitest` 141/141. Jogo jogável ponta-a-ponta, provado por screenshot.
 
+## 🌿 Rodada 4 (2026-11-21) — no branch `feat/rodada4`, AGUARDANDO OK (NÃO na main)
+Itens 58–60 do `docs/FEEDBACK-JOS-2026-11-21-rodada4.md`, 1 commit + screenshot por
+item, **nada na `main`/produção**. `tsc` 0 · `eslint` 0. Sem migration nesta rodada.
+- **58 — abertura de jogo de verdade:** novo `src/components/guest/game-opening.tsx`
+  (`GameOpening`) substitui o `GamifiedPlaceholder` "em construção/beta" (deletado).
+  Tela-título estilo GBA sobre a arte do mapa-múndi; nomes + data + contagem; botão
+  pixel "▶ COMEÇAR"; "Confirmar presença" secundário discreto. Texto da abertura
+  aprovado pelo JOs (constante `OPENING`). O `?k=` passa ao link do jogo (a
+  identidade real é o cookie `guest_token`, não o `?k=`). **Botões futuros do convite
+  impresso (S4, `docs/IDEIA-QRCODES-CONVITE.md`) ficam só no código, atrás de
+  `INVITE_CODES_ENABLED=false` — bloco ESCONDIDO enquanto a flag está off.**
+- **59 — tirar o "EN":** `LocaleToggle` removido do layout do convite; barra "A ◑"
+  (acessibilidade) permanece. Componente fica no repo.
+- **60 — service worker:** `public/sw.js` nunca devolve `undefined` ao `respondWith`;
+  só cacheia respostas `ok`/não-redirect; sem rede entrega página offline 503
+  (`offlinePage`). `CACHE_VERSION` v2→v3. Provado com SW ativo/controlando em aba
+  anônima: online = console limpo; offline sem cache = 503, 0 erro de SW.
+- **Provas:** `docs/screens-jogo/m58-abertura-{mobile-427,desktop-1280}.png`,
+  `m59-sem-en-{mobile-427,desktop-1280}.png`, `m60-offline-fallback.png`,
+  `m60-console-prova.txt`.
+- **Pendente do JOs:** jogar/aprovar o branch e dar o OK pro merge (sem migration →
+  merge direto quando liberar). **Não mergear sem o OK dele.**
+
 ---
 
 ## Onde estamos
@@ -28,11 +118,12 @@ Estado do código: `tsc` 0 erros · `eslint` 0 errors (16 warnings pré-existent
 | S0 | Visão, docs, fix do PRESS START | ✅ feito · **na main** |
 | S1 | Gate de experiência (CLASSIC × GAMIFIED) + placeholder | ✅ feito · **na main** |
 | S2 | Identidade: cadastro, passkey (WebAuthn), visitante, claim de boneco, acompanhantes | ✅ feito · **na main** |
-| S3 | Criador de personagem (LPC) + rosto + **jogo completo ponta-a-ponta** | ✅ feito · **só no branch `feat/s3-personagem`** |
+| S3 | Criador de personagem (LPC) + rosto + **jogo completo ponta-a-ponta** | ✅ feito · **na main · EM PRODUÇÃO** |
 
-> **S0–S2 estão MERGEADOS na `main`.** S3 (criador + jogo inteiro) está **só no
-> branch `feat/s3-personagem`**, validado por screenshot, **aguardando aprovação do
-> JOs para merge**.
+> **S0–S3 estão MERGEADOS na `main` e EM PRODUÇÃO** (merge `5fdd163`, deploy do
+> Railway em 2026-11-21, 4 migrations aplicadas pelo `migrate deploy`). Validado
+> ponta-a-ponta em produção no evento real `joseeleticia` (mobile e desktop) e site
+> CLASSIC conferido íntegro. Relatório: `docs/RELATORIO-DEPLOY-PROD-2026-11-21.md`.
 
 ### S3 — o que foi entregue no branch (resumo)
 Jogo **jogável ponta-a-ponta**, conferido por screenshot (Chrome/Playwright do
@@ -88,17 +179,18 @@ Windows, logado) — provas em `docs/screens-jogo/`. `tsc` 0 erros, `eslint` 0.
 
 ---
 
-## O que está só no dev × o que está em produção
+## O que está em produção × o que é dev-only
 
-- **Produção (`joseeleticia.com`, Railway, deploy da `main`):** apenas S0–S2. O
-  modo clássico e o gate de experiência. **Nenhuma migration do jogo foi aplicada.**
-- **Só no branch `feat/s3-personagem` (não aplicado em produção):**
-  - Todo o criador + jogo (S3) + painel de Recados do jogo.
-  - **4 migrations aditivas** (só rodadas no voem-dev) — SQL exato em
-    **`docs/PLANO-MERGE.md`**: `add_game_character_roles` (cria GameCharacter,
-    EventRole, GuestRoleClaim), `add_locked_role_fk`, `add_character_appearance`,
-    `add_game_progress`.
-  - Dados de teste **dev-only no demo/voem-dev** (não afeta prod):
+- **Produção (`joseeleticia.com`, Railway, deploy da `main`):** S0–S3 completo. Modo
+  clássico, gate de experiência, criador + jogo inteiro + painel de Recados do jogo.
+  As **4 migrations aditivas** já foram aplicadas pelo `migrate deploy`
+  (`add_game_character_roles` → GameCharacter/EventRole/GuestRoleClaim,
+  `add_locked_role_fk`, `add_character_appearance`, `add_game_progress`) — SQL exato
+  em `docs/PLANO-MERGE.md`. Rollback: `git revert -m 1 5fdd163`.
+  - **No evento real `joseeleticia`:** ainda **0 memórias e 0 mesas** cadastradas, e
+    há **2 visitantes de teste** (`Convidada`, `Teste`) para limpar — pendência do
+    JOs (ver relatório de deploy).
+- **Dados de teste dev-only no demo/voem-dev (NÃO afetam prod):**
     - `amanda` (token `demo-session-amanda-12`) — é o "convidado-câmera" dos
       screenshots. Na rodada 3 ela avançou para **5/5 memórias + Fase 2** (joguei
       pelo screenshot). Pra resetar: `GameCharacter.gameProgress = {}` da amanda.
@@ -106,10 +198,10 @@ Windows, logado) — provas em `docs/screens-jogo/`. `tsc` 0 erros, `eslint` 0.
       Pendente`, PENDING, com personagem) — criado pra provar a missão do RSVP na
       Vila (item 54). Script descartável já removido; o convidado ficou no dev.
     - 5 memórias, 4 mesas; 3 visitantes com recado (`seed-recados-dev.ts`).
-  - **Arte nova trocada no branch** (rodada 3): `mundi.png/.webp` (estendido
-    1536×1344) e `bosque.walk.png` (máscara do JOs). As antigas foram guardadas em
-    `assets-src/` (`mundi-antigo.*`, `bosque-walk-antiga.png`) — fora do git, por
-    convenção; se precisar reverter a arte, é de lá.
+- **Arte nova (rodada 3), já em produção:** `mundi.png/.webp` (estendido 1536×1344) e
+  `bosque.walk.png` (máscara do JOs) foram ao ar no merge. As antigas foram guardadas
+  em `assets-src/` (`mundi-antigo.*`, `bosque-walk-antiga.png`) — **fora do git**; se
+  precisar reverter a arte, é de lá.
 
 ### ✅ Pendência nº 1 — profundidade estendida (FEITA, 2026-11-20, commitada)
 Estendida a profundidade (overlay + colisão na base) a **todas** as árvores,
@@ -135,21 +227,24 @@ Detalhes em **`docs/RELATORIO-RODADA3.md`**. Resumo:
 
 ---
 
-## Pendências (em ordem)
+## Pendências (em ordem) — agora do JOs
 
-1. **O JOs jogar e dar o OK** — mapa-múndi + 3 fases no celular e no PC. O zoom/
-   tamanho do boneco no mapa-múndi foi acertado na rodada 3 (item 53, casa com a
-   fase Vila), mas a palavra final é dele jogando. `SPEED`/`zoom` em `game-canvas.tsx`.
-2. **Merge para produção**: seguir `docs/PLANO-MERGE.md`, **só com aprovação do JOs**.
-   ⚠️ **Atenção:** o `PLANO-MERGE.md` ainda NÃO cobre a arte nova do mapa-múndi
-   (item 56) nem a máscara nova do bosque (item 57); são só assets em `public/`
-   (sem migration), mas revisar o plano antes do merge.
-3. **Ajuste fino residual** de colisões menores (canteiros/bancos) e âncoras, se o
-   JOs quiser, com `?debug=1` (o grosso já foi feito nas rodadas 3 anteriores).
+Merge + deploy FEITOS. O que falta é tudo do lado do JOs, no evento real em produção:
 
-> Antes de qualquer merge: `tsc`+`eslint`+`vitest` verdes, mostrar o SQL das
-> migrations, conferir backup de produção verificado (produção aplica as migrations
-> no `migrate deploy` do build). Tudo detalhado em `docs/PLANO-MERGE.md`.
+1. **Jogar e dar o OK final** — mapa-múndi + 3 fases no celular e no PC em produção.
+   O zoom/tamanho do boneco no mapa-múndi foi acertado na rodada 3 (item 53, casa com
+   a fase Vila), mas a palavra final é dele jogando. `SPEED`/`zoom` em `game-canvas.tsx`.
+2. **Conferir o painel *Recados do jogo*** (login de organizador) — única prova visual
+   que faltou no deploy; o caminho do dado foi provado por banco + código.
+3. **Cadastrar o conteúdo real** no evento `joseeleticia`: **memórias** (aba História,
+   viram os pedestais do Bosque) e **mesas** (aba Mesas, viram o Grande Dia). Hoje 0/0.
+4. **Limpar os 2 visitantes de teste** (`Convidada`, `Teste`) do evento real.
+5. **Ajuste fino residual** de colisões menores (canteiros/bancos) e âncoras, se quiser,
+   com `?debug=1` (o grosso já foi feito nas rodadas anteriores).
+
+> Já NÃO há merge pendente. Se precisar de uma nova migration no futuro, a regra segue:
+> só aditiva, `tsc`+`eslint`+`vitest` verdes, SQL mostrado antes, backup de produção
+> verificado antes (produção aplica no `migrate deploy` do build). Ver `docs/PLANO-MERGE.md`.
 
 ### ⚠️ Avisos / pontas soltas
 

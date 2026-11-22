@@ -1,8 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createTable, deleteTable, assignGuest, unassignGuest, updateTableName } from "./actions";
-import { Users, Plus, Trash2, GripVertical } from "lucide-react";
+import {
+  createTable,
+  deleteTable,
+  assignGuest,
+  unassignGuest,
+  setSeatLock,
+  releaseGuestSeats,
+  moveGuestSeats,
+} from "./actions";
+import { Users, Plus, Trash2, GripVertical, Lock, Unlock, Armchair } from "lucide-react";
 
 interface Guest {
   id: string;
@@ -24,14 +32,28 @@ interface Table {
   assignments: Assignment[];
 }
 
+interface SeatRow {
+  id: string;
+  tableId: string;
+  seatIndex: number;
+  guestId: string | null;
+  companionId: string | null;
+  claimedById: string | null;
+  holderName: string | null;
+  locked: boolean;
+  isChild: boolean;
+}
+
 interface Props {
   eventId: string;
   tables: Table[];
   guests: Guest[];
   guestMap: Record<string, Guest>;
+  seats: SeatRow[];
+  infantsByGuest: Record<string, number>;
 }
 
-export function MesasClient({ eventId, tables: initialTables, guests, guestMap }: Props) {
+export function MesasClient({ eventId, tables: initialTables, guests, guestMap, seats, infantsByGuest }: Props) {
   const [tables, setTables] = useState(initialTables);
   const [newTableName, setNewTableName] = useState("");
   const [newTableCap, setNewTableCap] = useState(8);
@@ -74,6 +96,22 @@ export function MesasClient({ eventId, tables: initialTables, guests, guestMap }
   function handleDirectAssign(tableId: string, guestId: string) {
     if (!guestId) return;
     startTransition(async () => { void await assignGuest(eventId, tableId, guestId); });
+  }
+
+  // S4b: travar/soltar cadeira, mover/liberar a família que escolheu no jogo.
+  function handleLock(tableId: string, index: number, locked: boolean) {
+    startTransition(async () => { void await setSeatLock(eventId, tableId, index, locked); });
+  }
+  function handleRelease(guestId: string) {
+    if (!confirm("Liberar os lugares desta família? As cadeiras ficam livres de novo.")) return;
+    startTransition(async () => { void await releaseGuestSeats(eventId, guestId); });
+  }
+  function handleMove(guestId: string, toTableId: string) {
+    if (!toTableId) return;
+    startTransition(async () => {
+      const r = await moveGuestSeats(eventId, guestId, toTableId);
+      if (r && !r.ok && r.message) alert(r.message);
+    });
   }
 
   const seatsTaken = (t: Table) => t.assignments.length;
@@ -148,6 +186,22 @@ export function MesasClient({ eventId, tables: initialTables, guests, guestMap }
             const total = assigned.reduce((s, g) => s + 1 + g.plusOnes, 0);
             const isFull = total >= table.capacity;
 
+            // S4b: cadeiras desta mesa (livre/ocupada/travada) + famílias que
+            // escolheram no jogo (agrupadas pelo "chefe", claimedById).
+            const tableSeats = seats.filter((s) => s.tableId === table.id);
+            const seatByIndex = new Map(tableSeats.map((s) => [s.seatIndex, s]));
+            const groups = new Map<string, { headName: string; count: number }>();
+            for (const s of tableSeats) {
+              if (!s.claimedById) continue;
+              const g = groups.get(s.claimedById) ?? { headName: "", count: 0 };
+              g.count++;
+              if (s.guestId && s.guestId === s.claimedById) {
+                g.headName = s.holderName ?? guestMap[s.guestId]?.name ?? "Convidado";
+              }
+              groups.set(s.claimedById, g);
+            }
+            const occupiedCount = tableSeats.filter((s) => s.guestId || s.companionId).length;
+
             return (
               <div
                 key={table.id}
@@ -204,6 +258,88 @@ export function MesasClient({ eventId, tables: initialTables, guests, guestMap }
                         <option key={g.id} value={g.id}>{g.name}{g.plusOnes > 0 ? ` (+${g.plusOnes})` : ""}</option>
                       ))}
                     </select>
+                  )}
+                </div>
+
+                {/* S4b — Cadeiras escolhidas no jogo / travar lugares */}
+                <div className="border-t px-2 py-2">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <Armchair size={12} className="text-muted-foreground" />
+                    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Lugares ({occupiedCount}/{table.capacity})
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1 mb-1.5">
+                    {Array.from({ length: table.capacity }, (_, i) => {
+                      const s = seatByIndex.get(i);
+                      const occupied = !!(s && (s.guestId || s.companionId));
+                      const locked = !!(s && s.locked && !occupied);
+                      const title = occupied
+                        ? `${s!.holderName ?? "Convidado"} — cadeira ${i + 1}`
+                        : locked
+                          ? `Cadeira ${i + 1} travada — clique para destravar`
+                          : `Cadeira ${i + 1} livre — clique para travar`;
+                      const base = "flex h-6 min-w-6 items-center justify-center rounded px-1 text-[10px] font-medium border";
+                      if (occupied) {
+                        const child = s!.isChild;
+                        return (
+                          <span
+                            key={i}
+                            title={child ? `${s!.holderName ?? "Convidado"} (criança) — cadeira ${i + 1}` : title}
+                            className={`${base} ${child ? "border-sky-300 bg-sky-100 text-sky-800" : "border-amber-300 bg-amber-100 text-amber-800"}`}
+                          >
+                            {(s!.holderName ?? "·").slice(0, 6)}{child ? "•" : ""}
+                          </span>
+                        );
+                      }
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          title={title}
+                          onClick={() => handleLock(table.id, i, !locked)}
+                          className={`${base} ${
+                            locked
+                              ? "border-neutral-400 bg-neutral-200 text-neutral-600"
+                              : "border-dashed border-border text-muted-foreground hover:bg-muted/50"
+                          }`}
+                        >
+                          {locked ? <Lock size={10} /> : <Unlock size={10} className="opacity-40" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {groups.size > 0 && (
+                    <div className="flex flex-col gap-1">
+                      {Array.from(groups.entries()).map(([headId, g]) => {
+                        const infants = infantsByGuest[headId] ?? 0;
+                        return (
+                        <div key={headId} className="flex items-center gap-1 text-[11px]">
+                          <span className="truncate flex-1">
+                            {g.headName || "Convidado"}{g.count > 1 ? ` (família: ${g.count})` : ""}
+                            {infants > 0 ? ` +${infants} bebê${infants > 1 ? "s" : ""} de colo` : ""}
+                          </span>
+                          <select
+                            defaultValue=""
+                            onChange={(e) => { handleMove(headId, e.target.value); e.target.value = ""; }}
+                            className="h-6 rounded border border-border bg-transparent text-[10px] px-1"
+                            title="Mover a família para outra mesa"
+                          >
+                            <option value="">mover…</option>
+                            {tables.filter((t) => t.id !== table.id).map((t) => (
+                              <option key={t.id} value={t.id}>{t.name}</option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => handleRelease(headId)}
+                            className="text-muted-foreground hover:text-destructive"
+                            title="Liberar os lugares desta família"
+                          >×</button>
+                        </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               </div>

@@ -7,15 +7,25 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { GuestActions } from "./guest-actions";
 import { bulkBanGuests, bulkRemoveGuests, importGuestsFromCsv } from "./actions";
+import { InviteButton, type InviteRow } from "./invite-button";
+
+export type { InviteRow };
 
 type RsvpStatus = "CONFIRMED" | "DECLINED" | "PENDING";
 
+interface Companion {
+  id: string;
+  name: string;
+  type: "ADULT" | "CHILD";
+  lapInfant: boolean;
+}
 interface Guest {
   id: string;
   name: string;
   email: string;
   phone: string | null;
   plusOnes: number;
+  companions?: Companion[];
   dietaryRestrictions: string | null;
   rsvpStatus: RsvpStatus;
   banned: boolean;
@@ -35,6 +45,8 @@ interface Props {
   guests: Guest[];
   eventId: string;
   whatsappContext?: WhatsappContext;
+  gamified?: boolean;
+  inviteRows?: Record<string, InviteRow>;
 }
 
 type FilterTab = "all" | "confirmed" | "declined" | "pending" | "banned";
@@ -60,7 +72,7 @@ function buildWhatsappLink(guest: Guest, ctx: WhatsappContext): string {
   return `https://wa.me/${phone.startsWith("55") ? phone : `55${phone}`}?text=${encodeURIComponent(msg)}`;
 }
 
-export function GuestList({ guests, eventId, whatsappContext }: Props) {
+export function GuestList({ guests, eventId, whatsappContext, gamified, inviteRows }: Props) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterTab>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -319,7 +331,7 @@ export function GuestList({ guests, eventId, whatsappContext }: Props) {
                 {guest.phone && (
                   <div className="flex items-center gap-2">
                     <p className="text-xs text-muted-foreground">{guest.phone}</p>
-                    {whatsappContext && (
+                    {!gamified && whatsappContext && (
                       <a
                         href={buildWhatsappLink(guest, whatsappContext)}
                         target="_blank"
@@ -338,6 +350,16 @@ export function GuestList({ guests, eventId, whatsappContext }: Props) {
                       +{guest.plusOnes} acomp.
                     </span>
                   )}
+                  {guest.companions?.map((c) => (
+                    <span key={c.id} className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                      {c.name}
+                      {c.lapInfant ? (
+                        <span className="rounded-full bg-sky-100 text-sky-700 px-1.5 py-0.5">bebê de colo</span>
+                      ) : c.type === "CHILD" ? (
+                        <span className="rounded-full bg-amber-100 text-amber-700 px-1.5 py-0.5">criança</span>
+                      ) : null}
+                    </span>
+                  ))}
                   {guest.dietaryRestrictions && (
                     <span className="text-xs text-muted-foreground">
 <Utensils className="inline size-3 mr-1 -mt-0.5" aria-hidden />{guest.dietaryRestrictions}
@@ -347,6 +369,16 @@ export function GuestList({ guests, eventId, whatsappContext }: Props) {
                     {format(guest.createdAt, "d MMM yyyy", { locale: ptBR })}
                   </span>
                 </div>
+
+                {/* S4a — Disparar convite (código pessoal, WhatsApp/Email + marcador) */}
+                {gamified && !guest.banned && inviteRows?.[guest.id] && (
+                  <InviteButton
+                    eventId={eventId}
+                    guestId={guest.id}
+                    row={inviteRows[guest.id]}
+                    hasEmail={!!guest.email && !guest.email.endsWith(".invalid")}
+                  />
+                )}
               </div>
               <div className="shrink-0">
                 <GuestActions guestId={guest.id} eventId={eventId} banned={guest.banned} />

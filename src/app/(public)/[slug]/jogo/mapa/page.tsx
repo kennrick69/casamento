@@ -5,7 +5,8 @@ import { storage } from "@/lib/storage";
 import { getGameEvent } from "@/lib/game/identity";
 import { getCurrentGuest } from "@/lib/auth/guest";
 import { isEventOrganizer } from "@/lib/game/character/organizer";
-import { type CharacterSpec, specFromCharacter, specToQuery } from "@/lib/game/character/catalog";
+import { getEventSeatMaps } from "@/lib/game/seats";
+import { type CharacterSpec, specFromCharacter, specToQuery, DEFAULT_SPEC } from "@/lib/game/character/catalog";
 import { MapaClient, type Memory, type TableInfo, type GameProgress } from "./mapa-client";
 
 export const metadata: Metadata = {
@@ -35,6 +36,14 @@ const GROOM_SPEC: CharacterSpec = {
   beard: "curta",
   glasses: "none",
   outfit: "noivo",
+};
+
+// NPCs do salão (S4·PARTE 3) — equipe da festa, pixel-art no mesmo estilo (LPC).
+const NPC_SPECS: Record<"dj" | "fotografo" | "cerimonialista" | "garcom", CharacterSpec> = {
+  dj: { body: "masculino", skin: "black", hairStyle: "cacheado_curto", hairColor: "black", eyeColor: "castanho", eyebrows: "thick", beard: "curta", glasses: "redondo", outfit: "terno" },
+  fotografo: { body: "masculino", skin: "bronze", hairStyle: "social", hairColor: "dark_brown", eyeColor: "castanho", eyebrows: "thin", beard: "none", glasses: "none", outfit: "terno" },
+  cerimonialista: { body: "feminino", skin: "light", hairStyle: "coque", hairColor: "chestnut", eyeColor: "mel", eyebrows: "thin", beard: "none", glasses: "none", outfit: "vestido_blue" },
+  garcom: { body: "masculino", skin: "peach", hairStyle: "social", hairColor: "black", eyeColor: "castanho", eyebrows: "thick", beard: "none", glasses: "none", outfit: "terno" },
 };
 
 function parseProgress(raw: unknown): GameProgress {
@@ -86,7 +95,11 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
   }));
 
   const tables: TableInfo[] = seatingTables.map((t) => ({ id: t.id, name: t.name, capacity: t.capacity }));
-  const myTableId = myAssignment?.tableId ?? null;
+
+  // S4b: mapa de cadeiras (livre/ocupada/minha/travada) de todas as mesas + a
+  // "minha mesa" derivada da cadeira escolhida (prioridade sobre a alocação grossa).
+  const { maps: seatMaps, myTableId: seatTableId } = await getEventSeatMaps(event.id, guest.id);
+  const myTableId = seatTableId ?? myAssignment?.tableId ?? null;
 
   // Organizador logado (noivo/noiva) joga com tudo liberado — modo de teste (item 31).
   const isOrganizer = await isEventOrganizer(event.id);
@@ -94,6 +107,27 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
   const atlasUrl = `/${slug}/jogo/personagem/sheet?${specToQuery(spec)}`;
   const brideAtlas = `/${slug}/jogo/personagem/sheet?${specToQuery(BRIDE_SPEC)}`;
   const groomAtlas = `/${slug}/jogo/personagem/sheet?${specToQuery(GROOM_SPEC)}`;
+  const sheet = (s: CharacterSpec) => `/${slug}/jogo/personagem/sheet?${specToQuery(s)}`;
+  const npcAtlases = {
+    dj: sheet(NPC_SPECS.dj),
+    fotografo: sheet(NPC_SPECS.fotografo),
+    cerimonialista: sheet(NPC_SPECS.cerimonialista),
+    garcom: sheet(NPC_SPECS.garcom),
+  };
+
+  // S4c — família andando junto (estilo Pokémon). Os acompanhantes que NÃO são
+  // bebê de colo viram "followers" em fila atrás do jogador; criança anda em
+  // tamanho de criança. Usa o avatar do acompanhante (se ele criou um) ou um
+  // padrão. O bebê de colo é carregado (não entra na fila).
+  const companions = await prisma.guestCompanion.findMany({
+    where: { guestId: guest.id, lapInfant: false },
+    orderBy: { createdAt: "asc" },
+    include: { gameCharacter: true },
+  });
+  const followers = companions.map((c) => ({
+    atlasUrl: c.gameCharacter ? sheet(specFromCharacter(c.gameCharacter)) : sheet(DEFAULT_SPEC),
+    child: c.type === "CHILD",
+  }));
 
   return (
     <>
@@ -113,9 +147,14 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
       memories={memories}
       tables={tables}
       myTableId={myTableId}
+      seatMaps={seatMaps}
+      canChooseSeat={!guest.isVisitor}
+      companionCount={await prisma.guestCompanion.count({ where: { guestId: guest.id, lapInfant: false } })}
       coupleMessage={null}
       brideAtlas={brideAtlas}
       groomAtlas={groomAtlas}
+      npcAtlases={npcAtlases}
+      followers={followers}
       progress={parseProgress(character.gameProgress)}
       />
     </>

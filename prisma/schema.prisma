@@ -213,6 +213,8 @@ model Event {
   weddingParty        WeddingPartyMember[]
   storyItems          CoupleStoryItem[]
   venue3d             Venue3D?
+  inviteCodes         InviteCode[]
+  seats               Seat[]
 }
 
 enum EventStatus {
@@ -348,9 +350,46 @@ model Guest {
   identificationLogs  GuestIdentificationLog[]
   gameCharacter       GameCharacter?
   roleClaims          GuestRoleClaim[]
+  inviteCodes         InviteCode[]         @relation("GuestInviteCodes")
+  seat                Seat?                @relation("GuestSeat")
 
   @@unique([eventId, email])
   @@index([eventId, sessionToken])
+}
+
+// Modo Gamificado (S4) — códigos de convite. Dois tipos:
+//  • PERSONAL: um por convidado da lista (vínculo guestId desde a criação). O
+//    link pessoal é /<slug>/c/<code>; "Disparar convite" registra sentAt/sentChannel.
+//  • BLANK: lote em branco para imprimir (QR no envelope). guestId só é
+//    preenchido no RESGATE, quando cria o convidado na lista.
+// `code` = 8 chars base32 sem 0/O/1/I (impossível de adivinhar). invalidatedAt
+// desativa um código perdido. Tudo aditivo; não afeta a experiência clássica.
+enum InviteCodeKind {
+  PERSONAL
+  BLANK
+}
+
+model InviteCode {
+  id            String         @id @default(cuid())
+  eventId       String
+  code          String // 8 chars base32 (sem 0/O/1/I), maiúsculo
+  kind          InviteCodeKind @default(PERSONAL)
+  guestId       String? // PERSONAL: dono desde a criação; BLANK: preenchido no resgate
+  maxCompanions Int            @default(4) // teto de acompanhantes no resgate (BLANK)
+  batchLabel    String? // rótulo do lote impresso
+  sentAt        DateTime? // "Disparar convite" (online): quando foi enviado
+  sentChannel   String? // "whatsapp" | "email"
+  claimedAt     DateTime? // 1º resgate (BLANK) / vínculo efetivado
+  invalidatedAt DateTime? // código revogado (perdido/cancelado)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  event Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest Guest? @relation("GuestInviteCodes", fields: [guestId], references: [id], onDelete: SetNull)
+
+  @@unique([eventId, code])
+  @@index([eventId, kind])
+  @@index([guestId])
 }
 
 // Modo Gamificado (S2) — passkey WebAuthn do convidado (SimpleWebAuthn).
@@ -474,11 +513,15 @@ model GuestCompanion {
   guestId   String
   name      String
   type      CompanionType @default(ADULT)
+  // S4 (crianças): bebê de colo = criança que NÃO ocupa cadeira e é carregada
+  // (não anda em fila própria). Implica type CHILD (avatar em tamanho de criança).
+  lapInfant Boolean       @default(false)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
   guest Guest @relation(fields: [guestId], references: [id], onDelete: Cascade)
   gameCharacter GameCharacter?
+  seat          Seat?         @relation("CompanionSeat")
 
   @@index([guestId])
 }
@@ -876,6 +919,7 @@ model SeatingTable {
 
   event       Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
   assignments SeatingAssignment[]
+  seats       Seat[]
 
   @@index([eventId, order])
 }
@@ -888,6 +932,41 @@ model SeatingAssignment {
   table     SeatingTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
 
   @@index([tableId])
+}
+
+// --- S4b — Escolha de lugar (cadeiras do salão no jogo) ---
+// Uma linha por CADEIRA ocupada/travada. A cadeira é identificada por
+// (tableId, seatIndex), 0..capacity-1. Ocupante = um convidado (guestId), um
+// acompanhante (companionId) OU nenhum quando o organizador apenas TRAVA a
+// cadeira (locked, guest/companion nulos). `claimedById` = convidado "chefe"
+// que reservou o grupo (ele + família), para mover/soltar o grupo inteiro.
+// Aditivo: convive com SeatingAssignment (alocação grossa por mesa do organizador),
+// que o jogo mantém em sincronia para o convidado que escolhe.
+model Seat {
+  id          String   @id @default(cuid())
+  eventId     String
+  tableId     String
+  seatIndex   Int
+  guestId     String?
+  companionId String?
+  claimedById String?
+  holderName  String?
+  locked      Boolean  @default(false)
+  source      String   @default("guest") // "guest" (escolhido no jogo) | "organizer"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  event     Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  table     SeatingTable    @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  guest     Guest?          @relation("GuestSeat", fields: [guestId], references: [id], onDelete: SetNull)
+  companion GuestCompanion? @relation("CompanionSeat", fields: [companionId], references: [id], onDelete: SetNull)
+
+  @@unique([tableId, seatIndex])
+  @@unique([guestId])
+  @@unique([companionId])
+  @@index([eventId])
+  @@index([tableId])
+  @@index([claimedById])
 }
 
 // --- M5.4 — Live events ---

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { Dir, Point, WorldEdge } from "@/lib/game/world";
+import type { SeatCell } from "@/lib/game/seats"; // só o tipo (erased) — não puxa o módulo server-only
 
 // Phaser é dinâmico (script vendored) e sua API não é tipada aqui; `any` é
 // intencional em todo o motor desta cena.
@@ -22,6 +23,11 @@ const SPEED = 195;
 // ≈75-80% da altura das portas da arte (item 28). Nearest-neighbor (pixelArt),
 // sem borrar. Aplicada ao avatar e aos NPCs (noivos no altar).
 const AVATAR_SCALE = 1.5;
+// S4c: acompanhante criança anda em tamanho de criança (~72% do adulto).
+const CHILD_SCALE = AVATAR_SCALE * 0.72;
+// Distância entre cada integrante da fila da família (estilo Pokémon), no espaço
+// do mundo. ~ a largura do boneco, pra ficarem um atrás do outro sem colar.
+const FOLLOW_SPACING = 26;
 const FRAMES_PER_DIR = 9; // sheets LPC: 9 colunas × 4 linhas
 // Item 44: a referência de posição é a SOLA do pé (1º pixel opaco de baixo pra
 // cima do sprite LPC), medida em ~62 de 64px. Com a origem na sola, player.x/y =
@@ -99,6 +105,9 @@ export interface Interactable {
   glyph?: GlyphName; // ícone pixel-art flutuante (sem emoji)
   tableLabel?: string; // texto da mesa
   highlight?: boolean; // alvo da missão (brilho dourado)
+  capacity?: number; // nº de cadeiras a desenhar (mesa)
+  seats?: SeatCell[]; // S4b: estado de cada cadeira (livre/minha/ocupada/travada)
+  solid?: boolean; // colisão pela base (NPCs do salão não são atravessados)
 }
 
 export interface NpcAvatar {
@@ -128,6 +137,9 @@ export interface SceneConfig {
   startNode?: number;
   // phase:
   npcs?: NpcAvatar[];
+  // S4c — família andando junto (estilo Pokémon). Em fila atrás do jogador, no
+  // mapa-múndi e nas fases. child = tamanho de criança. Bebê de colo não entra aqui.
+  followers?: { atlasUrl: string; child: boolean }[];
   // Overlays de profundidade (item 27): recortes da arte (topo de poste, copa de
   // árvore) desenhados ACIMA do avatar quando ele está atrás (depth = baseY = a
   // linha do chão do objeto). cx/cy/cw/ch = região recortada do mapa.
@@ -213,6 +225,11 @@ export function GameCanvas({
         // world mode
         let currentNode = cfg.startNode ?? 0;
         let moving = false;
+        // S4c — followers (família em fila). history = rastro de posições do pé do
+        // jogador; cada follower fica a FOLLOW_SPACING*(i+1) de distância atrás.
+        const followerSprites: any[] = [];
+        const followerFacing: Dir[] = [];
+        const history: { x: number; y: number }[] = [];
 
         function addWalkAnims(scene: any, key: string, texture: string) {
           (["up", "left", "down", "right"] as Dir[]).forEach((d) => {
@@ -238,6 +255,9 @@ export function GameCanvas({
           (cfg.npcs ?? []).forEach((n, i) => {
             this.load.spritesheet(`npc${i}`, n.atlasUrl, { frameWidth: 64, frameHeight: 64 });
           });
+          (cfg.followers ?? []).forEach((f, i) => {
+            this.load.spritesheet(`fol${i}`, f.atlasUrl, { frameWidth: 64, frameHeight: 64 });
+          });
         }
 
         // Mesa de 8 lugares em pixel-art no estilo do salão (item 37): toalha branca
@@ -245,25 +265,50 @@ export function GameCanvas({
         // (vistas 3/4 de cima), e o nome numa plaquinha com a fonte do jogo (Caveat).
         // Escala: cadeira ~ largura do boneco; mesa bem maior que ele.
         const CLOTH = 52, CHAIR_R = 72; // raios: toalha e anel de cadeiras
-        function drawTable(scene: any, x: number, y: number, label: string) {
+        function drawTable(scene: any, x: number, y: number, label: string, seats?: SeatCell[], capacity?: number) {
           const c = scene.add.container(x, y);
           const g = scene.add.graphics();
           // sombra no chão
           g.fillStyle(0x000000, 0.14);
           g.fillEllipse(0, 14, CLOTH * 2.5, CLOTH * 1.5);
-          // cadeiras de madeira (8) com encosto voltado pra fora
-          for (let i = 0; i < 8; i++) {
-            const a = (i / 8) * Math.PI * 2;
+          // cadeiras: capacity (fallback 8), encosto voltado pra fora. S4b: a cor e
+          // um marcador mostram o estado — livre, ocupada (outro), minha ou travada.
+          const n = Math.max(1, Math.min(14, capacity ?? seats?.length ?? 8));
+          // começa no topo (−90°) e vai no sentido horário — leitura natural.
+          for (let i = 0; i < n; i++) {
+            const a = (i / n) * Math.PI * 2 - Math.PI / 2;
             const cx = Math.cos(a) * CHAIR_R, cy = Math.sin(a) * CHAIR_R;
             const ox = Math.cos(a), oy = Math.sin(a);
-            // encosto (mais escuro), na borda externa
-            g.fillStyle(0x6b4423, 1);
+            const st = seats?.find((s) => s.index === i)?.state ?? "free";
+            // paleta por estado (encosto / assento / detalhe)
+            const pal =
+              st === "mine"
+                ? { back: 0x9a6b1f, seat: 0xe6b84c, top: 0xf6d98a }
+                : st === "taken"
+                  ? { back: 0x5a3a1f, seat: 0x8a5a30, top: 0x9f6c3c }
+                  : st === "locked"
+                    ? { back: 0x4a4a4a, seat: 0x6f6f6f, top: 0x8a8a8a }
+                    : { back: 0x6b4423, seat: 0xa9713f, top: 0xc08a52 };
+            // encosto (externo)
+            g.fillStyle(pal.back, 1);
             g.fillRoundedRect(cx + ox * 8 - 11, cy + oy * 8 - 11, 22, 22, 5);
-            // assento (madeira clara)
-            g.fillStyle(0xa9713f, 1);
+            // assento
+            g.fillStyle(pal.seat, 1);
             g.fillRoundedRect(cx - 11, cy - 10, 22, 20, 5);
-            g.fillStyle(0xc08a52, 1);
+            g.fillStyle(pal.top, 1);
             g.fillRoundedRect(cx - 8, cy - 7, 16, 12, 4);
+            // marcador no assento: ocupada/minha = "cabecinha"; travada = X.
+            if (st === "taken" || st === "mine") {
+              g.fillStyle(st === "mine" ? 0x7a4a12 : 0x3a2a1a, 1);
+              g.fillCircle(cx, cy - 1, 6); // alguém sentado (cabeça vista de cima)
+            } else if (st === "locked") {
+              g.lineStyle(2.5, 0x2a2a2a, 1);
+              g.beginPath();
+              g.moveTo(cx - 5, cy - 5); g.lineTo(cx + 5, cy + 5);
+              g.moveTo(cx + 5, cy - 5); g.lineTo(cx - 5, cy + 5);
+              g.strokePath();
+              g.lineStyle();
+            }
           }
           // toalha: saia (drapeado) + tampo
           g.fillStyle(0xe7dcc8, 1); g.fillCircle(0, 6, CLOTH + 4);     // saia/sombra da toalha
@@ -349,7 +394,7 @@ export function GameCanvas({
           for (const k of Object.keys(markerSprites)) delete markerSprites[k];
           cfgRef.current.interactables.forEach((it) => {
             if (it.kind === "table") {
-              const tbl = drawTable(scene, it.x, it.y, it.tableLabel ?? "");
+              const tbl = drawTable(scene, it.x, it.y, it.tableLabel ?? "", it.seats, it.capacity);
               // Item 48: indicador só na MINHA mesa enquanto pendente — sparkle
               // discreto acima; encontrada ("check") ou demais mesas = sem indicador.
               if (it.glyph === "bang" && !it.done) {
@@ -460,8 +505,8 @@ export function GameCanvas({
           // para o avatar não os atravessar. Raio < 72 (alcance de interação),
           // então ainda dá pra chegar perto e interagir.
           (cfg.interactables ?? []).forEach((it) => {
-            if (it.kind !== "table" && it.kind !== "pedestal") return;
-            const rad = it.kind === "table" ? 62 : 22;
+            if (it.kind !== "table" && it.kind !== "pedestal" && !it.solid) return;
+            const rad = it.kind === "table" ? 62 : it.kind === "pedestal" ? 22 : 15;
             const body = scene.add.circle(it.x, it.y, rad, 0xff2bff, cfg.debug ? 0.25 : 0);
             scene.physics.add.existing(body, true);
             body.body.setCircle(rad);
@@ -493,6 +538,21 @@ export function GameCanvas({
           // snap imediato: o avatar já nasce centralizado e visível (não espera
           // o lerp da câmera) — resolve "o boneco não aparece" (itens 15 e 19).
           scene.cameras.main.centerOn(player.x, player.y);
+
+          // ── S4c — followers da família (fila atrás do jogador) ──
+          followerSprites.length = 0;
+          followerFacing.length = 0;
+          (cfg.followers ?? []).forEach((f, i) => {
+            addWalkAnims(scene, `fol${i}`, `fol${i}`);
+            const s = scene.add.sprite(player.x, player.y, `fol${i}`, ROW.down * FRAMES_PER_DIR);
+            s.setOrigin(0.5, ORIGIN_Y); // origem na sola (mesma colisão pela base)
+            s.setScale(f.child ? CHILD_SCALE : AVATAR_SCALE);
+            s.setDepth(player.y);
+            followerSprites.push(s);
+            followerFacing.push("down");
+          });
+          history.length = 0;
+          history.push({ x: player.x, y: player.y });
 
           // ── world: posiciona no nó inicial (a trilha já está pintada na arte;
           // não desenhamos linha reta por cima — item 20) ──
@@ -542,6 +602,51 @@ export function GameCanvas({
           // memória vista, mesa encontrada) — preserva a posição do avatar.
           sceneApiRef.current = { rebuild: () => buildInteractables(scene) };
           scene._ready = true;
+        }
+
+        // S4c — registra o rastro do pé do jogador e posiciona a família em fila.
+        function recordHistory() {
+          const last = history[0];
+          if (!last || Math.hypot(player.x - last.x, player.y - last.y) >= 3) {
+            history.unshift({ x: player.x, y: player.y });
+            const maxLen = Math.ceil(((followerSprites.length + 1) * FOLLOW_SPACING) / 3) + 24;
+            if (history.length > maxLen) history.length = maxLen;
+          }
+        }
+        // ponto do rastro a uma distância (arc-length) atrás do jogador.
+        function sampleHistory(dist: number): { x: number; y: number } {
+          let acc = 0;
+          for (let k = 1; k < history.length; k++) {
+            const seg = Math.hypot(history[k].x - history[k - 1].x, history[k].y - history[k - 1].y);
+            if (acc + seg >= dist) {
+              const t = (dist - acc) / (seg || 1);
+              return {
+                x: history[k - 1].x + (history[k].x - history[k - 1].x) * t,
+                y: history[k - 1].y + (history[k].y - history[k - 1].y) * t,
+              };
+            }
+            acc += seg;
+          }
+          return history[history.length - 1] ?? { x: player.x, y: player.y };
+        }
+        function updateFollowers() {
+          if (!followerSprites.length) return;
+          recordHistory();
+          for (let i = 0; i < followerSprites.length; i++) {
+            const spr = followerSprites[i];
+            const pos = sampleHistory(FOLLOW_SPACING * (i + 1));
+            const dx = pos.x - spr.x, dy = pos.y - spr.y;
+            spr.setPosition(pos.x, pos.y);
+            spr.setDepth(pos.y);
+            if (Math.abs(dx) + Math.abs(dy) > 0.4) {
+              const dir: Dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "left" : "right") : dy < 0 ? "up" : "down";
+              followerFacing[i] = dir;
+              spr.anims.play(`fol${i}-walk-${dir}`, true);
+            } else {
+              spr.anims.stop();
+              spr.setFrame(ROW[followerFacing[i]] * FRAMES_PER_DIR);
+            }
+          }
         }
 
         function nearestInteractable(px: number, py: number): Interactable | null {
@@ -772,10 +877,12 @@ export function GameCanvas({
             player.anims.stop();
             player.setFrame(ROW[facing] * FRAMES_PER_DIR);
             if (controls.current) controls.current.interact = false;
+            updateFollowers(); // família para junto (idle) com a caixa aberta
             return;
           }
           if (cfgRef.current.mode === "world") updateWorld(this);
           else updatePhase();
+          updateFollowers();
         }
 
         game = new Phaser.Game({
@@ -808,7 +915,12 @@ export function GameCanvas({
   // Reconstrói marcadores/mesas dentro da MESMA cena quando o estado muda
   // (portão libera, memória vista, mesa encontrada), sem perder a posição.
   const interactSig = config.interactables
-    .map((i) => `${i.id}:${i.locked ? 1 : 0}${i.done ? 1 : 0}${i.highlight ? 1 : 0}`)
+    .map(
+      (i) =>
+        `${i.id}:${i.locked ? 1 : 0}${i.done ? 1 : 0}${i.highlight ? 1 : 0}:${i.glyph ?? ""}:${
+          i.seats ? i.seats.map((s) => s.state[0]).join("") : ""
+        }`,
+    )
     .join("|");
   useEffect(() => {
     sceneApiRef.current?.rebuild();
