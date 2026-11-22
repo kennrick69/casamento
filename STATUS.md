@@ -3,8 +3,26 @@
 Regra de ouro: nada que funciona hoje pode quebrar; tudo do jogo fica atrás de
 `Event.experienceType`; o SQL de toda migration é mostrado antes de qualquer merge.
 
-Última atualização: 2026-11-22 (**fix/storage PUBLICADO** — volume `/data` persistente +
-health honesto + texto "CODIGO" na fonte pixel — merge `7cfe417`).
+Última atualização: 2026-11-22 (**fix/mural-file-delete PUBLICADO** — remover foto apaga o
+arquivo do volume + limpeza de órfãos pelo painel — merge `ef0a5e0`; antes: fix/storage `7cfe417`).
+
+## 🧹 fix/mural-file-delete — remover foto apaga o arquivo + limpa órfãos (2026-11-22)
+Branch `fix/mural-file-delete` **mergeada na `main`** (merge `ef0a5e0`, `--no-ff`) e deployada
+(health verde atravessando o redeploy, `storage: ok` persistente). 4 arquivos, `tsc`+`eslint` verdes.
+- **Problema:** o "remover foto" do painel (mural + moderação) só fazia soft-delete (`removedAt`),
+  deixando o byte no volume. Galeria e história já apagavam o arquivo; o mural não.
+- **Fix:** helper `src/lib/storage/photo-file.ts` → `deletePhotoFile(storageKey)` (idiom
+  `storage.delete(key).catch(...)`, nunca derruba o fluxo). Plugado em `removePhoto`,
+  `batchRemovePhotos` (mural/actions) e `resolveReport(REMOVED)` (moderacao/actions): pega o
+  `storageKey` ANTES do soft-delete e apaga o byte. Continua soft-delete no banco (auditoria).
+- **Removida nunca é servida:** `api/photos/[key]` linha 23 já 404 quando `removedAt != null`
+  (única rota que serve foto); agora com o byte apagado há dupla garantia.
+- **Órfãos / arquivo de teste:** nova server action `purgeOrphanMuralFiles` (requireOrganizer) +
+  botão **"Limpar arquivos órfãos"** no painel do mural. Varre `${slug}/fotos/` e apaga arquivos
+  sem foto viva no banco. Prefixo exclusivo do mural (galeria=`gallery/…`, história=`story/…`),
+  seguro. **Sem Railway SSH** — organizador logado clica e o toast devolve a contagem.
+- **Pendência de 1 clique:** o órfão `/data/joseeleticia/fotos/1yrJWTIXLHjE.jpg` (já 404) morre
+  no primeiro clique do botão. Não dá pra eu disparar sozinho (sem `CRON_SECRET`/sessão de org).
 
 ## 🔧 fix/storage — upload de fotos funciona em produção (2026-11-22)
 Branch `fix/storage` **mergeado na `main`** (merge `7cfe417`, `--no-ff`) e deployado.
@@ -26,7 +44,8 @@ Branch `fix/storage` **mergeado na `main`** (merge `7cfe417`, `--no-ff`) e deplo
   `docs/screens-jogo/fix-storage-mural-427.png`. **Foto de teste apagada** (hard-delete da
   Photo row em prod): `GET /api/photos/...` → 404, mural volta a "Nenhuma foto", 0 fotos no
   evento. **Resíduo:** os ~20KB do arquivo órfão em `/data/joseeleticia/fotos/` (já
-  inacessível, 404) só somem com shell do container (Railway) — pendência de 1 comando.
+  inacessível, 404) — RESOLVIDO pelo `fix/mural-file-delete`: some no botão "Limpar
+  arquivos órfãos" do painel (ver seção acima), sem Railway SSH.
 
 ## S4 COMPLETO PUBLICADO EM PRODUÇÃO — merge `ffe880e`
 
