@@ -3,7 +3,26 @@
 Regra de ouro: nada que funciona hoje pode quebrar; tudo do jogo fica atrás de
 `Event.experienceType`; o SQL de toda migration é mostrado antes de qualquer merge.
 
-Última atualização: 2026-11-21 (**S3 MERGEADO e EM PRODUÇÃO**).
+Última atualização: 2026-11-21 (**rodada "finalizar tudo" no `feat/s4-convites`**).
+
+## 🧩 Rodada "finalizar tudo antes de testar" — branch `feat/s4-convites` (NÃO na main)
+Decisão do JOs (21/11): construir S4a + S4b + NPCs + S4c TODOS no `feat/s4-convites`,
+**sem merge**, e só então testar tudo de uma vez em produção (publicação única, PARTE 5).
+Um commit + screenshot (celular 427 e PC 1280) por item; STATUS atualizado ao fim de
+cada parte. As falas/textos ficam no tom do site — o JOs ajusta no teste final.
+
+- **PARTE 1 — ajustes do S4a ✅ (commit `66f8411`):**
+  - Mensagem do convite mantém "Entre no jogo para escolher o seu lugar" (S4b vai existir).
+  - "Tenho um código" aceita com/sem hífen, com espaços e minúsculas: `44hu-v9nt` ==
+    `44HU V9NT` == `44HUV9NT`. Normalizador puro compartilhado em
+    `src/lib/invite/normalize.ts` (cliente + servidor usam a MESMA regra).
+  - Provas: `docs/screens-jogo/m-s4p1-codigo-{427,1280}.png`.
+- **PARTE 2 — S4b (escolha de lugar):** a fazer.
+- **PARTE 3 — NPCs do salão + Cardápio (`docs/NPCS-SALAO.md`):** a fazer.
+- **PARTE 4 — S4c (família andando junto, estilo Pokémon):** a fazer.
+- **PARTE 5 — publicação única:** SQL de TODAS as migrations + plano de merge + backfill,
+  aguardando OK do JOs. **Nada na main até lá.**
+
 
 ## 🚀 S3 EM PRODUÇÃO (2026-11-21)
 `feat/s3-personagem` foi **mergeado na `main`** (merge commit `5fdd163`, `--no-ff`)
