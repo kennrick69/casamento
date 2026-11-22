@@ -3,7 +3,32 @@
 Regra de ouro: nada que funciona hoje pode quebrar; tudo do jogo fica atrás de
 `Event.experienceType`; o SQL de toda migration é mostrado antes de qualquer merge.
 
-Última atualização: 2026-11-22 (**S4 COMPLETO PUBLICADO EM PRODUÇÃO** — merge `ffe880e`).
+Última atualização: 2026-11-22 (**fix/storage PUBLICADO** — volume `/data` persistente +
+health honesto + texto "CODIGO" na fonte pixel — merge `7cfe417`).
+
+## 🔧 fix/storage — upload de fotos funciona em produção (2026-11-22)
+Branch `fix/storage` **mergeado na `main`** (merge `7cfe417`, `--no-ff`) e deployado.
+- **Causa raiz do `storage=degraded`:** não era permissão — era `ENOENT` em `/data`: o
+  **Volume não estava montado**. O JOs anexou o Volume `casamento-volume` em `/data`
+  (serviço `casamento`). Agora `RAILWAY_VOLUME_MOUNT_PATH=/data` existe e é gravável.
+- **Código (6 arquivos, `tsc`+`eslint` verdes):** `src/lib/storage/volume-path.ts` novo —
+  `resolveVolumeBase()` prefere `RAILWAY_VOLUME_MOUNT_PATH` (fonte de verdade do mount) →
+  `RAILWAY_VOLUME_PATH` → `/tmp/casamento-uploads`. `storage/railway-volume.ts` (grava) e
+  `api/photos/[key]` (lê) usam o MESMO resolver. `api/health` faz probe de escrita REAL
+  (mkdir recursivo, igual ao upload) e acusa `EFÊMERO` quando grava mas não há Volume
+  anexado (foto sumiria no deploy) em vez de "ok" falso.
+- **Texto "CóDIGO":** Press Start 2P é all-caps e não tem "Ó" maiúsculo → saía "CóDIGO".
+  Removido o acento em `invite-code-entry` ("Tenho um codigo") e `redeem-client`
+  ("TENHO OUTRO CODIGO"). Prod confere: opening mostra "Tenho um codigo".
+- **Provas em produção:** `GET /api/health` → `storage: ok` · `"gravável · volume
+  persistente em /data · 4.5GB livre"`. Foto de teste subida pelo mural a 427px (visitante
+  "Convidada"), servida HTTP 200 (20654 bytes do volume) — print
+  `docs/screens-jogo/fix-storage-mural-427.png`. **Foto de teste apagada** (hard-delete da
+  Photo row em prod): `GET /api/photos/...` → 404, mural volta a "Nenhuma foto", 0 fotos no
+  evento. **Resíduo:** os ~20KB do arquivo órfão em `/data/joseeleticia/fotos/` (já
+  inacessível, 404) só somem com shell do container (Railway) — pendência de 1 comando.
+
+## S4 COMPLETO PUBLICADO EM PRODUÇÃO — merge `ffe880e`
 
 ## 🧩 Rodada "finalizar tudo antes de testar" — branch `feat/s4-convites` (NÃO na main)
 Decisão do JOs (21/11): construir S4a + S4b + NPCs + S4c TODOS no `feat/s4-convites`,
@@ -83,8 +108,8 @@ descomprimido + conferido: 44 tabelas, dados reais, dump íntegro — `casamento
   **0 convidados na lista**. Quando o JOs cadastrar a lista, cada convidado ganha código
   automaticamente (`ensurePersonalCodes` ao abrir Convidados) e dá p/ re-rodar o backfill.
 - **Site CLASSIC íntegro**: `/` e `/joseeleticia` → HTTP 200. Health 200 (`db` ok).
-  Obs.: health acusa `storage=degraded` (volume `/data` não gravável) — **pré-existente**,
-  não é do S4; afeta upload de fotos no volume e vale olhar à parte.
+  Obs.: health acusava `storage=degraded` (volume `/data` não gravável) — **RESOLVIDO em
+  22/11**, ver seção "🔧 fix/storage" no topo (Volume anexado + health honesto).
 - **Smoke 427 em prod** (`docs/screens-jogo/p-prod-*`): abertura com "Tenho um código" +
   "Escanear QR code" + "Convite impresso" e mensagem "encontre a sua mesa na festa"
   (`p-prod-01`); "Tenho um código" aceitando `44hu v9nt` (minúsculo+espaço) e tratando
@@ -94,8 +119,8 @@ descomprimido + conferido: 44 tabelas, dados reais, dump íntegro — `casamento
 - **Pendente do JOs no evento real** p/ testar escolha de mesa ponta-a-ponta em prod:
   cadastrar a **lista de convidados** e definir as **mesas/capacidade** (hoje 0 mesas).
 - **Rollback**: `git revert -m 1 ffe880e`. Tabelas novas podem ficar (não atrapalham).
-  Detalhe cosmético visto no smoke: a fonte pixel mostra "CóDIGO" (Press Start 2P não tem
-  Ó maiúsculo) — ajuste de texto no teste final.
+  Detalhe cosmético visto no smoke: a fonte pixel mostrava "CóDIGO" (Press Start 2P não tem
+  Ó maiúsculo) — **RESOLVIDO em 22/11** (texto sem acento), ver "🔧 fix/storage" no topo.
 
 ## 🚀 S3 EM PRODUÇÃO (2026-11-21)
 `feat/s3-personagem` foi **mergeado na `main`** (merge commit `5fdd163`, `--no-ff`)
