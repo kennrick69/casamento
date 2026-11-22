@@ -60,6 +60,7 @@ export interface MapaClientProps {
   brideAtlas: string;
   groomAtlas: string;
   npcAtlases: { dj: string; fotografo: string; cerimonialista: string; garcom: string };
+  followers: { atlasUrl: string; child: boolean }[];
   progress: GameProgress;
 }
 
@@ -245,6 +246,7 @@ export function MapaClient(props: MapaClientProps) {
         edges: WORLD.edges,
         startNode: worldStartNode,
         interactables,
+        followers: props.followers,
         debug,
       };
     }
@@ -356,6 +358,7 @@ export function MapaClient(props: MapaClientProps) {
       walkMaskUrl: phase.walkMask,
       interactables,
       npcs,
+      followers: props.followers,
       overlays: phase.overlays,
       debug,
     };

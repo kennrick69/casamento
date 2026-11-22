@@ -6,7 +6,7 @@ import { getGameEvent } from "@/lib/game/identity";
 import { getCurrentGuest } from "@/lib/auth/guest";
 import { isEventOrganizer } from "@/lib/game/character/organizer";
 import { getEventSeatMaps } from "@/lib/game/seats";
-import { type CharacterSpec, specFromCharacter, specToQuery } from "@/lib/game/character/catalog";
+import { type CharacterSpec, specFromCharacter, specToQuery, DEFAULT_SPEC } from "@/lib/game/character/catalog";
 import { MapaClient, type Memory, type TableInfo, type GameProgress } from "./mapa-client";
 
 export const metadata: Metadata = {
@@ -115,6 +115,20 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
     garcom: sheet(NPC_SPECS.garcom),
   };
 
+  // S4c — família andando junto (estilo Pokémon). Os acompanhantes que NÃO são
+  // bebê de colo viram "followers" em fila atrás do jogador; criança anda em
+  // tamanho de criança. Usa o avatar do acompanhante (se ele criou um) ou um
+  // padrão. O bebê de colo é carregado (não entra na fila).
+  const companions = await prisma.guestCompanion.findMany({
+    where: { guestId: guest.id, lapInfant: false },
+    orderBy: { createdAt: "asc" },
+    include: { gameCharacter: true },
+  });
+  const followers = companions.map((c) => ({
+    atlasUrl: c.gameCharacter ? sheet(specFromCharacter(c.gameCharacter)) : sheet(DEFAULT_SPEC),
+    child: c.type === "CHILD",
+  }));
+
   return (
     <>
       {/* Item 55: removidos os <link rel="preload"> do Phaser/mapa/atlas. O Phaser
@@ -140,6 +154,7 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
       brideAtlas={brideAtlas}
       groomAtlas={groomAtlas}
       npcAtlases={npcAtlases}
+      followers={followers}
       progress={parseProgress(character.gameProgress)}
       />
     </>

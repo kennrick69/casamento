@@ -23,6 +23,11 @@ const SPEED = 195;
 // ≈75-80% da altura das portas da arte (item 28). Nearest-neighbor (pixelArt),
 // sem borrar. Aplicada ao avatar e aos NPCs (noivos no altar).
 const AVATAR_SCALE = 1.5;
+// S4c: acompanhante criança anda em tamanho de criança (~72% do adulto).
+const CHILD_SCALE = AVATAR_SCALE * 0.72;
+// Distância entre cada integrante da fila da família (estilo Pokémon), no espaço
+// do mundo. ~ a largura do boneco, pra ficarem um atrás do outro sem colar.
+const FOLLOW_SPACING = 26;
 const FRAMES_PER_DIR = 9; // sheets LPC: 9 colunas × 4 linhas
 // Item 44: a referência de posição é a SOLA do pé (1º pixel opaco de baixo pra
 // cima do sprite LPC), medida em ~62 de 64px. Com a origem na sola, player.x/y =
@@ -132,6 +137,9 @@ export interface SceneConfig {
   startNode?: number;
   // phase:
   npcs?: NpcAvatar[];
+  // S4c — família andando junto (estilo Pokémon). Em fila atrás do jogador, no
+  // mapa-múndi e nas fases. child = tamanho de criança. Bebê de colo não entra aqui.
+  followers?: { atlasUrl: string; child: boolean }[];
   // Overlays de profundidade (item 27): recortes da arte (topo de poste, copa de
   // árvore) desenhados ACIMA do avatar quando ele está atrás (depth = baseY = a
   // linha do chão do objeto). cx/cy/cw/ch = região recortada do mapa.
@@ -217,6 +225,11 @@ export function GameCanvas({
         // world mode
         let currentNode = cfg.startNode ?? 0;
         let moving = false;
+        // S4c — followers (família em fila). history = rastro de posições do pé do
+        // jogador; cada follower fica a FOLLOW_SPACING*(i+1) de distância atrás.
+        const followerSprites: any[] = [];
+        const followerFacing: Dir[] = [];
+        const history: { x: number; y: number }[] = [];
 
         function addWalkAnims(scene: any, key: string, texture: string) {
           (["up", "left", "down", "right"] as Dir[]).forEach((d) => {
@@ -241,6 +254,9 @@ export function GameCanvas({
           if (cfg.collisionUrl) this.load.json("col", cfg.collisionUrl);
           (cfg.npcs ?? []).forEach((n, i) => {
             this.load.spritesheet(`npc${i}`, n.atlasUrl, { frameWidth: 64, frameHeight: 64 });
+          });
+          (cfg.followers ?? []).forEach((f, i) => {
+            this.load.spritesheet(`fol${i}`, f.atlasUrl, { frameWidth: 64, frameHeight: 64 });
           });
         }
 
@@ -523,6 +539,21 @@ export function GameCanvas({
           // o lerp da câmera) — resolve "o boneco não aparece" (itens 15 e 19).
           scene.cameras.main.centerOn(player.x, player.y);
 
+          // ── S4c — followers da família (fila atrás do jogador) ──
+          followerSprites.length = 0;
+          followerFacing.length = 0;
+          (cfg.followers ?? []).forEach((f, i) => {
+            addWalkAnims(scene, `fol${i}`, `fol${i}`);
+            const s = scene.add.sprite(player.x, player.y, `fol${i}`, ROW.down * FRAMES_PER_DIR);
+            s.setOrigin(0.5, ORIGIN_Y); // origem na sola (mesma colisão pela base)
+            s.setScale(f.child ? CHILD_SCALE : AVATAR_SCALE);
+            s.setDepth(player.y);
+            followerSprites.push(s);
+            followerFacing.push("down");
+          });
+          history.length = 0;
+          history.push({ x: player.x, y: player.y });
+
           // ── world: posiciona no nó inicial (a trilha já está pintada na arte;
           // não desenhamos linha reta por cima — item 20) ──
           if (cfg.mode === "world" && cfg.nodes && cfg.edges) {
@@ -571,6 +602,51 @@ export function GameCanvas({
           // memória vista, mesa encontrada) — preserva a posição do avatar.
           sceneApiRef.current = { rebuild: () => buildInteractables(scene) };
           scene._ready = true;
+        }
+
+        // S4c — registra o rastro do pé do jogador e posiciona a família em fila.
+        function recordHistory() {
+          const last = history[0];
+          if (!last || Math.hypot(player.x - last.x, player.y - last.y) >= 3) {
+            history.unshift({ x: player.x, y: player.y });
+            const maxLen = Math.ceil(((followerSprites.length + 1) * FOLLOW_SPACING) / 3) + 24;
+            if (history.length > maxLen) history.length = maxLen;
+          }
+        }
+        // ponto do rastro a uma distância (arc-length) atrás do jogador.
+        function sampleHistory(dist: number): { x: number; y: number } {
+          let acc = 0;
+          for (let k = 1; k < history.length; k++) {
+            const seg = Math.hypot(history[k].x - history[k - 1].x, history[k].y - history[k - 1].y);
+            if (acc + seg >= dist) {
+              const t = (dist - acc) / (seg || 1);
+              return {
+                x: history[k - 1].x + (history[k].x - history[k - 1].x) * t,
+                y: history[k - 1].y + (history[k].y - history[k - 1].y) * t,
+              };
+            }
+            acc += seg;
+          }
+          return history[history.length - 1] ?? { x: player.x, y: player.y };
+        }
+        function updateFollowers() {
+          if (!followerSprites.length) return;
+          recordHistory();
+          for (let i = 0; i < followerSprites.length; i++) {
+            const spr = followerSprites[i];
+            const pos = sampleHistory(FOLLOW_SPACING * (i + 1));
+            const dx = pos.x - spr.x, dy = pos.y - spr.y;
+            spr.setPosition(pos.x, pos.y);
+            spr.setDepth(pos.y);
+            if (Math.abs(dx) + Math.abs(dy) > 0.4) {
+              const dir: Dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "left" : "right") : dy < 0 ? "up" : "down";
+              followerFacing[i] = dir;
+              spr.anims.play(`fol${i}-walk-${dir}`, true);
+            } else {
+              spr.anims.stop();
+              spr.setFrame(ROW[followerFacing[i]] * FRAMES_PER_DIR);
+            }
+          }
         }
 
         function nearestInteractable(px: number, py: number): Interactable | null {
@@ -801,10 +877,12 @@ export function GameCanvas({
             player.anims.stop();
             player.setFrame(ROW[facing] * FRAMES_PER_DIR);
             if (controls.current) controls.current.interact = false;
+            updateFollowers(); // família para junto (idle) com a caixa aberta
             return;
           }
           if (cfgRef.current.mode === "world") updateWorld(this);
           else updatePhase();
+          updateFollowers();
         }
 
         game = new Phaser.Game({
