@@ -36,6 +36,8 @@ function loadJsQR(): Promise<JsQRFn | null> {
   });
 }
 
+// Press Start 2P é all-caps e NÃO tem "Ó" maiúsculo (só o "ó" minúsculo), então
+// "código" sai como "CóDIGO". Em textos nessa fonte, usar sem acento ("codigo").
 const PIXEL = "var(--font-press-start), ui-monospace, monospace";
 
 export function InviteCodeEntry({ slug }: { slug: string }) {
@@ -143,7 +145,7 @@ export function InviteCodeEntry({ slug }: { slug: string }) {
             className="flex items-center justify-center gap-1.5 px-2 py-2"
             style={{ fontFamily: PIXEL, fontSize: "8px", lineHeight: 1.4, color: "#3a2a1a", background: "#efe0bf", border: "2px solid #6b4a2a" }}
           >
-            <KeyRound className="size-3.5" aria-hidden /> Tenho um código
+            <KeyRound className="size-3.5" aria-hidden /> Tenho um codigo
           </button>
           <button
             type="button"

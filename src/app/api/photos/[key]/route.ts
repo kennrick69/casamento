@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { storage } from "@/lib/storage";
+import { resolveVolumeBase } from "@/lib/storage/volume-path";
 import { prisma } from "@/lib/db";
 import fs from "fs/promises";
 import path from "path";
@@ -26,11 +27,8 @@ export async function GET(
   const exists = await storage.exists(decodedKey);
   if (!exists) return new NextResponse("Não encontrado", { status: 404 });
 
-  // Serve the file
-  const filePath = path.join(
-    process.env.RAILWAY_VOLUME_PATH ?? "/tmp/casamento-uploads",
-    decodedKey
-  );
+  // Serve the file (MESMA base que o storage usa para gravar — ver resolveVolumeBase)
+  const filePath = path.join(resolveVolumeBase(), decodedKey);
   const file = await fs.readFile(filePath);
   const ext = path.extname(decodedKey).toLowerCase();
   const contentType = ext === ".webp" ? "image/webp" : "image/jpeg";

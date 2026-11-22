@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import * as fs from "fs";
+import * as path from "path";
+import { resolveVolumeBase, hasPersistentVolume, isRailwayRuntime } from "@/lib/storage/volume-path";
 
 type CheckStatus = "ok" | "degraded" | "error";
 
@@ -39,35 +41,62 @@ function checkPusher(): HealthCheck {
 }
 
 async function checkStorage(): Promise<HealthCheck> {
-  const volumePath = process.env.RAILWAY_VOLUME_PATH ?? "/tmp";
+  // Mesma base que o upload de fotos usa de fato (ver resolveVolumeBase).
+  const base = resolveVolumeBase();
+  const persistent = hasPersistentVolume();
+  const onRailway = isRailwayRuntime();
 
-  // Caminho pra statfs — gives us free space details when supported
+  // Teste de escrita REAL: cria o diretório (igual ao upload, que faz mkdir
+  // recursivo) e grava/remove um arquivo de prova. Assim o health reflete
+  // exatamente o que o envio de fotos vai encontrar.
+  let writable = false;
+  let writeError: string | null = null;
   try {
-    const stats = await fs.promises.statfs(volumePath);
+    const probeDir = path.join(base, ".health");
+    const probePath = path.join(probeDir, `probe-${Date.now()}`);
+    await fs.promises.mkdir(probeDir, { recursive: true });
+    await fs.promises.writeFile(probePath, "ok");
+    await fs.promises.unlink(probePath);
+    writable = true;
+  } catch (err) {
+    writeError = err instanceof Error ? err.message : String(err);
+  }
+
+  // Espaço livre (quando o runtime suporta statfs).
+  let spaceDetail = "";
+  try {
+    const stats = await fs.promises.statfs(base);
     const freeGb = (stats.bfree * stats.bsize) / 1024 ** 3;
     const totalGb = (stats.blocks * stats.bsize) / 1024 ** 3;
     const usedPct = Math.round(((totalGb - freeGb) / totalGb) * 100);
-    if (freeGb < 0.1) {
-      return { status: "error", detail: `disk critical: ${freeGb.toFixed(2)}GB free (${usedPct}% used)` };
+    spaceDetail = ` · ${freeGb.toFixed(1)}GB livre / ${totalGb.toFixed(1)}GB (${usedPct}% usado)`;
+    if (writable && freeGb < 0.1) {
+      return { status: "error", detail: `disco crítico em ${base}:${spaceDetail}` };
     }
-    if (freeGb < 0.5) {
-      return { status: "degraded", detail: `disk low: ${freeGb.toFixed(2)}GB free (${usedPct}% used)` };
+    if (writable && freeGb < 0.5) {
+      return { status: "degraded", detail: `disco baixo em ${base}:${spaceDetail}` };
     }
-    return { status: "ok", detail: `${freeGb.toFixed(1)}GB free / ${totalGb.toFixed(1)}GB total` };
   } catch {
-    // statfs não funciona em alguns containers Linux (ex.: Railway com volume
-    // montado via overlayfs). Cai pra um teste de escrita/leitura: se a gente
-    // consegue criar e remover um arquivo no volume, o storage está saudável.
-    try {
-      const probePath = `${volumePath}/.health-probe-${Date.now()}`;
-      await fs.promises.writeFile(probePath, "ok");
-      await fs.promises.unlink(probePath);
-      return { status: "ok", detail: "writable (statfs unavailable nesse runtime)" };
-    } catch (writeErr) {
-      const reason = writeErr instanceof Error ? writeErr.message : String(writeErr);
-      return { status: "degraded", detail: `volume não escrevível: ${reason}` };
-    }
+    // statfs indisponível nesse runtime — segue só com o teste de escrita.
   }
+
+  if (!writable) {
+    return { status: "degraded", detail: `volume não gravável (${base}): ${writeError}` };
+  }
+
+  // Grava, mas em produção no Railway SEM Volume anexado → armazenamento
+  // efêmero: a foto some no próximo deploy. Isso é degradado, não "ok".
+  if (onRailway && !persistent) {
+    return {
+      status: "degraded",
+      detail:
+        `gravável mas EFÊMERO em ${base}: nenhum Volume Railway anexado ` +
+        `(RAILWAY_VOLUME_MOUNT_PATH ausente). As fotos somem no próximo deploy.`,
+    };
+  }
+
+  const kind = persistent ? "volume persistente" : "fallback local";
+  return { status: "ok", detail: `gravável · ${kind} em ${base}${spaceDetail}` };
 }
 
 function checkMemory(): HealthResponse["memory"] {

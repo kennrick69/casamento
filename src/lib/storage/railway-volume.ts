@@ -1,13 +1,14 @@
 import fs from "fs/promises";
 import path from "path";
 import type { StorageProvider } from "./types";
+import { resolveVolumeBase } from "./volume-path";
 
 // TODO[tech-debt]: migrar para CloudflareR2Storage antes de 100 fotos ou 30 dias antes do evento.
 // Ver docs/tech-debt.md para detalhes e checklist de migração.
 export class RailwayVolumeStorage implements StorageProvider {
   private readonly base: string;
 
-  constructor(base = process.env.RAILWAY_VOLUME_PATH ?? "/tmp/casamento-uploads") {
+  constructor(base = resolveVolumeBase()) {
     this.base = base;
   }
 
