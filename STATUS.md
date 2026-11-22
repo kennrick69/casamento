@@ -3,7 +3,7 @@
 Regra de ouro: nada que funciona hoje pode quebrar; tudo do jogo fica atrás de
 `Event.experienceType`; o SQL de toda migration é mostrado antes de qualquer merge.
 
-Última atualização: 2026-11-21 (**rodada "finalizar tudo" no `feat/s4-convites`**).
+Última atualização: 2026-11-22 (**S4 COMPLETO PUBLICADO EM PRODUÇÃO** — merge `ffe880e`).
 
 ## 🧩 Rodada "finalizar tudo antes de testar" — branch `feat/s4-convites` (NÃO na main)
 Decisão do JOs (21/11): construir S4a + S4b + NPCs + S4c TODOS no `feat/s4-convites`,
@@ -64,13 +64,38 @@ cada parte. As falas/textos ficam no tom do site — o JOs ajusta no teste final
     bebê de colo fora da fila), `m-s4p4-familia-mesa-1280.png` (família até a mesa).
   - **Dev-only:** a Amanda ganhou um "Bebê Cardoso" (bebê de colo) no voem-dev só
     para provar a exclusão da fila.
-- **PARTE 5 — publicação única ✅ PLANO PRONTO, aguardando OK do JOs:**
-  **`docs/PLANO-MERGE-S4-COMPLETO.md`** — SQL exato das 3 migrations aditivas
-  (`add_invite_codes`, `add_seats`, `add_companion_lap_infant`), backfill dos códigos
-  pessoais, o que entra (rodada 4 + S4 inteiro), riscos/rollback e checklist (backup
-  verificado, deploy acompanhado, backfill conferido). **Nada na `main` até o OK.**
-  `tsc` 0 · `eslint` 0 erros · migrations aplicadas só no voem-dev.
+- **PARTE 5 — publicação única ✅ PUBLICADO EM PRODUÇÃO (22/11, OK do JOs):**
+  Plano seguido (`docs/PLANO-MERGE-S4-COMPLETO.md`). Ver seção **"🚀 S4 EM PRODUÇÃO"**
+  abaixo. Merge `ffe880e` (`--no-ff`) → deploy Railway → 3 migrations aditivas
+  aplicadas (`add_invite_codes`, `add_seats`, `add_companion_lap_infant`) → backfill
+  rodado (0 a criar: evento real ainda sem lista) → site clássico íntegro → smoke 427 ok.
 
+
+## 🚀 S4 EM PRODUÇÃO (2026-11-22)
+`feat/s4-convites` **mergeado na `main`** (merge `ffe880e`, `--no-ff`) e **deployado no
+Railway**. Antes do merge: **backup de produção fresco verificado** (decriptado +
+descomprimido + conferido: 44 tabelas, dados reais, dump íntegro — `casamento-2026-11-22`).
+- **3 migrations aditivas aplicadas** pelo `migrate deploy` (confirmadas em prod:
+  `InviteCode` e `Seat` criadas, `GuestCompanion.lapInfant` adicionada, as 3 com
+  `finished_at`). Nenhuma coluna existente mudou.
+- **Backfill** `scripts/invite/backfill-personal-codes.mjs` rodado 1× contra prod:
+  **0 códigos criados** — o evento real `joseeleticia` ainda tem só 3 **visitantes** e
+  **0 convidados na lista**. Quando o JOs cadastrar a lista, cada convidado ganha código
+  automaticamente (`ensurePersonalCodes` ao abrir Convidados) e dá p/ re-rodar o backfill.
+- **Site CLASSIC íntegro**: `/` e `/joseeleticia` → HTTP 200. Health 200 (`db` ok).
+  Obs.: health acusa `storage=degraded` (volume `/data` não gravável) — **pré-existente**,
+  não é do S4; afeta upload de fotos no volume e vale olhar à parte.
+- **Smoke 427 em prod** (`docs/screens-jogo/p-prod-*`): abertura com "Tenho um código" +
+  "Escanear QR code" + "Convite impresso" e mensagem "encontre a sua mesa na festa"
+  (`p-prod-01`); "Tenho um código" aceitando `44hu v9nt` (minúsculo+espaço) e tratando
+  código inexistente com elegância (`p-prod-02/03`); Grande Dia renderizando com NPC do
+  salão "Fotógrafo · aperte A" (`p-prod-04/05`). Sem erros de página; **zero resíduo**
+  (reusei cookie de visitante existente; `?start=` é só visualização).
+- **Pendente do JOs no evento real** p/ testar escolha de mesa ponta-a-ponta em prod:
+  cadastrar a **lista de convidados** e definir as **mesas/capacidade** (hoje 0 mesas).
+- **Rollback**: `git revert -m 1 ffe880e`. Tabelas novas podem ficar (não atrapalham).
+  Detalhe cosmético visto no smoke: a fonte pixel mostra "CóDIGO" (Press Start 2P não tem
+  Ó maiúsculo) — ajuste de texto no teste final.
 
 ## 🚀 S3 EM PRODUÇÃO (2026-11-21)
 `feat/s3-personagem` foi **mergeado na `main`** (merge commit `5fdd163`, `--no-ff`)
