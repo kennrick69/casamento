@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Image from "next/image";
 import { Check, Heart } from "lucide-react";
 import { toast } from "sonner";
-import { approvePhoto, removePhoto, batchApprovePhotos, batchRemovePhotos } from "./actions";
+import { approvePhoto, removePhoto, batchApprovePhotos, batchRemovePhotos, purgeOrphanMuralFiles } from "./actions";
 
 interface Photo {
   id: string;
@@ -33,6 +33,7 @@ export function MuralAdminClient({
   const [filter, setFilter] = useState<Filter>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isBatchPending, startBatch] = useTransition();
+  const [isPurgePending, startPurge] = useTransition();
 
   const visible = photos.filter((p) => {
     if (filter === "pending") return !p.approvedByCouple;
@@ -68,6 +69,24 @@ export function MuralAdminClient({
       if (result.ok) {
         toast.success(`${result.count} foto${result.count !== 1 ? "s" : ""} removida${result.count !== 1 ? "s" : ""}.`);
         setSelected(new Set());
+      }
+    });
+  }
+
+  function handlePurgeOrphans() {
+    if (!window.confirm("Apagar do volume os arquivos de foto que não têm mais registro ativo no banco? Ação irreversível.")) return;
+    startPurge(async () => {
+      const fd = new FormData();
+      fd.set("eventId", eventId);
+      const result = await purgeOrphanMuralFiles(fd);
+      if (result.ok) {
+        toast.success(
+          result.deleted === 0
+            ? "Nenhum arquivo órfão — volume já está limpo."
+            : `${result.deleted} arquivo${result.deleted !== 1 ? "s" : ""} órfão${result.deleted !== 1 ? "s" : ""} apagado${result.deleted !== 1 ? "s" : ""} do volume.`,
+        );
+      } else {
+        toast.error("Não foi possível limpar os arquivos órfãos.");
       }
     });
   }
@@ -119,6 +138,14 @@ export function MuralAdminClient({
             </button>
           </>
         )}
+        <button
+          onClick={handlePurgeOrphans}
+          disabled={isPurgePending}
+          title="Apaga do volume arquivos de foto sem registro ativo no banco (órfãos)"
+          className="ml-auto text-xs px-3 py-1.5 rounded-lg border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-60"
+        >
+          {isPurgePending ? "Limpando…" : "Limpar arquivos órfãos"}
+        </button>
       </div>
 
       {visible.length === 0 ? (

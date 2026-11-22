@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { requireOrganizer } from "@/lib/authorization";
+import { deletePhotoFile } from "@/lib/storage/photo-file";
 import { revalidatePath } from "next/cache";
 
 export async function resolveReport(formData: FormData): Promise<{ ok: boolean; action?: string }> {
@@ -20,7 +21,13 @@ export async function resolveReport(formData: FormData): Promise<{ ok: boolean; 
 
   if (action === "REMOVED") {
     if (photoId) {
+      // Pega a key antes do soft-delete para apagar o byte no volume.
+      const photo = await prisma.photo.findUnique({
+        where: { id: photoId },
+        select: { storageKey: true },
+      });
       await prisma.photo.update({ where: { id: photoId }, data: { removedAt: new Date() } });
+      await deletePhotoFile(photo?.storageKey);
     }
     if (chatMessageId) {
       await prisma.chatMessage.update({ where: { id: chatMessageId }, data: { removedAt: new Date() } });
