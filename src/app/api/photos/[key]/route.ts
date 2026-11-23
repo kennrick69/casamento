@@ -5,9 +5,12 @@ import { prisma } from "@/lib/db";
 import fs from "fs/promises";
 import path from "path";
 
-// Serve fotos do volume com checagem de visibilidade.
-// Fotos PUBLIC: qualquer um com o link pode ver.
-// Fotos COUPLE_ONLY: apenas organizadores do evento.
+// Serve fotos do volume.
+//  • Mural (`${slug}/fotos/...`): passa pela checagem de Photo (moderação →
+//    foto removida nunca é servida). Fluxo de conteúdo enviado por convidado.
+//  • Conteúdo CURADO pelo casal (`story/...` = memórias do Bosque, `gallery/...`
+//    = galeria): público por natureza. Não há linha em Photo; a própria key
+//    (nanoid imprevisível) é a credencial. Serve direto se o arquivo existe.
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ key: string }> }
@@ -15,13 +18,22 @@ export async function GET(
   const { key } = await params;
   const decodedKey = decodeURIComponent(key);
 
-  const photo = await prisma.photo.findFirst({
-    where: { storageKey: { contains: decodedKey } },
-    include: { event: true },
-  });
-
-  if (!photo || photo.removedAt) {
+  // Guarda contra path traversal (../) antes de tocar no filesystem.
+  if (decodedKey.includes("..")) {
     return new NextResponse("Não encontrado", { status: 404 });
+  }
+
+  const isCurated = decodedKey.startsWith("story/") || decodedKey.startsWith("gallery/");
+
+  if (!isCurated) {
+    // Mural: exige foto não removida.
+    const photo = await prisma.photo.findFirst({
+      where: { storageKey: { contains: decodedKey } },
+      include: { event: true },
+    });
+    if (!photo || photo.removedAt) {
+      return new NextResponse("Não encontrado", { status: 404 });
+    }
   }
 
   const exists = await storage.exists(decodedKey);

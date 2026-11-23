@@ -5,6 +5,7 @@ import { storage } from "@/lib/storage";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { EventNav } from "@/components/admin/event-nav";
 import { HistoriaAdminClient } from "./historia-admin-client";
+import { parseStoryPhotos } from "@/lib/game/story-photos";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Nossa história" };
@@ -26,7 +27,10 @@ export default async function HistoriaAdminPage({ params }: Props) {
     description: it.description,
     dateLabel: it.dateLabel,
     date: it.date?.toISOString() ?? null,
-    photoUrl: it.photoKey ? storage.getUrl(it.photoKey) : null,
+    photos: parseStoryPhotos(it.photos, it.photoKey).map((p) => ({
+      url: storage.getUrl(p.key),
+      caption: p.caption,
+    })),
   }));
 
   return (

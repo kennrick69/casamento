@@ -8,6 +8,7 @@ import { isEventOrganizer } from "@/lib/game/character/organizer";
 import { getEventSeatMaps } from "@/lib/game/seats";
 import { type CharacterSpec, specFromCharacter, specToQuery, DEFAULT_SPEC } from "@/lib/game/character/catalog";
 import { resolveCardapio } from "@/lib/game/cardapio";
+import { parseStoryPhotos } from "@/lib/game/story-photos";
 import { MapaClient, type Memory, type TableInfo, type GameProgress } from "./mapa-client";
 
 export const metadata: Metadata = {
@@ -87,13 +88,20 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
     prisma.seatingAssignment.findUnique({ where: { guestId: guest.id } }),
   ]);
 
-  const memories: Memory[] = storyItems.map((s) => ({
-    id: s.id,
-    title: s.title,
-    dateLabel: s.dateLabel ?? null,
-    description: s.description ?? null,
-    photoUrl: s.photoKey ? storage.getUrl(s.photoKey) : null,
-  }));
+  const memories: Memory[] = storyItems.map((s) => {
+    const photos = parseStoryPhotos(s.photos, s.photoKey).map((p) => ({
+      url: storage.getUrl(p.key),
+      caption: p.caption,
+    }));
+    return {
+      id: s.id,
+      title: s.title,
+      dateLabel: s.dateLabel ?? null,
+      description: s.description ?? null,
+      photoUrl: photos[0]?.url ?? null, // legado (compat)
+      photos,
+    };
+  });
 
   const tables: TableInfo[] = seatingTables.map((t) => ({ id: t.id, name: t.name, capacity: t.capacity }));
 
