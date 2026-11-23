@@ -188,6 +188,11 @@ model Event {
   archivedAt            DateTime?
   archivalWarningAt     DateTime?
   customization         Json?
+  // Cardápio do Garçom (NPC do salão). JSON { foods: string[], drinks: string[], byoNotice: string }.
+  // null = casal ainda não cadastrou → jogo usa o cardápio de EXEMPLO (ver lib/game/cardapio).
+  menu                  Json?
+  // Recado que o convidado vê ao encontrar a própria mesa no Grande Dia. null = texto genérico.
+  tableFoundMessage     String?        @db.Text
 
   theme               Theme                @relation(fields: [themeId], references: [id])
   organizers          EventOrganizer[]

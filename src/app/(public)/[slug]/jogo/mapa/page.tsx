@@ -7,6 +7,7 @@ import { getCurrentGuest } from "@/lib/auth/guest";
 import { isEventOrganizer } from "@/lib/game/character/organizer";
 import { getEventSeatMaps } from "@/lib/game/seats";
 import { type CharacterSpec, specFromCharacter, specToQuery, DEFAULT_SPEC } from "@/lib/game/character/catalog";
+import { resolveCardapio } from "@/lib/game/cardapio";
 import { MapaClient, type Memory, type TableInfo, type GameProgress } from "./mapa-client";
 
 export const metadata: Metadata = {
@@ -115,6 +116,14 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
     garcom: sheet(NPC_SPECS.garcom),
   };
 
+  // Conteúdo do salão configurado pelo casal (aba Cardápio): o Garçom mostra o
+  // cardápio real (ou o de EXEMPLO se ainda não cadastrou) e o recado da mesa.
+  const salaoCfg = await prisma.event.findUnique({
+    where: { id: event.id },
+    select: { menu: true, tableFoundMessage: true },
+  });
+  const cardapio = resolveCardapio(salaoCfg?.menu);
+
   // S4c — família andando junto (estilo Pokémon). Os acompanhantes que NÃO são
   // bebê de colo viram "followers" em fila atrás do jogador; criança anda em
   // tamanho de criança. Usa o avatar do acompanhante (se ele criou um) ou um
@@ -150,7 +159,8 @@ export default async function MapaPage({ params }: { params: Promise<{ slug: str
       seatMaps={seatMaps}
       canChooseSeat={!guest.isVisitor}
       companionCount={await prisma.guestCompanion.count({ where: { guestId: guest.id, lapInfant: false } })}
-      coupleMessage={null}
+      coupleMessage={salaoCfg?.tableFoundMessage ?? null}
+      cardapio={cardapio}
       brideAtlas={brideAtlas}
       groomAtlas={groomAtlas}
       npcAtlases={npcAtlases}

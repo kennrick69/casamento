@@ -8,7 +8,7 @@ import { ArrowLeft, Loader2, Info, MapPin, Lock } from "lucide-react";
 import { WORLD, PHASES, tableGrid, type LevelId } from "@/lib/game/world";
 import type { Controls, Interactable, SceneConfig, NpcAvatar } from "./game-canvas";
 import type { TableSeatMap } from "@/lib/game/seats";
-import { CARDAPIO } from "@/lib/game/cardapio";
+import type { Cardapio } from "@/lib/game/cardapio";
 import { leaveMessageForCouple } from "../actions";
 import { chooseSeat } from "./seat-actions";
 
@@ -62,6 +62,7 @@ export interface MapaClientProps {
   npcAtlases: { dj: string; fotografo: string; cerimonialista: string; garcom: string };
   followers: { atlasUrl: string; child: boolean }[];
   progress: GameProgress;
+  cardapio: Cardapio;
 }
 
 type SalaoNpc = "dj" | "fotografo" | "cerimonialista" | "garcom";
@@ -703,7 +704,7 @@ export function MapaClient(props: MapaClientProps) {
               isTouch={isTouch}
               onBack={() => setGarcomView("ask")}
               title="Garçom"
-              body={`Hoje temos:\n\n${CARDAPIO.foods.map((f) => `• ${f}`).join("\n")}`}
+              body={`Hoje temos:\n\n${props.cardapio.foods.map((f) => `• ${f}`).join("\n")}`}
               choices={[
                 { key: "drinks", label: "Ver as bebidas", onSelect: () => setGarcomView("drinks") },
                 { key: "ok", label: "Fechar", onSelect: close },
@@ -718,7 +719,7 @@ export function MapaClient(props: MapaClientProps) {
               isTouch={isTouch}
               onBack={() => setGarcomView("ask")}
               title="Garçom"
-              body={`Para beber:\n\n${CARDAPIO.drinks.map((d) => `• ${d}`).join("\n")}\n\n${CARDAPIO.byoNotice}`}
+              body={`Para beber:\n\n${props.cardapio.drinks.map((d) => `• ${d}`).join("\n")}\n\n${props.cardapio.byoNotice}`}
               choices={[
                 { key: "food", label: "Ver o cardápio", onSelect: () => setGarcomView("food") },
                 { key: "ok", label: "Fechar", onSelect: close },

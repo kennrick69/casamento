@@ -5,6 +5,8 @@ import { prisma } from "@/lib/db";
 import { EXCLUDE_VISITORS } from "@/lib/guest-filters";
 import { requireOrganizer } from "@/lib/authorization";
 import { EventNav } from "@/components/admin/event-nav";
+import { ConfigProgress } from "@/components/admin/config-progress";
+import { getEventReadiness } from "@/lib/event/readiness";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { buttonVariants } from "@/components/ui/button";
 import { Users, Camera, Gift, Shield, AlertTriangle, ClipboardList, Music, Lock, Settings, User as UserIcon, PartyPopper } from "lucide-react";
@@ -76,6 +78,8 @@ export default async function EventDashboardPage({
 
   const totalWithCompanions = confirmedGuests + (confirmedWithPlusOnes._sum.plusOnes ?? 0);
 
+  const readiness = await getEventReadiness(id);
+
   const baseUrl = getAppUrl();
   const eventUrl = `${baseUrl}/${event.slug}`;
   const qrPng = `/api/qr/${event.slug}`;
@@ -123,6 +127,9 @@ export default async function EventDashboardPage({
             </Link>
           </div>
         )}
+
+        {/* Progresso da configuração (jornada do jogador) */}
+        <ConfigProgress readiness={readiness} />
 
         {/* Countdown */}
         <div className={`game-countdown game-panel mb-6 rounded-xl px-5 py-4 text-center ${
