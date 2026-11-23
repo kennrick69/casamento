@@ -901,9 +901,15 @@ model CoupleStoryItem {
   eventId     String
   date        DateTime?
   dateLabel   String?
-  title       String
+  // Título agora é OPCIONAL: permite memória "só fotos" (sem texto). O jogo já
+  // trata título/descrição vazios (filter(Boolean)); dados antigos têm título.
+  title       String?
   description String?   @db.Text
+  // Legado: 1ª foto (mantido p/ compat). O conteúdo novo vem de `photos`.
   photoKey    String?
+  // Galeria do totem no Bosque: array de { key, caption } — várias fotos, cada
+  // uma com sua legenda (o convidado passa pro lado no carrossel GBA).
+  photos      Json?
   order       Int       @default(0)
   createdAt   DateTime  @default(now())
 

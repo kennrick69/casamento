@@ -23,12 +23,17 @@ const GameCanvas = dynamic(() => import("./game-canvas").then((m) => m.GameCanva
 });
 
 // ─── Tipos de dados vindos do servidor ──────────────────────────────────────
+export interface MemoryPhoto {
+  url: string;
+  caption: string | null;
+}
 export interface Memory {
   id: string;
-  title: string;
+  title: string | null;
   dateLabel: string | null;
   description: string | null;
   photoUrl: string | null;
+  photos: MemoryPhoto[];
 }
 export interface TableInfo {
   id: string;
@@ -286,7 +291,7 @@ export function MapaClient(props: MapaClientProps) {
         kind: "pedestal",
         glyph: progress.memoriesSeen.includes(mem.id) ? "check" : "bang", // "!" da missão (item 29)
         done: progress.memoriesSeen.includes(mem.id),
-        label: mem.title,
+        label: mem.title ?? mem.dateLabel ?? "Memória",
       }));
       interactables.push({
         id: "exit",
@@ -619,18 +624,9 @@ export function MapaClient(props: MapaClientProps) {
           apiRef={dialogRef}
           isTouch={isTouch}
           onBack={close}
-          title={activeMemory.dateLabel ?? "Memória"}
+          title={activeMemory.dateLabel ?? activeMemory.title ?? "Memória"}
           body={[activeMemory.title, activeMemory.description].filter(Boolean).join("\n\n")}
-          extra={
-            activeMemory.photoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={activeMemory.photoUrl}
-                alt={activeMemory.title}
-                className="mt-2 max-h-40 w-full rounded border-2 border-[#8a6d3b] object-cover"
-              />
-            ) : undefined
-          }
+          extra={activeMemory.photos.length > 0 ? <MemoryCarousel photos={activeMemory.photos} /> : undefined}
           choices={[{ key: "ok", label: "Continuar", onSelect: close }]}
         />
       );
@@ -953,6 +949,100 @@ function paginate(text: string, max: number): string[] {
     if (cur) pages.push(cur);
   }
   return pages.length ? pages : [""];
+}
+
+// Carrossel de fotos da memória (Bosque). Moldura pixel GBA; a foto é foto, mas
+// borda, setas, contador e legenda seguem o estilo pixel. O convidado passa pro
+// lado por swipe (toque), setas na tela ou ← →. Legenda POR FOTO.
+function MemoryCarousel({ photos }: { photos: MemoryPhoto[] }) {
+  const [idx, setIdx] = useState(0);
+  const touchX = useRef<number | null>(null);
+  const pixelFont = "var(--font-press-start), monospace";
+  const n = photos.length;
+
+  const go = useCallback(
+    (dir: number) => setIdx((i) => Math.min(n - 1, Math.max(0, i + dir))),
+    [n],
+  );
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") { e.stopPropagation(); go(-1); }
+      else if (e.key === "ArrowRight") { e.stopPropagation(); go(1); }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [go]);
+
+  if (n === 0) return null;
+  const cur = photos[Math.min(idx, n - 1)];
+  const atStart = idx <= 0;
+  const atEnd = idx >= n - 1;
+
+  const arrowStyle = (disabled: boolean): React.CSSProperties => ({
+    fontFamily: pixelFont,
+    fontSize: "14px",
+    color: disabled ? "#bda06a" : "#2a1d12",
+    background: disabled ? "#e8dcc0" : "#f7eccf",
+    border: "3px solid #2a1d12",
+    boxShadow: disabled ? "none" : "inset 0 0 0 2px #c9a24b, 2px 2px 0 rgba(0,0,0,0.3)",
+    width: "34px",
+    height: "34px",
+    lineHeight: 1,
+    cursor: disabled ? "default" : "pointer",
+  });
+
+  return (
+    <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+      {/* Moldura pixel GBA em volta da foto */}
+      <div
+        onTouchStart={(e) => { touchX.current = e.touches[0]?.clientX ?? null; }}
+        onTouchEnd={(e) => {
+          if (touchX.current == null) return;
+          const dx = (e.changedTouches[0]?.clientX ?? touchX.current) - touchX.current;
+          if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
+          touchX.current = null;
+        }}
+        style={{
+          background: "#2a1d12",
+          padding: "4px",
+          border: "3px solid #2a1d12",
+          boxShadow: "inset 0 0 0 2px #c9a24b",
+          imageRendering: "pixelated",
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={cur.url}
+          alt={cur.caption ?? `Foto ${idx + 1}`}
+          draggable={false}
+          className="block w-full select-none"
+          style={{ maxHeight: "40vh", objectFit: "contain", background: "#000" }}
+        />
+      </div>
+
+      {/* Legenda da foto (pixel) */}
+      {cur.caption && (
+        <p
+          className="mt-1.5 text-center"
+          style={{ fontFamily: "var(--font-lora), Georgia, serif", fontSize: "13px", color: "#3a2a1a", lineHeight: 1.4 }}
+        >
+          {cur.caption}
+        </p>
+      )}
+
+      {/* Controles: ◀ contador ▶ (só quando há mais de uma) */}
+      {n > 1 && (
+        <div className="mt-2 flex items-center justify-center gap-3">
+          <button type="button" aria-label="Foto anterior" disabled={atStart} onClick={() => go(-1)} style={arrowStyle(atStart)}>◀</button>
+          <span style={{ fontFamily: pixelFont, fontSize: "10px", color: "#6b4a2a", minWidth: "42px", textAlign: "center" }}>
+            {idx + 1}/{n}
+          </span>
+          <button type="button" aria-label="Próxima foto" disabled={atEnd} onClick={() => go(1)} style={arrowStyle(atEnd)}>▶</button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // Caixa única de diálogo: moldura pixel dupla (clara + contorno escuro, cantos
