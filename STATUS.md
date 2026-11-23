@@ -3,8 +3,37 @@
 Regra de ouro: nada que funciona hoje pode quebrar; tudo do jogo fica atrás de
 `Event.experienceType`; o SQL de toda migration é mostrado antes de qualquer merge.
 
-Última atualização: 2026-11-22 (**fix/mural-file-delete PUBLICADO** — remover foto apaga o
-arquivo do volume + limpeza de órfãos pelo painel — merge `ef0a5e0`; antes: fix/storage `7cfe417`).
+Última atualização: 2026-11-23 (**config-progress + bosque-multifoto PUBLICADOS** — card de
+progresso do casamento + cardápio do Garçom configurável + memórias multi-foto com carrossel GBA
+— merges `4f60416` e `3ed14b5`; antes: fix/mural-file-delete `ef0a5e0`).
+
+## ⚠️ REGRA DE ESTILO: tudo que o convidado vê no jogo é PIXEL ART estilo GBA
+Reforço do JOs (23/11): qualquer UI nova do lado do convidado (diálogos, carrossel, HUD) segue a
+caixa de diálogo GBA/Pokémon já existente — moldura pixel (creme #f7eccf / dourado #c9a24b /
+#2a1d12, cantos dentados), fonte `var(--font-press-start)`. Fotos continuam fotos; a MOLDURA e os
+controles é que são pixel. (Painel do organizador segue o visual do admin, não GBA.)
+
+## 🎞️ bosque-multifoto — memórias com várias fotos + carrossel GBA (2026-11-23)
+Merge `3ed14b5` na `main`, deployado. Migration aditiva: `CoupleStoryItem.photos` (JSONB
+`[{key,caption}]`) + `title` passa a aceitar NULL (memória "só fotos"). `tsc`(só ruído Prisma)+`eslint` verdes.
+- **Painel História:** upload de VÁRIAS fotos por memória, **legenda por foto**, miniaturas/remover;
+  título e descrição opcionais. Ao remover a memória, apaga TODAS as fotos do volume.
+- **Jogo (totem do Bosque):** diálogo vira **carrossel GBA** (`MemoryCarousel` em mapa-client) —
+  swipe pro lado no celular + ← →, contador, legenda por foto. Fonte/borda pixel; foto é foto.
+- **FIX pré-existente:** `/api/photos/[key]` só servia foto do MURAL (exige linha `Photo`), então
+  `story/` e `gallery/` davam 404 — história e galeria pública estavam quebradas (invisível pq
+  evento vazio). Agora serve conteúdo curado do casal direto (key nanoid = credencial) + guarda `..`.
+- **Prova pendente:** carrossel no celular 427 — precisa de 1 memória com fotos (JOs cadastra 1 real
+  na aba História e eu tiro o print; é lado do convidado, dá pra provar com token de visitante).
+
+## 📊 config-progress — progresso do casamento + cardápio configurável (2026-11-23)
+Merge `4f60416` na `main`, deployado (health verde; colunas `menu`+`tableFoundMessage` confirmadas
+em prod). Resolve o risco "publicar e esquecer de configurar sem perceber".
+- **Card "Progresso do casamento"** no Dashboard (`lib/event/readiness` + `components/admin/config-progress`):
+  barra 0→100% só com itens essenciais, pela JORNADA (Vila/Bosque/Grande Dia/Gincana/Extras), com
+  alerta de "minas terrestres" (NPC que fala de conteúdo vazio) e aviso de publicado-mas-incompleto.
+- **Cardápio do Garçom** saiu do código → aba **Cardápio** (`Event.menu`) + recado da mesa
+  (`Event.tableFoundMessage`). O jogo lê do banco; sem cadastro mostra EXEMPLO e o painel sinaliza.
 
 ## 🧹 fix/mural-file-delete — remover foto apaga o arquivo + limpa órfãos (2026-11-22)
 Branch `fix/mural-file-delete` **mergeada na `main`** (merge `ef0a5e0`, `--no-ff`) e deployada
